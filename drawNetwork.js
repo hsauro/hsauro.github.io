@@ -37509,12 +37509,5156 @@ rtl.module("WEBLib.Buttons",["System","Classes","SysUtils","WEBLib.Controls","We
     rtl.addIntf(this,pas.System.IUnknown);
   });
 },["WEBLib.WebTools"]);
+rtl.module("libjquery",["System","JS","Web"],function () {
+  "use strict";
+  var $mod = this;
+  rtl.recNewT($mod,"TJQueryTopLeft",function () {
+    this.top = 0;
+    this.left = 0;
+    this.$eq = function (b) {
+      return (this.top === b.top) && (this.left === b.left);
+    };
+    this.$assign = function (s) {
+      this.top = s.top;
+      this.left = s.left;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TJQueryTopLeft",{});
+    $r.addField("top",rtl.longint);
+    $r.addField("left",rtl.longint);
+  });
+  $mod.$rtti.$ProcVar("TCallback",{procsig: rtl.newTIProcSig([["args",rtl.jsvalue]])});
+  $mod.$rtti.$ProcVar("TCallbackEvent",{procsig: rtl.newTIProcSig([["args",rtl.jsvalue]])});
+  $mod.$rtti.$RefToProcVar("TJQueryAddClassHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["AClass",rtl.string]],rtl.string)});
+  $mod.$rtti.$RefToProcVar("TJQueryAttrHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["aAttr",rtl.string]],rtl.jsvalue)});
+  $mod.$rtti.$RefToProcVar("TJQueryCSSHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["AClass",rtl.string]],rtl.jsvalue)});
+  $mod.$rtti.$RefToProcVar("TJQueryEachHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["AElement",pas.Web.$rtti["TJSElement"]]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQueryFilterHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["AElement",pas.Web.$rtti["TJSElement"]]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQueryHeightHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["AHeight",rtl.jsvalue]],rtl.jsvalue)});
+  $mod.$rtti.$RefToProcVar("TJQueryHTMLHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["aHTML",rtl.string]],rtl.string)});
+  $mod.$rtti.$RefToProcVar("TJQueryMapHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["AElement",pas.Web.$rtti["TJSElement"]]],pas.JS.$rtti["TJSObject"])});
+  $mod.$rtti.$RefToProcVar("TJQueryOffsetHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["aCoords",$mod.$rtti["TJQueryTopLeft"]]],$mod.$rtti["TJQueryTopLeft"])});
+  $mod.$rtti.$RefToProcVar("TJQueryPropHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["oldProp",rtl.jsvalue]],rtl.jsvalue)});
+  $mod.$rtti.$RefToProcVar("TJQueryQueueHandler",{procsig: rtl.newTIProcSig(null)});
+  $mod.$rtti.$RefToProcVar("TJQueryTextHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["aString",rtl.string]],rtl.string)});
+  $mod.$rtti.$RefToProcVar("TJQueryToggleClassHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["aClassName",rtl.string],["AState",rtl.boolean]],rtl.string)});
+  $mod.$rtti.$RefToProcVar("TJQueryValHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["aValue",rtl.string]],rtl.string)});
+  $mod.$rtti.$RefToProcVar("TJQueryWidthHandler",{procsig: rtl.newTIProcSig([["aIndex",rtl.longint],["AHeight",rtl.jsvalue]],rtl.jsvalue)});
+  $mod.$rtti.$RefToProcVar("TJQueryDeQueueFunction",{procsig: rtl.newTIProcSig(null)});
+  $mod.$rtti.$RefToProcVar("TJQueryAddQueueHandler",{procsig: rtl.newTIProcSig([["aFunc",$mod.$rtti["TJQueryDeQueueFunction"]]])});
+  $mod.$rtti.$RefToProcVar("TDeferredDoneHandler",{procsig: rtl.newTIProcSig(null,rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQXHRDoneHandler",{procsig: rtl.newTIProcSig([["aData",rtl.jsvalue],["textStatus",rtl.string],["aJQXHR",$mod.$rtti["TJQXHR"]]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQXHRFailHandler",{procsig: rtl.newTIProcSig([["aJQXHR",$mod.$rtti["TJQXHR"]],["textStatus",rtl.string],["AErrorThrown",rtl.jsvalue]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQXHRAlwaysHandler",{procsig: rtl.newTIProcSig([["arg1",pas.JS.$rtti["TJSObject"]],["textStatus",rtl.string],["arg2",pas.JS.$rtti["TJSObject"]]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxSettingsHandler",{procsig: rtl.newTIProcSig([["aHXR",$mod.$rtti["TJQXHR"]],["aOptions",$mod.$rtti["TJSAjaxSettings"]]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxSettingsDataFilter",{procsig: rtl.newTIProcSig([["aData",rtl.string],["aType",rtl.string]],rtl.jsvalue)});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxSettingsErrorHandler",{procsig: rtl.newTIProcSig([["aHXR",$mod.$rtti["TJQXHR"]],["aOptions",$mod.$rtti["TJSAjaxSettings"]],["aStatus",rtl.string],["aError",rtl.string]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxSettingsSuccessHandler",{procsig: rtl.newTIProcSig([["data",rtl.jsvalue],["aStatus",rtl.string],["aHXR",$mod.$rtti["TJQXHR"]]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxSettsingsXHRHandler",{procsig: rtl.newTIProcSig(null,rtl.jsvalue)});
+  $mod.$rtti.$ProcVar("TJQueryAjaxTransportCompleteHandler",{procsig: rtl.newTIProcSig([["aStatus",rtl.nativeint],["aStatusText",rtl.string],["responses",pas.JS.$rtti["TJSObject"]],["Headers",pas.JS.$rtti["TJSObject"]]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxTransportSendHandler",{procsig: rtl.newTIProcSig([["headers",pas.JS.$rtti["TJSObject"]],["onComplete",$mod.$rtti["TJQueryAjaxTransportCompleteHandler"]]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxTransportAbortHandler",{procsig: rtl.newTIProcSig(null,rtl.boolean)});
+  rtl.recNewT($mod,"TJQueryAjaxTransport",function () {
+    this.send = null;
+    this.abort = null;
+    this.$eq = function (b) {
+      return rtl.eqCallback(this.send,b.send) && rtl.eqCallback(this.abort,b.abort);
+    };
+    this.$assign = function (s) {
+      this.send = s.send;
+      this.abort = s.abort;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TJQueryAjaxTransport",{});
+    $r.addField("send",$mod.$rtti["TJQueryAjaxTransportSendHandler"]);
+    $r.addField("abort",$mod.$rtti["TJQueryAjaxTransportAbortHandler"]);
+  });
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxTransportHandler",{procsig: rtl.newTIProcSig([["aOptions",pas.JS.$rtti["TJSObject"]],["aOriginalOptions",pas.JS.$rtti["TJSObject"]],["aXHR",$mod.$rtti["TJQXHR"]]],$mod.$rtti["TJQueryAjaxTransport"])});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxPrefilterHandler",{procsig: rtl.newTIProcSig([["aOptions",pas.JS.$rtti["TJSObject"]],["aOriginalOptions",pas.JS.$rtti["TJSObject"]],["aXHR",$mod.$rtti["TJQXHR"]]])});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxEventHandler",{procsig: rtl.newTIProcSig([["aEvent",$mod.$rtti["TAjaxEvent"]],["aHXR",$mod.$rtti["TJQXHR"]],["aOptions",$mod.$rtti["TJSAjaxSettings"]]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxErrorHandler",{procsig: rtl.newTIProcSig([["aEvent",$mod.$rtti["TAjaxEvent"]],["aHXR",$mod.$rtti["TJQXHR"]],["aOptions",$mod.$rtti["TJSAjaxSettings"]],["aError",rtl.string]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxSuccessHandler",{procsig: rtl.newTIProcSig([["aData",pas.JS.$rtti["TJSObject"]],["aStatus",rtl.string],["aXHR",$mod.$rtti["TJQXHR"]]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxLoadHandler",{procsig: rtl.newTIProcSig([["aResponseText",rtl.string],["aStatus",rtl.string],["aXHR",$mod.$rtti["TJQXHR"]]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxScriptHandler",{procsig: rtl.newTIProcSig([["aScript",rtl.string],["aStatus",rtl.string],["aXHR",$mod.$rtti["TJQXHR"]]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQueryAjaxHandler",{procsig: rtl.newTIProcSig(null)});
+});
+rtl.module("jqwidget",["System","JS","Web","libjquery","SysUtils"],function () {
+  "use strict";
+  var $mod = this;
+  $mod.$rtti.$RefToProcVar("TJQXEventHandler",{procsig: rtl.newTIProcSig([["Event",$mod.$rtti["TJQXEvent"]]],rtl.boolean)});
+  $mod.$rtti.$RefToProcVar("TJQXElementEventHandler",{procsig: rtl.newTIProcSig([["Event",$mod.$rtti["TJQXElementEvent"]]],rtl.boolean)});
+});
+rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBLib.Graphics","Web"],function () {
+  "use strict";
+  var $mod = this;
+  $mod.$rtti.$Class("TMainMenu");
+  $mod.$rtti.$Class("TMenuItem");
+  this.TMenuItemAutoFlag = {"0": "maAutomatic", maAutomatic: 0, "1": "maManual", maManual: 1, "2": "maParent", maParent: 2};
+  $mod.$rtti.$Enum("TMenuItemAutoFlag",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TMenuItemAutoFlag});
+  this.TMenuBreak = {"0": "mbNone", mbNone: 0, "1": "mbBreak", mbBreak: 1, "2": "mbBarBreak", mbBarBreak: 2};
+  $mod.$rtti.$Enum("TMenuBreak",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TMenuBreak});
+  $mod.$rtti.$Int("THelpContext",{minvalue: -2147483647, maxvalue: 2147483647, ordtype: 4});
+  $mod.$rtti.$Int("TShortCut",{minvalue: 0, maxvalue: 65535, ordtype: 5});
+  this.TMainMenuHamburgerMenuVisible = {"0": "hmAlways", hmAlways: 0, "1": "hmNever", hmNever: 1, "2": "hmResponsive", hmResponsive: 2};
+  $mod.$rtti.$Enum("TMainMenuHamburgerMenuVisible",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TMainMenuHamburgerMenuVisible});
+  $mod.$rtti.$MethodVar("TMainMenuChangeEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Source",$mod.$rtti["TMenuItem"]],["Rebuild",rtl.boolean]]), methodkind: 0});
+  rtl.createClass($mod,"TMenuItem",pas.Classes.TComponent,function () {
+    this.$init = function () {
+      pas.Classes.TComponent.$init.call(this);
+      this.FOwner$1 = null;
+      this.FCaption = "";
+      this.FItems = null;
+      this.FParentItem = null;
+      this.FUpdateCount = 0;
+      this.FOnClick = null;
+      this.FChecked = false;
+      this.FEnabled = false;
+      this.FDefault = false;
+      this.FAutoCheck = false;
+      this.FHint = "";
+      this.FAutoHotkeys = 0;
+      this.FRadioItem = false;
+      this.FGroupIndex = 0;
+      this.FVisible = false;
+      this.FShortCut = 0;
+      this.FBreak = 0;
+      this.FImageIndex = 0;
+      this.FAutoLineReduction = 0;
+      this.FHelpContext = 0;
+      this.FElementClassName = "";
+      this.FParentMenu = null;
+    };
+    this.$final = function () {
+      this.FOwner$1 = undefined;
+      this.FItems = undefined;
+      this.FParentItem = undefined;
+      this.FOnClick = undefined;
+      this.FParentMenu = undefined;
+      pas.Classes.TComponent.$final.call(this);
+    };
+    this.SetChecked = function (Value) {
+      var Item = null;
+      var OtherItem = null;
+      var MenuOwner = null;
+      var I = 0;
+      if (this.FChecked !== Value) {
+        this.FChecked = Value;
+        if (this.FOwner != null) {
+          MenuOwner = this.FOwner;
+          if ($mod.TMenuItem.isPrototypeOf(this.FOwner) && Value) {
+            Item = this.FOwner;
+            for (var $l1 = 0, $end2 = Item.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+              I = $l1;
+              OtherItem = rtl.getObject(Item.FItems.Get(I));
+              if (OtherItem.FRadioItem && (OtherItem !== this)) OtherItem.SetChecked(false);
+            };
+          };
+          while (!$mod.TCustomMainMenu.isPrototypeOf(MenuOwner) && (MenuOwner != null)) {
+            MenuOwner = MenuOwner.FOwner;
+          };
+          if ($mod.TCustomMainMenu.isPrototypeOf(MenuOwner)) MenuOwner.UpdateElement();
+        };
+      };
+    };
+    this.SetCaption = function (Value) {
+      var pm = null;
+      this.FCaption = Value;
+      pm = this.GetParentMenu();
+      if (pm != null) pm.UpdateElement();
+    };
+    this.SetImageIndex = function (Value) {
+      var pm = null;
+      this.FImageIndex = Value;
+      pm = this.GetParentMenu();
+      if (pm != null) pm.UpdateElement();
+    };
+    this.SetEnabled = function (Value) {
+      if (this.FEnabled !== Value) {
+        this.FEnabled = Value;
+        this.GetParentMenu().UpdateElement();
+      };
+    };
+    this.GetCount = function () {
+      var Result = 0;
+      if (this.FItems === null) {
+        Result = 0}
+       else Result = this.FItems.GetCount();
+      return Result;
+    };
+    this.Create$1 = function (AOwner) {
+      this.FParentMenu = null;
+      if ($mod.TMainMenu.isPrototypeOf(AOwner)) this.FParentMenu = AOwner;
+      pas.Classes.TComponent.Create$1.call(this,AOwner);
+      this.FAutoHotkeys = $mod.TMenuItemAutoFlag.maParent;
+      this.FAutoLineReduction = $mod.TMenuItemAutoFlag.maParent;
+      this.FImageIndex = -1;
+      this.FHint = "";
+      this.FCaption = "";
+      this.FChecked = false;
+      this.FEnabled = true;
+      this.FDefault = false;
+      this.FRadioItem = false;
+      this.FVisible = true;
+      this.FOwner$1 = AOwner;
+      return this;
+    };
+    this.Assign = function (Source) {
+      var i = 0;
+      var srcmenu = null;
+      var mnu = null;
+      var pm = null;
+      if ($mod.TMenuItem.isPrototypeOf(Source)) {
+        srcmenu = rtl.as(Source,$mod.TMenuItem);
+        this.FAutoCheck = srcmenu.FAutoCheck;
+        this.FAutoHotkeys = srcmenu.FAutoHotkeys;
+        this.FAutoLineReduction = srcmenu.FAutoLineReduction;
+        this.FBreak = srcmenu.FBreak;
+        this.FCaption = srcmenu.FCaption;
+        this.FChecked = srcmenu.FChecked;
+        this.FDefault = srcmenu.FDefault;
+        this.FEnabled = srcmenu.FEnabled;
+        this.FGroupIndex = srcmenu.FGroupIndex;
+        this.FHelpContext = srcmenu.FHelpContext;
+        this.FHint = srcmenu.FHint;
+        this.FImageIndex = srcmenu.FImageIndex;
+        this.FRadioItem = srcmenu.FRadioItem;
+        this.FShortCut = srcmenu.FShortCut;
+        this.FVisible = srcmenu.FVisible;
+        this.FElementClassName = srcmenu.FElementClassName;
+        pm = this.GetParentMenu();
+        if (this.FParentItem != null) this.SetName(pm.GetUniqueName(srcmenu.FCaption));
+        if (srcmenu.FItems != null) {
+          if (this.FItems != null) {
+            for (var $l1 = this.FItems.GetCount() - 1; $l1 >= 0; $l1--) {
+              i = $l1;
+              this.RemoveItem(this.GetParentMenu().FParent,rtl.getObject(this.FItems.Get(i)));
+            };
+            this.FItems.Clear();
+          } else this.FItems = pas.Classes.TList.$create("Create$1");
+          for (var $l2 = 0, $end3 = srcmenu.FItems.GetCount() - 1; $l2 <= $end3; $l2++) {
+            i = $l2;
+            mnu = $mod.TMenuItem.$create("Create$1",[pm.FOwner]);
+            mnu.FParentMenu = pm;
+            mnu.FParentItem = this;
+            mnu.Assign(rtl.getObject(srcmenu.FItems.Get(i)));
+            this.FItems.Add(mnu);
+          };
+        };
+      };
+    };
+    this.BeginUpdate$1 = function () {
+      this.FUpdateCount += 1;
+    };
+    this.EndUpdate$1 = function () {
+      if (this.FUpdateCount > 0) {
+        this.FUpdateCount -= 1;
+        if (this.FUpdateCount === 0) this.GetParentMenu().UpdateElement();
+      };
+    };
+    this.SetParentComponent = function (Value) {
+      pas.Classes.TComponent.SetParentComponent.apply(this,arguments);
+      this.FParentMenu = Value;
+      if (Value !== null) if ($mod.TCustomMainMenu.isPrototypeOf(Value)) {
+        Value.FItems.Add(this)}
+       else if ($mod.TMenuItem.isPrototypeOf(Value)) Value.Add(this);
+    };
+    this.Add = function (Item) {
+      this.Insert$1(this.GetCount(),Item);
+    };
+    this.Insert$1 = function (Index, Item) {
+      if (this.FItems === null) this.FItems = pas.Classes.TList.$create("Create$1");
+      this.FItems.Insert(Index,Item);
+      Item.FParentItem = this;
+      Item.GetParentMenu().UpdateElement();
+    };
+    this.GetOwner = function () {
+      var Result = null;
+      Result = this.FOwner$1;
+      return Result;
+    };
+    this.GetParentMenu = function () {
+      var Result = null;
+      var AOwner = null;
+      Result = null;
+      AOwner = this.FParentMenu;
+      while ((AOwner != null) && $mod.TMenuItem.isPrototypeOf(AOwner)) {
+        AOwner = AOwner.FParentMenu;
+      };
+      if (AOwner != null) Result = AOwner;
+      return Result;
+    };
+    this.GetChildren = function (Proc, Root) {
+      var I = 0;
+      if (this.FItems != null) for (var $l1 = 0, $end2 = this.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+        I = $l1;
+        Proc(rtl.getObject(this.FItems.Get(I)));
+      };
+    };
+    this.SetChildOrder = function (Child, Order) {
+      var idx = 0;
+      idx = this.FItems.IndexOf(Child);
+      if ((idx >= 0) && (Order < this.FItems.GetCount())) {
+        this.FItems.Move(idx,Order);
+      };
+    };
+    this.RemoveItem = function (AOwner, AItem) {
+      var I = 0;
+      if (AItem.FItems != null) {
+        for (var $l1 = AItem.FItems.GetCount() - 1; $l1 >= 0; $l1--) {
+          I = $l1;
+          this.RemoveItem(AOwner,rtl.getObject(AItem.FItems.Get(I)));
+        };
+      };
+      AOwner.RemoveComponent(AItem);
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("AutoCheck",0,rtl.boolean,"FAutoCheck","FAutoCheck",{Default: false});
+    $r.addProperty("AutoHotkeys",0,$mod.$rtti["TMenuItemAutoFlag"],"FAutoHotkeys","FAutoHotkeys",{Default: $mod.TMenuItemAutoFlag.maParent});
+    $r.addProperty("AutoLineReduction",0,$mod.$rtti["TMenuItemAutoFlag"],"FAutoLineReduction","FAutoLineReduction",{Default: $mod.TMenuItemAutoFlag.maParent});
+    $r.addProperty("Break",0,$mod.$rtti["TMenuBreak"],"FBreak","FBreak",{Default: $mod.TMenuBreak.mbNone});
+    $r.addProperty("Caption",2,rtl.string,"FCaption","SetCaption");
+    $r.addProperty("Checked",2,rtl.boolean,"FChecked","SetChecked",{Default: false});
+    $r.addProperty("Default",0,rtl.boolean,"FDefault","FDefault",{Default: false});
+    $r.addProperty("Enabled",2,rtl.boolean,"FEnabled","SetEnabled",{Default: true});
+    $r.addProperty("GroupIndex",0,rtl.byte,"FGroupIndex","FGroupIndex",{Default: 0});
+    $r.addProperty("HelpContext",0,$mod.$rtti["THelpContext"],"FHelpContext","FHelpContext",{Default: 0});
+    $r.addProperty("Hint",0,rtl.string,"FHint","FHint");
+    $r.addProperty("ImageIndex",2,rtl.longint,"FImageIndex","SetImageIndex",{Default: -1});
+    $r.addProperty("RadioItem",0,rtl.boolean,"FRadioItem","FRadioItem",{Default: false});
+    $r.addProperty("ShortCut",0,$mod.$rtti["TShortCut"],"FShortCut","FShortCut",{Default: 0});
+    $r.addProperty("Visible",0,rtl.boolean,"FVisible","FVisible",{Default: true});
+    $r.addProperty("ElementClassName",0,pas["WEBLib.Controls"].$rtti["TElementClassName"],"FElementClassName","FElementClassName");
+    $r.addProperty("OnClick",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnClick","FOnClick");
+  });
+  $mod.$rtti.$Class("TMainMenuAppearance");
+  rtl.createClass($mod,"THamburgerMenu",pas.Classes.TPersistent,function () {
+    this.$init = function () {
+      pas.Classes.TPersistent.$init.call(this);
+      this.FOwner = null;
+      this.FVisible = 0;
+      this.FCaption = "";
+      this.FBackgroundColor = 0;
+      this.FCaptionColor = 0;
+      this.FResponsiveMaxWidth = 0;
+    };
+    this.$final = function () {
+      this.FOwner = undefined;
+      pas.Classes.TPersistent.$final.call(this);
+    };
+    this.SetVisible = function (Value) {
+      if (this.FVisible !== Value) {
+        this.FVisible = Value;
+        this.FOwner.FOwner.UpdateElement();
+      };
+    };
+    this.SetBackgroundColor = function (Value) {
+      if (this.FBackgroundColor !== Value) {
+        this.FBackgroundColor = Value;
+        this.FOwner.FOwner.UpdateElement();
+      };
+    };
+    this.SetCaption = function (Value) {
+      if (this.FCaption !== Value) {
+        this.FCaption = Value;
+        this.FOwner.FOwner.UpdateElement();
+      };
+    };
+    this.SetCaptionColor = function (Value) {
+      if (this.FCaptionColor !== Value) {
+        this.FCaptionColor = Value;
+        this.FOwner.FOwner.UpdateElement();
+      };
+    };
+    this.SetResponsiveMaxWidth = function (Value) {
+      if (this.FResponsiveMaxWidth !== Value) {
+        this.FResponsiveMaxWidth = Value;
+        this.FOwner.FOwner.UpdateElement();
+      };
+    };
+    this.Create$1 = function (AOwner) {
+      this.FBackgroundColor = 12632256;
+      this.FCaption = "Menu";
+      this.FCaptionColor = 16777215;
+      this.FVisible = $mod.TMainMenuHamburgerMenuVisible.hmResponsive;
+      this.FResponsiveMaxWidth = 768;
+      this.FOwner = AOwner;
+      return this;
+    };
+    this.Destroy = function () {
+      pas.System.TObject.Destroy.call(this);
+    };
+    this.Assign = function (Source) {
+      pas.Classes.TPersistent.Assign.apply(this,arguments);
+      if ($mod.THamburgerMenu.isPrototypeOf(Source)) {
+        this.FBackgroundColor = rtl.as(Source,$mod.THamburgerMenu).FBackgroundColor;
+        this.FCaption = rtl.as(Source,$mod.THamburgerMenu).FCaption;
+        this.FCaptionColor = rtl.as(Source,$mod.THamburgerMenu).FCaptionColor;
+        this.FVisible = rtl.as(Source,$mod.THamburgerMenu).FVisible;
+        this.FResponsiveMaxWidth = rtl.as(Source,$mod.THamburgerMenu).FResponsiveMaxWidth;
+      };
+    };
+    this.GetOwner = function () {
+      var Result = null;
+      Result = this.FOwner;
+      return Result;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("Caption",2,rtl.string,"FCaption","SetCaption");
+    $r.addProperty("CaptionColor",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FCaptionColor","SetCaptionColor",{Default: 16777215});
+    $r.addProperty("BackgroundColor",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FBackgroundColor","SetBackgroundColor",{Default: 12632256});
+    $r.addProperty("Visible",2,$mod.$rtti["TMainMenuHamburgerMenuVisible"],"FVisible","SetVisible",{Default: $mod.TMainMenuHamburgerMenuVisible.hmResponsive});
+    $r.addProperty("ResponsiveMaxWidth",2,rtl.longint,"FResponsiveMaxWidth","SetResponsiveMaxWidth",{Default: 768});
+  });
+  rtl.createClass($mod,"TMainMenuAppearance",pas.Classes.TPersistent,function () {
+    this.$init = function () {
+      pas.Classes.TPersistent.$init.call(this);
+      this.FOwner = null;
+      this.FBackgroundColor = 0;
+      this.FHoverFontColor = 0;
+      this.FHoverColor = 0;
+      this.FImageURLs = null;
+      this.FHamburgerMenu = null;
+      this.FImageSize = 0;
+      this.FSubmenuIndicator = "";
+    };
+    this.$final = function () {
+      this.FOwner = undefined;
+      this.FImageURLs = undefined;
+      this.FHamburgerMenu = undefined;
+      pas.Classes.TPersistent.$final.call(this);
+    };
+    this.SetBackgroundColor = function (Value) {
+      if (this.FBackgroundColor !== Value) {
+        this.FBackgroundColor = Value;
+        this.FOwner.UpdateElement();
+      };
+    };
+    this.SetHoverColor = function (Value) {
+      if (this.FHoverColor !== Value) {
+        this.FHoverColor = Value;
+        this.FOwner.UpdateElement();
+      };
+    };
+    this.SetHoverFontColor = function (Value) {
+      if (this.FHoverFontColor !== Value) {
+        this.FHoverFontColor = Value;
+        this.FOwner.UpdateElement();
+      };
+    };
+    this.SetImageURLs = function (Value) {
+      this.FImageURLs.Assign(Value);
+    };
+    this.SetImageSize = function (Value) {
+      if (this.FImageSize !== Value) {
+        this.FImageSize = Value;
+        this.FOwner.UpdateElement();
+      };
+    };
+    this.SetSubmenuIndicator = function (Value) {
+      if (this.FSubmenuIndicator !== Value) {
+        this.FSubmenuIndicator = Value;
+        this.FOwner.UpdateElement();
+      };
+    };
+    this.HandleImageURLsChanged = function (Sender) {
+      this.FOwner.UpdateElement();
+    };
+    this.Create$1 = function (AOwner) {
+      this.FBackgroundColor = 0xF0F0F0;
+      this.FHoverColor = 14120960;
+      this.FHoverFontColor = 197379;
+      this.FHamburgerMenu = $mod.THamburgerMenu.$create("Create$1",[this]);
+      this.FImageURLs = pas.Classes.TStringList.$create("Create$1");
+      this.FImageURLs.FOnChange = rtl.createCallback(this,"HandleImageURLsChanged");
+      this.FImageSize = 16;
+      this.FSubmenuIndicator = "&#9658;";
+      this.FOwner = AOwner;
+      return this;
+    };
+    this.Destroy = function () {
+      rtl.free(this,"FHamburgerMenu");
+      rtl.free(this,"FImageURLs");
+      pas.System.TObject.Destroy.call(this);
+    };
+    this.Assign = function (Source) {
+      pas.Classes.TPersistent.Assign.apply(this,arguments);
+      if ($mod.TMainMenu.isPrototypeOf(Source)) {
+        this.FBackgroundColor = rtl.as(Source,$mod.TMainMenuAppearance).FBackgroundColor;
+        this.FHoverColor = rtl.as(Source,$mod.TMainMenuAppearance).FHoverColor;
+        this.FHoverFontColor = rtl.as(Source,$mod.TMainMenuAppearance).FHoverFontColor;
+        this.FHamburgerMenu.Assign(rtl.as(Source,$mod.TMainMenuAppearance).FHamburgerMenu);
+        this.FImageURLs.Assign(rtl.as(Source,$mod.TMainMenuAppearance).FImageURLs);
+        this.FImageSize = rtl.as(Source,$mod.TMainMenuAppearance).FImageSize;
+        this.FSubmenuIndicator = rtl.as(Source,$mod.TMainMenuAppearance).FSubmenuIndicator;
+      };
+    };
+    this.GetOwner = function () {
+      var Result = null;
+      Result = this.FOwner;
+      return Result;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("BackgroundColor",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FBackgroundColor","SetBackgroundColor",{Default: 15790320});
+    $r.addProperty("HamburgerMenu",0,$mod.$rtti["THamburgerMenu"],"FHamburgerMenu","FHamburgerMenu");
+    $r.addProperty("HoverColor",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FHoverColor","SetHoverColor",{Default: 14120960});
+    $r.addProperty("HoverFontColor",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FHoverFontColor","SetHoverFontColor",{Default: 197379});
+    $r.addProperty("ImageURLs",2,pas.Classes.$rtti["TStringList"],"FImageURLs","SetImageURLs");
+    $r.addProperty("ImageSize",2,rtl.longint,"FImageSize","SetImageSize",{Default: 16});
+    $r.addProperty("SubmenuIndicator",2,rtl.string,"FSubmenuIndicator","SetSubmenuIndicator");
+  });
+  rtl.createClass($mod,"TCustomMainMenu",pas["WEBLib.Controls"].TCustomControl,function () {
+    this.$init = function () {
+      pas["WEBLib.Controls"].TCustomControl.$init.call(this);
+      this.FItems = null;
+      this.FOnChange = null;
+    };
+    this.$final = function () {
+      this.FItems = undefined;
+      this.FOnChange = undefined;
+      pas["WEBLib.Controls"].TCustomControl.$final.call(this);
+    };
+    this.Loaded = function () {
+      pas["WEBLib.Controls"].TCustomControl.Loaded.call(this);
+      if (this.IsUpdating()) return;
+      if (this.GetElementHandle() != null) this.UpdateElement();
+    };
+    this.UpdateElement = function () {
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.IsUpdating()) return;
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TCustomControl.CreateInitialize.call(this);
+      this.FItems = $mod.TMenuItem.$create("Create$1",[this]);
+      this.FItems.FParentMenu = this;
+    };
+    this.Destroy = function () {
+      rtl.free(this,"FItems");
+      pas["WEBLib.Controls"].TCustomControl.Destroy.call(this);
+    };
+    this.GetChildren = function (Proc, Root) {
+      var I = 0;
+      if ((this.FItems != null) && (this.FItems.FItems != null)) {
+        for (var $l1 = 0, $end2 = this.FItems.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+          I = $l1;
+          Proc(rtl.getObject(this.FItems.FItems.Get(I)));
+        };
+      };
+    };
+    this.SetChildOrder = function (Child, Order) {
+      var idx = 0;
+      idx = this.FItems.FItems.IndexOf(Child);
+      if ((idx >= 0) && (Order < this.FItems.FItems.GetCount())) {
+        this.FItems.FItems.Move(idx,Order);
+      };
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("Items",0,$mod.$rtti["TMenuItem"],"FItems","");
+    $r.addProperty("OnChange",0,$mod.$rtti["TMainMenuChangeEvent"],"FOnChange","FOnChange");
+  });
+  rtl.createClass($mod,"TMainMenu",$mod.TCustomMainMenu,function () {
+    this.$init = function () {
+      $mod.TCustomMainMenu.$init.call(this);
+      this.FMenu = null;
+      this.FMainMenu = false;
+      this.FMenuIndex = 0;
+      this.FAppearance = null;
+      this.FContainer$1 = null;
+    };
+    this.$final = function () {
+      this.FMenu = undefined;
+      this.FAppearance = undefined;
+      this.FContainer$1 = undefined;
+      $mod.TCustomMainMenu.$final.call(this);
+    };
+    this.HandleChange = function (Event) {
+      var Result = false;
+      var h = null;
+      var it = null;
+      Result = true;
+      h = Event.target;
+      it = this.GetItemByName(this.FItems,h.id);
+      if (it != null) {
+        if (this.FOnChange != null) this.FOnChange(this,it,false);
+        if (it.FOnClick != null) it.FOnClick(it);
+      };
+      return Result;
+    };
+    this.Loaded = function () {
+      $mod.TCustomMainMenu.Loaded.call(this);
+      if (this.IsUpdating()) return;
+      if (this.GetElementHandle() != null) this.UpdateElement();
+    };
+    this.UpdateElement = function () {
+      var MenuStyle = "";
+      var MenuColorStyle = "";
+      var MenuResponsiveStyle = "";
+      var MenuImageSize = "";
+      var ElHandle = null;
+      var ElLabel = null;
+      var ElSpan = null;
+      var ElIcon = null;
+      var ElCheckBox = null;
+      var ElStyle = null;
+      var ElScript = null;
+      var ElItems = null;
+      $mod.TCustomMainMenu.UpdateElement.call(this);
+      if (this.IsUpdating()) return;
+      if (!(this.GetElementHandle() != null) && !(this.FContainer$1 != null)) return;
+      if (this.FContainer$1 != null) {
+        ElHandle = this.FContainer$1.GetElementHandle();
+        this.SetVisible(false);
+      } else {
+        ElHandle = this.GetElementHandle();
+        ElHandle.style.setProperty("top","0");
+        ElHandle.style.setProperty("left","0");
+        if ((pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) && !(this.FContainer$1 != null)) this.GetElementHandle().style.setProperty("background-color","silver");
+      };
+      this.FMenu = document.getElementById(this.FName + "menu");
+      if (this.FMenu != null) this.FMenu.parentElement.removeChild(this.FMenu);
+      this.FMenu = document.createElement("NAV");
+      this.FMenu.setAttribute("id",this.FName + "menu");
+      this.FMenu.innerHTML = "";
+      if (this.FContainer$1 != null) {
+        this.FMenu.style.setProperty("top","0");
+        this.FMenu.style.setProperty("left","0");
+        this.FMenu.style.setProperty("position","absolute");
+        this.FMenu.style.setProperty("width","100%");
+      };
+      ElHandle.innerHTML = "";
+      ElHandle.style.setProperty("overflow","visible");
+      if (this.FAppearance.FHamburgerMenu.FVisible !== $mod.TMainMenuHamburgerMenuVisible.hmAlways) {
+        MenuResponsiveStyle = "  #" + this.FName + "menu .main-menu {\r" + "    display: block;\r" + "  }\r" + "  #toggle-menu {\r" + "    display: none;\r" + "  }\r" + "  #" + this.FName + "menu ul span.drop-label {\r" + "    display: inline-block;\r" + "  }\r" + "  #" + this.FName + "menu li {\r" + "    float: left;\r" + "    border-width: 0 1px 0 0;\r" + "  }\r" + "  #" + this.FName + "menu .sub-menu li {\r" + "    float: none;\r" + "  }\r" + "  #" + this.FName + "menu .sub-menu {\r" + "    border-width: 0;\r" + "    margin: 0;\r" + "    position: absolute;\r" + "    top: 100%;\r" + "    left: 0;\r" + "    min-width: 12em;\r" + "    z-index: 9999999;\r" + "\t   white-space: nowrap;\r" + "  }\r" + "  #" + this.FName + "menu .sub-menu,\r" + "  #" + this.FName + 'menu input[type="checkbox"]:checked + .sub-menu {\r' + "    display: none;\r" + "  }\r" + "  #" + this.FName + "menu .sub-menu li {\r" + "    border-width: 1px;\r" + "  }\r" + "  #" + this.FName + "menu .sub-menu .sub-menu {\r" + "    top: 0;\r" + "    left: 100%;\r" + "  }\r" + "  #" + this.FName + 'menu li:hover > input[type="checkbox"] + .sub-menu {\r' + "    display: block;\r" + "  }\r";
+        if (this.FAppearance.FHamburgerMenu.FVisible === $mod.TMainMenuHamburgerMenuVisible.hmResponsive) {
+          MenuResponsiveStyle = "@media only screen and (min-width: " + pas.SysUtils.IntToStr(this.FAppearance.FHamburgerMenu.FResponsiveMaxWidth) + "px) {\r" + MenuResponsiveStyle + "}";
+        };
+      };
+      if (this.FAppearance.FImageSize > 0) {
+        MenuImageSize = "  width: " + pas.SysUtils.IntToStr(this.FAppearance.FImageSize) + "px;\r" + "  height: " + pas.SysUtils.IntToStr(this.FAppearance.FImageSize) + "px;\r";
+      };
+      MenuStyle = "#" + this.FName + "menu ul {\r" + "  margin: 0;\r" + "  padding: 0;\r" + "}\r" + "#" + this.FName + "menu .main-menu {\r" + "  display: none;\r" + "}\r" + "#" + this.FName + "menu label img.icon," + "#" + this.FName + "menu label span.checked {\r" + MenuImageSize + "  margin-right: 10px;\r" + "  float: left;\r" + "}\r" + "#tm:checked + .main-menu {\r" + "  display: block;\r" + "}\r" + "#" + this.FName + 'menu input[type="checkbox"],\r' + "#" + this.FName + "menu ul span.drop-label {\r" + "  display: none;\r" + "}\r" + "#" + this.FName + "menu li,\r" + "#toggle-menu,\r" + "#" + this.FName + "menu .sub-menu {\r" + "  border-width: 1px;\r" + "  border-style: solid;\r" + "  border-color: rgba(0, 0, 0, .05);\r" + "  border-bottom: 0px;\r" + "  border-top: 0px;\r" + "}\r" + "#" + this.FName + "menu li,\r" + "#toggle-menu {\r" + "  border-width: 0 0 3px;\r" + "}\r" + "#" + this.FName + "menu .sub-menu {\r" + "  border-width: 1px 1px 0;\r" + "  margin: 0 1em;\r" + "}\r" + "#" + this.FName + "menu .sub-menu li:first-child {\r" + "  border-top: 1px solid;\r" + "  border-color: rgba(0, 0, 0, .05);\r" + "}\r" + "#" + this.FName + "menu .sub-menu li:last-child {\r" + "  border-bottom: 1px solid;\r" + "  border-color: rgba(0, 0, 0, .05);\r" + "}\r" + "#" + this.FName + "menu li,\r" + "#toggle-menu,\r" + "#" + this.FName + "menu li label {\r" + "  position: relative;\r" + "  display: block;\r" + "}\r" + "#toggle-menu,\r" + "#" + this.FName + "menu li label { \r" + "  padding: 0.75em 1.5em;\r" + "  text-decoration: none;\r" + "}\r" + "#" + this.FName + "menu li span.menu-separator { \r" + "  display: block;\r" + "  width: 100%;\r" + "  height: 1px;\r" + "  background-color: rgba(0, 0, 0, .05);\r" + "}\r" + "#" + this.FName + "menu .sub-menu {\r" + "  display: none;\r" + "}\r" + "#" + this.FName + 'menu input[type="checkbox"]:checked + .sub-menu {\r' + "  display: block;\r" + "  z-index: 3000;\r" + "}\r" + "#" + this.FName + "menu span.drop-icon {\r" + "  float: right;\r" + "  margin-left: 10px;\r" + "}\r" + "#" + this.FName + "menu span.hamburger-icon {\r" + "  float: right;\r" + "  padding: 0;\r" + "  margin: 0;\r" + "  font-weight: 900;\r" + "}\r" + "@media only screen and (max-width: 64em) and (min-width: 52.01em) {\r" + "  #" + this.FName + "menu li {\r" + "\/*    width: 33.333%;*\/\r" + "    width: auto;\r" + "  }\r" + "  #" + this.FName + "menu .sub-menu li {\r" + "    width: auto;\r" + "  }\r" + "}\r";
+      if (this.FElementClassName === "") {
+        MenuColorStyle = "" + "#" + this.FName + "menu .sub-menu {\r" + "  background-color: " + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FHamburgerMenu.FBackgroundColor) + ";\r" + "}\r" + "#" + this.FName + "menu li,\r" + "#toggle-menu,\r" + "#" + this.FName + "menu li label {\r" + "}\r" + "#toggle-menu {\r" + "  background-color: " + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FHamburgerMenu.FBackgroundColor) + ";\r" + "  color: " + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FHamburgerMenu.FCaptionColor) + ";\r" + "}\r" + "#" + this.FName + "menu .main-menu li label {\r" + "  background-color: " + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FBackgroundColor) + ";\r" + "}\r" + "#" + this.FName + "menu li label:hover {\r" + "  background-color: " + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FHoverColor) + ";\r" + "  color: " + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FHoverFontColor) + ";\r" + "}\r" + "#" + this.FName + "menu .sub-menu label:hover {\r" + "  background-color: " + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FHoverColor) + ";\r" + "  color: " + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FHoverFontColor) + ";\r" + "}\r";
+      };
+      MenuStyle = MenuStyle + MenuColorStyle + MenuResponsiveStyle;
+      this.FMainMenu = true;
+      this.FMenuIndex = 0;
+      ElStyle = document.createElement("STYLE");
+      ElStyle.innerHTML = MenuStyle;
+      ElScript = document.createElement("SCRIPT");
+      ElScript.innerHTML = "function " + this.FName + "MenuClick(ctrl){" + "  el = ctrl.parentElement.parentElement;" + '  el.style.display = "none";' + '  setTimeout(function(){el.style.removeProperty("display")}, 25);' + "}";
+      ElLabel = document.createElement("LABEL");
+      ElLabel.setAttribute("for","tm");
+      ElLabel.setAttribute("id","toggle-menu");
+      ElLabel.innerHTML = this.FAppearance.FHamburgerMenu.FCaption;
+      ElSpan = document.createElement("SPAN");
+      ElSpan.setAttribute("class","drop-label");
+      ElLabel.appendChild(ElSpan);
+      ElIcon = document.createElement("SPAN");
+      ElIcon.setAttribute("class","hamburger-icon");
+      ElIcon.innerHTML = "&#9776;";
+      ElSpan.appendChild(ElIcon);
+      ElCheckBox = document.createElement("INPUT");
+      ElCheckBox.setAttribute("type","checkbox");
+      ElCheckBox.setAttribute("id","tm");
+      this.FMenu.appendChild(ElStyle);
+      this.FMenu.appendChild(ElScript);
+      this.FMenu.appendChild(ElLabel);
+      this.FMenu.appendChild(ElCheckBox);
+      ElItems = this.GetMenuSource(this.FItems);
+      if (ElItems !== null) this.FMenu.appendChild(ElItems);
+      ElHandle.appendChild(this.FMenu);
+    };
+    this.GetMenuSource = function (Item) {
+      var Result = null;
+      var I = 0;
+      var it = null;
+      var MenuClass = "";
+      var ElListItem = null;
+      var ElLabel = null;
+      var ElCheckBox = null;
+      var ElSymbol = null;
+      Result = null;
+      if ((Item.FItems != null) && (Item.FItems.GetCount() > 0)) {
+        Result = document.createElement("UL");
+        if (this.FMainMenu) {
+          this.FMainMenu = false;
+          MenuClass = "main-menu";
+        } else MenuClass = "sub-menu";
+        this.FMenuIndex = this.FMenuIndex + 1;
+        Result.setAttribute("class",MenuClass);
+        for (var $l1 = 0, $end2 = Item.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+          I = $l1;
+          it = rtl.getObject(Item.FItems.Get(I));
+          if (it.FVisible) {
+            ElListItem = document.createElement("LI");
+            if (it.FCaption !== "-") {
+              ElLabel = document.createElement("LABEL");
+              ElLabel.setAttribute("class","drop-label");
+              if ((it.FImageIndex >= 0) && (this.FAppearance.FImageURLs.GetCount() > it.FImageIndex)) {
+                ElLabel.innerHTML = '<img class="icon" src="' + this.FAppearance.FImageURLs.Get(it.FImageIndex) + '">'}
+               else if (it.FChecked) {
+                if (it.FRadioItem) {
+                  ElLabel.innerHTML = '<span class="checked">&#9679;<\/span>'}
+                 else ElLabel.innerHTML = '<span class="checked">&#10004;<\/span>';
+              };
+              ElLabel.innerHTML = ElLabel.innerHTML + it.FCaption;
+            } else {
+              ElLabel = document.createElement("SPAN");
+              ElLabel.setAttribute("class","menu-separator");
+              ElLabel.innerHTML = "";
+            };
+            if ((it.FItems != null) && (it.FItems.GetCount() > 0)) {
+              ElSymbol = document.createElement("SPAN");
+              ElSymbol.setAttribute("class","drop-icon");
+              ElSymbol.innerHTML = this.FAppearance.FSubmenuIndicator;
+              ElLabel.setAttribute("for","sm" + pas.SysUtils.IntToStr(this.FMenuIndex));
+              ElLabel.appendChild(ElSymbol);
+              ElCheckBox = document.createElement("INPUT");
+              ElCheckBox.setAttribute("type","checkbox");
+              ElCheckBox.setAttribute("id","sm" + pas.SysUtils.IntToStr(this.FMenuIndex));
+              ElListItem.appendChild(ElLabel);
+              ElListItem.appendChild(ElCheckBox);
+              ElListItem.appendChild(this.GetMenuSource(it));
+            } else {
+              ElLabel.setAttribute("for","tm");
+              ElLabel.setAttribute("id",it.FName);
+              if (it.FEnabled) {
+                if (MenuClass === "sub-menu") {
+                  if (it.FEnabled) ElLabel.setAttribute("onMouseUp",this.FName + "MenuClick(this);");
+                };
+                ElLabel.addEventListener("click",rtl.createCallback(this,"HandleChange"));
+              } else ElLabel.style.setProperty("color","gray");
+              ElListItem.appendChild(ElLabel);
+            };
+            Result.appendChild(ElListItem);
+          };
+        };
+      };
+      return Result;
+    };
+    this.GetItemByName = function (AMenu, Name) {
+      var Result = null;
+      var I = 0;
+      var it = null;
+      Result = null;
+      if (AMenu.FItems != null) {
+        for (var $l1 = 0, $end2 = AMenu.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+          I = $l1;
+          it = rtl.getObject(AMenu.FItems.Get(I));
+          if (it.FName === Name) {
+            Result = it;
+            if (it.FOnClick != null) Result.FOnClick = it.FOnClick;
+            return Result;
+          };
+          if (!(Result != null)) Result = this.GetItemByName(it,Name);
+        };
+      };
+      return Result;
+    };
+    this.GetUniqueName = function (AName) {
+      var Result = "";
+      var i = 0;
+      var j = 0;
+      var id = 0;
+      var found = false;
+      id = 1;
+      if (AName === "") AName = this.FName + "item";
+      do {
+        j = pas.System.Pos(" ",AName);
+        if (j > 0) pas.System.Delete({get: function () {
+            return AName;
+          }, set: function (v) {
+            AName = v;
+          }},j,1);
+      } while (!(j === 0));
+      do {
+        Result = AName + pas.SysUtils.IntToStr(id);
+        found = true;
+        for (var $l1 = 0, $end2 = this.FOwner.GetComponentCount() - 1; $l1 <= $end2; $l1++) {
+          i = $l1;
+          if (this.FOwner.GetComponent(i).FName === Result) {
+            found = false;
+            id += 1;
+            break;
+          };
+        };
+      } while (!found);
+      return Result;
+    };
+    this.CreateInitialize = function () {
+      $mod.TCustomMainMenu.CreateInitialize.call(this);
+      this.FAppearance = $mod.TMainMenuAppearance.$create("Create$1",[this]);
+      this.FContainer$1 = null;
+      this.FMainMenu = true;
+      this.FMenuIndex = 0;
+      this.SetTop(0);
+      this.SetLeft(0);
+      this.SetWidth(100);
+      if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) {
+        this.SetElementPosition(pas["WEBLib.Controls"].TElementPosition.epRelative);
+        this.SetWidthPercent(100);
+        this.SetWidthStyle(pas["WEBLib.Controls"].TSizeStyle.ssPercent);
+      };
+    };
+    this.CreateElement = function () {
+      var Result = null;
+      var LLabel = null;
+      if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) {
+        Result = document.createElement("DIV");
+        LLabel = document.createElement("DIV");
+        LLabel.innerHTML = "TWebMainMenu";
+        this.SetBorderStyle(pas["WEBLib.Controls"].TBorderStyle.bsSingle);
+        LLabel.setAttribute("align","center");
+        LLabel.style.setProperty("border","1px solid gray");
+        LLabel.style.setProperty("vertical-align","middle");
+        LLabel.style.setProperty("display","table-cell");
+        Result.appendChild(LLabel);
+      } else {
+        Result = document.createElement("DIV");
+      };
+      return Result;
+    };
+    this.Destroy = function () {
+      rtl.free(this,"FAppearance");
+      $mod.TCustomMainMenu.Destroy.call(this);
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("Appearance",0,$mod.$rtti["TMainMenuAppearance"],"FAppearance","FAppearance");
+    $r.addProperty("Container",0,pas["WEBLib.Controls"].$rtti["TControl"],"FContainer$1","FContainer$1");
+  });
+  rtl.createClass($mod,"TWebMainMenu",$mod.TMainMenu,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+});
+rtl.module("WEBLib.JQCtrls",["System","Classes","WEBLib.Graphics","SysUtils","Web","WEBLib.Controls","JS","libjquery","jqwidget","WEBLib.Menus","WEBLib.ExtCtrls"],function () {
+  "use strict";
+  var $mod = this;
+  var $impl = $mod.$impl;
+  this.TJQXDayOfWeek = {"0": "dowMonday", dowMonday: 0, "1": "dowTuesday", dowTuesday: 1, "2": "dowWednesday", dowWednesday: 2, "3": "dowThursday", dowThursday: 3, "4": "dowFriday", dowFriday: 4, "5": "dowSaturday", dowSaturday: 5, "6": "dowSunday", dowSunday: 6, "7": "dowLocaleDefault", dowLocaleDefault: 7};
+  $mod.$rtti.$Enum("TJQXDayOfWeek",{minvalue: 0, maxvalue: 7, ordtype: 1, enumtype: this.TJQXDayOfWeek});
+  this.TJQXInputKind = {"0": "diDate", diDate: 0, "1": "diTime", diTime: 1, "2": "diDateTime", diDateTime: 2};
+  $mod.$rtti.$Enum("TJQXInputKind",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TJQXInputKind});
+  this.TJQXMenuMode = {"0": "mmHorizontal", mmHorizontal: 0, "1": "mmVertical", mmVertical: 1, "2": "mmPopup", mmPopup: 2};
+  $mod.$rtti.$Enum("TJQXMenuMode",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TJQXMenuMode});
+  this.TJQXColorMode = {"0": "cmHue", cmHue: 0, "1": "cmSaturation", cmSaturation: 1};
+  $mod.$rtti.$Enum("TJQXColorMode",{minvalue: 0, maxvalue: 1, ordtype: 1, enumtype: this.TJQXColorMode});
+  this.TJQXSymbolPosition = {"0": "spLeft", spLeft: 0, "1": "spRight", spRight: 1};
+  $mod.$rtti.$Enum("TJQXSymbolPosition",{minvalue: 0, maxvalue: 1, ordtype: 1, enumtype: this.TJQXSymbolPosition});
+  this.TJQXInputMode = {"0": "imAdvanced", imAdvanced: 0, "1": "imSimple", imSimple: 1};
+  $mod.$rtti.$Enum("TJQXInputMode",{minvalue: 0, maxvalue: 1, ordtype: 1, enumtype: this.TJQXInputMode});
+  this.TJQXProgressOrientation = {"0": "poHorizontal", poHorizontal: 0, "1": "poVertical", poVertical: 1};
+  $mod.$rtti.$Enum("TJQXProgressOrientation",{minvalue: 0, maxvalue: 1, ordtype: 1, enumtype: this.TJQXProgressOrientation});
+  this.TJQXProgressLayout = {"0": "plNormal", plNormal: 0, "1": "plReverse", plReverse: 1};
+  $mod.$rtti.$Enum("TJQXProgressLayout",{minvalue: 0, maxvalue: 1, ordtype: 1, enumtype: this.TJQXProgressLayout});
+  this.TJQXTemplate = {"0": "ttDefault", ttDefault: 0, "1": "ttPrimary", ttPrimary: 1, "2": "ttSuccess", ttSuccess: 2, "3": "ttWarning", ttWarning: 3, "4": "ttDanger", ttDanger: 4, "5": "ttInfo", ttInfo: 5};
+  $mod.$rtti.$Enum("TJQXTemplate",{minvalue: 0, maxvalue: 5, ordtype: 1, enumtype: this.TJQXTemplate});
+  this.TJQXHorizontalPosition = {"0": "hpLeft", hpLeft: 0, "1": "hpRight", hpRight: 1, "2": "hpBoth", hpBoth: 2};
+  $mod.$rtti.$Enum("TJQXHorizontalPosition",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TJQXHorizontalPosition});
+  this.TJQXVerticalPosition = {"0": "vpTop", vpTop: 0, "1": "vpBottom", vpBottom: 1, "2": "vpBoth", vpBoth: 2};
+  $mod.$rtti.$Enum("TJQXVerticalPosition",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TJQXVerticalPosition});
+  this.TJQXSliderMode = {"0": "smDefault", smDefault: 0, "1": "smFixed", smFixed: 1};
+  $mod.$rtti.$Enum("TJQXSliderMode",{minvalue: 0, maxvalue: 1, ordtype: 1, enumtype: this.TJQXSliderMode});
+  this.TJQXKnobMarkType = {"0": "mtCircle", mtCircle: 0, "1": "mtLine", mtLine: 1};
+  $mod.$rtti.$Enum("TJQXKnobMarkType",{minvalue: 0, maxvalue: 1, ordtype: 1, enumtype: this.TJQXKnobMarkType});
+  this.TJQXKnobPointerType = {"0": "ptArrow", ptArrow: 0, "1": "ptCircle", ptCircle: 1, "2": "ptLine", ptLine: 2};
+  $mod.$rtti.$Enum("TJQXKnobPointerType",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TJQXKnobPointerType});
+  this.TJQXPosition = {"0": "xpLeft", xpLeft: 0, "1": "xpTop", xpTop: 1, "2": "xpCenter", xpCenter: 2, "3": "xpBottom", xpBottom: 3, "4": "xpRight", xpRight: 4, "5": "xpTopLeft", xpTopLeft: 5, "6": "xpBottomLeft", xpBottomLeft: 6, "7": "xpTopRight", xpTopRight: 7, "8": "xpBottomRight", xpBottomRight: 8};
+  $mod.$rtti.$Enum("TJQXPosition",{minvalue: 0, maxvalue: 8, ordtype: 1, enumtype: this.TJQXPosition});
+  this.TJQXImagePosition = {"0": "ipAfterImage", ipAfterImage: 0, "1": "ipAboveImage", ipAboveImage: 1, "2": "ipBelowImage", ipBelowImage: 2, "3": "ipBeforeImage", ipBeforeImage: 3, "4": "ipOverlay", ipOverlay: 4};
+  $mod.$rtti.$Enum("TJQXImagePosition",{minvalue: 0, maxvalue: 4, ordtype: 1, enumtype: this.TJQXImagePosition});
+  this.TJQXGroupMode = {"0": "gmDefault", gmDefault: 0, "1": "gmCheckBox", gmCheckBox: 1, "2": "gmRadioButton", gmRadioButton: 2};
+  $mod.$rtti.$Enum("TJQXGroupMode",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TJQXGroupMode});
+  this.TJQXTagCloudSort = {"0": "tcsNone", tcsNone: 0, "1": "tcsLabel", tcsLabel: 1, "2": "tcsValue", tcsValue: 2};
+  $mod.$rtti.$Enum("TJQXTagCloudSort",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TJQXTagCloudSort});
+  this.TJQXSortOrder = {"0": "soAscending", soAscending: 0, "1": "soDescending", soDescending: 1};
+  $mod.$rtti.$Enum("TJQXSortOrder",{minvalue: 0, maxvalue: 1, ordtype: 1, enumtype: this.TJQXSortOrder});
+  this.TJQXTextCase = {"0": "tcOriginal", tcOriginal: 0, "1": "tcUpperCase", tcUpperCase: 1, "2": "tcLowerCase", tcLowerCase: 2, "3": "tcFirstUpper", tcFirstUpper: 3, "4": "tcCamelCase", tcCamelCase: 4};
+  $mod.$rtti.$Enum("TJQXTextCase",{minvalue: 0, maxvalue: 4, ordtype: 1, enumtype: this.TJQXTextCase});
+  this.TJQXAnimationType = {"0": "atNone", atNone: 0, "1": "atFade", atFade: 1, "2": "atSlide", atSlide: 2};
+  $mod.$rtti.$Enum("TJQXAnimationType",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TJQXAnimationType});
+  this.TJQXTabPosition = {"0": "tpTop", tpTop: 0, "1": "tpBottom", tpBottom: 1};
+  $mod.$rtti.$Enum("TJQXTabPosition",{minvalue: 0, maxvalue: 1, ordtype: 1, enumtype: this.TJQXTabPosition});
+  this.TJQXToggleMode = {"0": "tmClick", tmClick: 0, "1": "tmDoubleClick", tmDoubleClick: 1, "2": "tmMouseEnter", tmMouseEnter: 2};
+  $mod.$rtti.$Enum("TJQXToggleMode",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TJQXToggleMode});
+  rtl.createClass($mod,"TJQXCalendarEventArgs",pas.Classes.TPersistent,function () {
+    this.$init = function () {
+      pas.Classes.TPersistent.$init.call(this);
+      this.FDate = 0.0;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("Date",0,pas.System.$rtti["TDateTime"],"FDate","FDate");
+  });
+  $mod.$rtti.$MethodVar("TJQXDateEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Event",$mod.$rtti["TJQXCalendarEventArgs"]]]), methodkind: 0});
+  rtl.createClass($mod,"TJQXMenuEventArgs",pas.Classes.TPersistent,function () {
+    this.$init = function () {
+      pas.Classes.TPersistent.$init.call(this);
+      this.FSource = null;
+    };
+    this.$final = function () {
+      this.FSource = undefined;
+      pas.Classes.TPersistent.$final.call(this);
+    };
+    var $r = this.$rtti;
+    $r.addProperty("Source",0,pas["WEBLib.Menus"].$rtti["TMenuItem"],"FSource","FSource");
+  });
+  $mod.$rtti.$MethodVar("TJQXItemEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Event",$mod.$rtti["TJQXMenuEventArgs"]]]), methodkind: 0});
+  rtl.createClass($mod,"TJQXSliderEventArgs",pas.Classes.TPersistent,function () {
+    this.$init = function () {
+      pas.Classes.TPersistent.$init.call(this);
+      this.FValue = 0.0;
+      this.FMaximumValue = 0.0;
+      this.FMinimumValue = 0.0;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("Value",0,rtl.double,"FValue","FValue");
+    $r.addProperty("MinimumValue",0,rtl.double,"FMinimumValue","FMinimumValue");
+    $r.addProperty("MaximumValue",0,rtl.double,"FMaximumValue","FMaximumValue");
+  });
+  $mod.$rtti.$MethodVar("TJQXSliderEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Event",$mod.$rtti["TJQXSliderEventArgs"]]]), methodkind: 0});
+  rtl.createClass($mod,"TJQXButtonEventArgs",pas.Classes.TPersistent,function () {
+    this.$init = function () {
+      pas.Classes.TPersistent.$init.call(this);
+      this.FButtonIndex = 0;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("ButtonIndex",0,rtl.longint,"FButtonIndex","FButtonIndex");
+  });
+  $mod.$rtti.$MethodVar("TJQXButtonEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Event",$mod.$rtti["TJQXButtonEventArgs"]]]), methodkind: 0});
+  rtl.createClass($mod,"TJQXTagEventArgs",pas.Classes.TPersistent,function () {
+    this.$init = function () {
+      pas.Classes.TPersistent.$init.call(this);
+      this.FTagIndex = 0;
+      this.FDisplayIndex = 0;
+      this.FTagLabel = "";
+      this.FTagValue = 0;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("TagIndex",0,rtl.longint,"FTagIndex","FTagIndex");
+    $r.addProperty("TagLabel",0,rtl.string,"FTagLabel","FTagLabel");
+    $r.addProperty("TagValue",0,rtl.longint,"FTagValue","FTagValue");
+    $r.addProperty("DisplayIndex",0,rtl.longint,"FDisplayIndex","FDisplayIndex");
+  });
+  $mod.$rtti.$MethodVar("TJQXTagEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Event",$mod.$rtti["TJQXTagEventArgs"]]]), methodkind: 0});
+  rtl.createClass($mod,"TJQXTabEventArgs",pas.Classes.TPersistent,function () {
+    this.$init = function () {
+      pas.Classes.TPersistent.$init.call(this);
+      this.FTabIndex = 0;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("TabIndex",0,rtl.longint,"FTabIndex","FTabIndex");
+  });
+  $mod.$rtti.$MethodVar("TJQXTabEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Event",$mod.$rtti["TJQXTabEventArgs"]]]), methodkind: 0});
+  rtl.createClass($mod,"TJQXCustomControl",pas["WEBLib.Controls"].TjQueryCustomControl,function () {
+    this.$init = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.$init.call(this);
+      this.FTheme = "";
+    };
+    this.GetTheme = function (ATheme) {
+      var Result = "";
+      Result = "base";
+      if (ATheme !== "") Result = ATheme;
+      return Result;
+    };
+    this.RequiredBaseURL = function () {
+      var Result = "";
+      var i = 0;
+      var el = null;
+      var scr = null;
+      var s = "";
+      var found = false;
+      if ($impl.TMSJQWIDGETSLIBRARYURL !== "") {
+        Result = $impl.TMSJQWIDGETSLIBRARYURL;
+        return Result;
+      };
+      Result = "";
+      found = false;
+      for (var $l1 = 0, $end2 = document.head.children.length - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        el = document.head.children.item(i);
+        if (el.tagName === "SCRIPT") {
+          scr = el;
+          if (pas.System.Pos("jqxcore.js",scr.src) > 0) {
+            s = scr.src;
+            found = true;
+            break;
+          };
+        };
+      };
+      if (found) {
+        $impl.TMSJQWIDGETSLIBRARYURL = pas.System.Copy(s,1,s.length - 10);
+        Result = $impl.TMSJQWIDGETSLIBRARYURL;
+      } else {
+        $impl.TMSJQWIDGETSLIBRARYURL = "notfound";
+        pas["WEBLib.Dialogs"].ShowMessage('No jQWidgets library specified in project HTML file.\r\nSee "Manage JavaScript Libraries"');
+      };
+      return Result;
+    };
+    this.RequiredScriptLoaded = function (Event) {
+      pas["WEBLib.Controls"].TControl.RequiredScriptLoaded.apply(this,arguments);
+      if (this.FControlScriptCountLoaded === this.FControlScriptCount) {
+        this.SetScriptLoaded(true);
+        this.InitJQuery();
+      };
+    };
+    this.SetTheme = function (AValue) {
+      this.FTheme = AValue;
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("Align",2,pas["WEBLib.Controls"].$rtti["TAlign"],"FAlign","SetAlign",{Default: pas["WEBLib.Controls"].TAlign.alNone});
+    $r.addProperty("AlignWithMargins",2,rtl.boolean,"FAlignWithMargins","SetAlignWithMargins",{Default: false});
+    $r.addProperty("Anchors",2,pas["WEBLib.Controls"].$rtti["TAnchors"],"FAnchors","SetAnchors",{Default: rtl.createSet(pas["WEBLib.Controls"].TAnchorKind.akLeft,pas["WEBLib.Controls"].TAnchorKind.akTop)});
+    $r.addProperty("Theme",2,rtl.string,"FTheme","SetTheme");
+    $r.addProperty("Visible",2,rtl.boolean,"FVisible","SetVisible",{Default: true});
+  });
+  rtl.createClass($mod,"TJQXCalendar",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FFirstDayOfWeek = 0;
+      this.FDate = 0.0;
+      this.FEndDate = 0.0;
+      this.FIsLoaded = false;
+      this.FMaxDate = 0.0;
+      this.FMinDate = 0.0;
+      this.FMultiSelect = false;
+      this.FOtherMonthDays = false;
+      this.FShowToday = false;
+      this.FWeekNumbers = false;
+      this.FOnDateClick = null;
+      this.FOnNavigateClick = null;
+    };
+    this.$final = function () {
+      this.FOnDateClick = undefined;
+      this.FOnNavigateClick = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleDateClick = function (Event) {
+      var Result = false;
+      var Args = null;
+      if (this.FOnDateClick != null) {
+        Args = $mod.TJQXCalendarEventArgs.$create("Create");
+        Args.FDate = $impl.JSDateToTDate(rtl.getObject(Event.args["date"]));
+        this.FDate = Args.FDate;
+        this.FOnDateClick(this,Args);
+        Args = rtl.freeLoc(Args);
+      };
+      Result = true;
+      return Result;
+    };
+    this.HandleNavigateClick = function (Event) {
+      var Result = false;
+      var Args = null;
+      if (this.FOnNavigateClick != null) {
+        Args = $mod.TJQXCalendarEventArgs.$create("Create");
+        Args.FDate = $impl.JSDateToTDate(rtl.getObject(Event.args["date"]));
+        this.FOnNavigateClick(this,Args);
+        Args = rtl.freeLoc(Args);
+      };
+      Result = true;
+      return Result;
+    };
+    this.UpdateElement = function () {
+      var dow = 0;
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.IsUpdating()) return;
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        var $tmp1 = this.FFirstDayOfWeek;
+        if ($tmp1 === $mod.TJQXDayOfWeek.dowMonday) {
+          dow = 1}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowTuesday) {
+          dow = 2}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowWednesday) {
+          dow = 3}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowThursday) {
+          dow = 4}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowFriday) {
+          dow = 5}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowSaturday) {
+          dow = 6}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowSunday) {
+          dow = 0}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowLocaleDefault) dow = 1;
+        jQuery(this.GetJQID()).jqxCalendar(pas.JS.New(["width",this.GetWidth(),"height",this.GetHeight()]));
+        jQuery(this.GetJQID()).jqxCalendar("firstDayOfWeek",dow);
+        jQuery(this.GetJQID()).jqxCalendar("setMaxDate",$impl.TDateToJSDate(this.FMaxDate));
+        jQuery(this.GetJQID()).jqxCalendar("setMinDate",$impl.TDateToJSDate(this.FMinDate));
+        jQuery(this.GetJQID()).jqxCalendar("showOtherMonthDays",this.FOtherMonthDays);
+        jQuery(this.GetJQID()).jqxCalendar("showFooter",this.FShowToday);
+        jQuery(this.GetJQID()).jqxCalendar("showWeekNumbers",this.FWeekNumbers);
+        jQuery(this.GetJQID()).jqxCalendar("disabled",!this.FEnabled);
+        jQuery(this.GetJQID()).jqxCalendar("theme",this.GetTheme(this.FTheme));
+        this.SetDate(this.FDate);
+      };
+    };
+    this.UpdateSize = function () {
+      if (this.IsUpdating()) return;
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxCalendar(pas.JS.New(["width",this.GetWidth(),"height",this.GetHeight()]));
+    };
+    this.SetDate = function (AValue) {
+      this.FDate = AValue;
+      if (this.IsUpdating()) return;
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        if (this.FMultiSelect) {
+          jQuery(this.GetJQID()).jqxCalendar("selectionMode","range");
+          jQuery(this.GetJQID()).jqxCalendar("setRange",$impl.TDateToJSDate(this.FDate),$impl.TDateToJSDate(this.FEndDate));
+        } else {
+          jQuery(this.GetJQID()).jqxCalendar("selectionMode","default");
+          jQuery(this.GetJQID()).jqxCalendar("val",$impl.TDateToJSDate(this.FDate));
+        };
+      };
+    };
+    this.GetDate = function () {
+      var Result = 0.0;
+      var seldate = 0.0;
+      var jso = null;
+      Result = this.FDate;
+      if (!this.FIsLoaded) return Result;
+      if (this.GetElementHandle() != null) {
+        if (this.FMultiSelect) {
+          jso = jQuery(this.GetJQID()).jqxCalendar("getRange");
+          if (jso != null) seldate = $impl.JSDateToTDate(rtl.getObject(jso["from"]));
+        } else {
+          jso = jQuery(this.GetJQID()).jqxCalendar("getDate");
+          if (jso != null) seldate = $impl.JSDateToTDate(jso);
+        };
+        Result = seldate;
+      };
+      return Result;
+    };
+    this.SetEndDate = function (AValue) {
+      this.FEndDate = AValue;
+      this.UpdateElement();
+    };
+    this.GetEndDate = function () {
+      var Result = 0.0;
+      var seldate = 0.0;
+      var jso = null;
+      Result = this.FDate;
+      if (!this.FIsLoaded) return Result;
+      if (this.GetElementHandle() != null) {
+        if (this.FMultiSelect) {
+          jso = jQuery(this.GetJQID()).jqxCalendar("getRange");
+          if (jso != null) seldate = $impl.JSDateToTDate(rtl.getObject(jso["to"]));
+        } else {
+          jso = jQuery(this.GetJQID()).jqxCalendar("getDate");
+          if (jso != null) seldate = $impl.JSDateToTDate(jso);
+        };
+        Result = seldate;
+      };
+      return Result;
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateSize();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateSize();
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetFirstDayOfWeek = function (AValue) {
+      this.FFirstDayOfWeek = AValue;
+      this.UpdateElement();
+    };
+    this.SetMaxDate = function (AValue) {
+      if (AValue < 0) return;
+      this.FMaxDate = AValue;
+      this.UpdateElement();
+    };
+    this.SetMinDate = function (AValue) {
+      if (AValue < 0) return;
+      this.FMinDate = AValue;
+      this.UpdateElement();
+    };
+    this.SetMultiSelect = function (AValue) {
+      this.FMultiSelect = AValue;
+      this.UpdateElement();
+    };
+    this.SetOtherMonthDays = function (AValue) {
+      this.FOtherMonthDays = AValue;
+      this.UpdateElement();
+    };
+    this.SetShowToday = function (AValue) {
+      this.FShowToday = AValue;
+      this.UpdateElement();
+    };
+    this.SetWeekNumbers = function (AValue) {
+      this.FWeekNumbers = AValue;
+      this.UpdateElement();
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.IsUpdating()) return;
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxCalendar(pas.JS.New(["width",this.GetWidth(),"height",this.GetHeight()]));
+        jQuery(this.GetJQID()).on("change",rtl.createCallback(this,"HandleDateClick"));
+        jQuery(this.GetJQID()).on("viewChange",rtl.createCallback(this,"HandleNavigateClick"));
+        this.UpdateElement();
+      };
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FDate = pas.SysUtils.Now();
+      this.FFirstDayOfWeek = $mod.TJQXDayOfWeek.dowMonday;
+      this.FIsLoaded = false;
+      this.FMaxDate = pas.SysUtils.EncodeDate(2100,12,31);
+      this.FMinDate = pas.SysUtils.EncodeDate(1970,1,1);
+      this.FMultiSelect = false;
+      this.FOtherMonthDays = true;
+      this.FShowToday = false;
+      this.FWeekNumbers = false;
+      this.SetEnabled(true);
+      this.SetHeight(220);
+      this.SetWidth(220);
+      this.FRequiredScripts.Add("jqxdatetimeinput.js");
+      this.FRequiredScripts.Add("jqxcalendar.js");
+      this.FRequiredScripts.Add("globalization\/globalize.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxCalendar("theme",this.GetTheme(AValue));
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("FirstDayOfWeek",2,$mod.$rtti["TJQXDayOfWeek"],"FFirstDayOfWeek","SetFirstDayOfWeek");
+    $r.addProperty("Date",3,pas.System.$rtti["TDateTime"],"GetDate","SetDate");
+    $r.addProperty("EndDate",3,pas.System.$rtti["TDateTime"],"GetEndDate","SetEndDate");
+    $r.addProperty("MaxDate",2,pas.System.$rtti["TDateTime"],"FMaxDate","SetMaxDate");
+    $r.addProperty("MinDate",2,pas.System.$rtti["TDateTime"],"FMinDate","SetMinDate");
+    $r.addProperty("MultiSelect",2,rtl.boolean,"FMultiSelect","SetMultiSelect");
+    $r.addProperty("OtherMonthDays",2,rtl.boolean,"FOtherMonthDays","SetOtherMonthDays");
+    $r.addProperty("ShowToday",2,rtl.boolean,"FShowToday","SetShowToday");
+    $r.addProperty("WeekNumbers",2,rtl.boolean,"FWeekNumbers","SetWeekNumbers");
+    $r.addProperty("OnDateClick",0,$mod.$rtti["TJQXDateEvent"],"FOnDateClick","FOnDateClick");
+    $r.addProperty("OnNavigateClick",0,$mod.$rtti["TJQXDateEvent"],"FOnNavigateClick","FOnNavigateClick");
+  });
+  rtl.createClass($mod,"TWebJQXCalendar",$mod.TJQXCalendar,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXDateTimeInput",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FFirstDayOfWeek = 0;
+      this.FDate = 0.0;
+      this.FEndDate = 0.0;
+      this.FIsLoaded = false;
+      this.FKind = 0;
+      this.FMaxDate = 0.0;
+      this.FMinDate = 0.0;
+      this.FMultiSelect = false;
+      this.FShowToday = false;
+      this.FWeekNumbers = false;
+      this.FOnDateClick = null;
+    };
+    this.$final = function () {
+      this.FOnDateClick = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleDateClick = function (Event) {
+      var Result = false;
+      var Args = null;
+      var jso = null;
+      if (this.FOnDateClick != null) {
+        Args = $mod.TJQXCalendarEventArgs.$create("Create");
+        if (this.FMultiSelect) {
+          jso = rtl.getObject(Event.args["date"]);
+          Args.FDate = $impl.JSDateToTDate(rtl.getObject(jso["to"]));
+        } else Args.FDate = $impl.JSDateToTDate(rtl.getObject(Event.args["date"]));
+        this.FDate = Args.FDate;
+        this.FOnDateClick(this,Args);
+        Args = rtl.freeLoc(Args);
+      };
+      Result = true;
+      return Result;
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.IsUpdating()) return;
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxDateTimeInput(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        jQuery(this.GetJQID()).on("valueChanged",rtl.createCallback(this,"HandleDateClick"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.IsUpdating()) return;
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        jQuery(this.GetJQID()).jqxDateTimeInput("theme",this.GetTheme(this.FTheme));
+      };
+    };
+    this.SetDate = function (AValue) {
+      var seldate = "";
+      this.FDate = AValue;
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        if (this.FKind === $mod.TJQXInputKind.diTime) {
+          seldate = pas.SysUtils.FormatDateTime("HH:mm:SS",AValue);
+          jQuery(this.GetJQID()).jqxDateTimeInput("val",seldate);
+        } else if (this.FKind === $mod.TJQXInputKind.diDate) {
+          seldate = pas.SysUtils.FormatDateTime("YYYY-MM-DD",AValue);
+          jQuery(this.GetJQID()).jqxDateTimeInput("setDate",seldate);
+        } else {
+          seldate = pas.SysUtils.FormatDateTime("YYYY-MM-DD HH:mm:SS",AValue);
+          jQuery(this.GetJQID()).jqxDateTimeInput("setDate",seldate);
+        };
+      };
+    };
+    this.GetDate = function () {
+      var Result = 0.0;
+      var seldate = 0.0;
+      var jso = null;
+      Result = this.FDate;
+      if (!this.FIsLoaded) return Result;
+      if (this.GetElementHandle() != null) {
+        if (this.FMultiSelect) {
+          jso = jQuery(this.GetJQID()).jqxDateTimeInput("getRange");
+          if (jso != null) seldate = $impl.JSDateToTDate(rtl.getObject(jso["from"]));
+        } else {
+          jso = jQuery(this.GetJQID()).jqxDateTimeInput("getDate");
+          if (jso != null) seldate = $impl.JSDateToTDate(jso);
+        };
+        Result = seldate;
+      };
+      return Result;
+    };
+    this.SetEndDate = function (AValue) {
+      this.FEndDate = AValue;
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxDateTimeInput("setRange",$impl.TDateToJSDate(this.FDate),$impl.TDateToJSDate(AValue));
+    };
+    this.GetEndDate = function () {
+      var Result = 0.0;
+      var seldate = 0.0;
+      var jso = null;
+      Result = this.FEndDate;
+      if (!this.FIsLoaded) return Result;
+      if (this.GetElementHandle() != null) {
+        if (this.FMultiSelect) {
+          jso = jQuery(this.GetJQID()).jqxDateTimeInput("getRange");
+          if (jso != null) seldate = $impl.JSDateToTDate(rtl.getObject(jso["to"]));
+        } else {
+          jso = jQuery(this.GetJQID()).jqxDateTimeInput("getDate");
+          if (jso != null) seldate = $impl.JSDateToTDate(jso);
+        };
+        Result = seldate;
+      };
+      return Result;
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxDateTimeInput("width",pas.SysUtils.IntToStr(AValue) + "px");
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxDateTimeInput("height",pas.SysUtils.IntToStr(AValue) + "px");
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxDateTimeInput("disabled",!Value);
+    };
+    this.SetFirstDayOfWeek = function (AValue) {
+      var dow = 0;
+      this.FFirstDayOfWeek = AValue;
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        var $tmp1 = AValue;
+        if ($tmp1 === $mod.TJQXDayOfWeek.dowMonday) {
+          dow = 1}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowTuesday) {
+          dow = 2}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowWednesday) {
+          dow = 3}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowThursday) {
+          dow = 4}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowFriday) {
+          dow = 5}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowSaturday) {
+          dow = 6}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowSunday) {
+          dow = 0}
+         else if ($tmp1 === $mod.TJQXDayOfWeek.dowLocaleDefault) dow = 1;
+        jQuery(this.GetJQID()).jqxDateTimeInput("firstDayOfWeek",dow);
+      };
+    };
+    this.SetKind = function (AValue) {
+      this.FKind = AValue;
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        if (AValue === $mod.TJQXInputKind.diDate) {
+          jQuery(this.GetJQID()).jqxDateTimeInput("showCalendarButton",true);
+          jQuery(this.GetJQID()).jqxDateTimeInput("showTimeButton",false);
+          jQuery(this.GetJQID()).jqxDateTimeInput("formatString","dd\/MM\/yyyy");
+        } else if (AValue === $mod.TJQXInputKind.diTime) {
+          jQuery(this.GetJQID()).jqxDateTimeInput("showCalendarButton",false);
+          jQuery(this.GetJQID()).jqxDateTimeInput("showTimeButton",true);
+          jQuery(this.GetJQID()).jqxDateTimeInput("formatString","HH:mm:ss");
+        } else {
+          jQuery(this.GetJQID()).jqxDateTimeInput("showCalendarButton",true);
+          jQuery(this.GetJQID()).jqxDateTimeInput("showTimeButton",true);
+          jQuery(this.GetJQID()).jqxDateTimeInput("formatString","dd\/MM\/yyyy HH:mm:ss");
+        };
+      };
+    };
+    this.SetMaxDate = function (AValue) {
+      this.FMaxDate = AValue;
+      if (!this.FIsLoaded) return;
+      if (this.FMaxDate < 0) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxDateTimeInput("setMaxDate",$impl.TDateToJSDate(AValue));
+    };
+    this.SetMinDate = function (AValue) {
+      this.FMinDate = AValue;
+      if (!this.FIsLoaded) return;
+      if (this.FMinDate < 0) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxDateTimeInput("setMinDate",$impl.TDateToJSDate(AValue));
+    };
+    this.SetMultiSelect = function (AValue) {
+      this.FMultiSelect = AValue;
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        if (AValue) {
+          jQuery(this.GetJQID()).jqxDateTimeInput("selectionMode","range")}
+         else jQuery(this.GetJQID()).jqxDateTimeInput("selectionMode","default");
+      };
+    };
+    this.SetShowToday = function (AValue) {
+      this.FShowToday = AValue;
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxDateTimeInput("showFooter",AValue);
+    };
+    this.SetWeekNumbers = function (AValue) {
+      this.FWeekNumbers = AValue;
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxDateTimeInput("showWeekNumbers",AValue);
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FDate = this.GetDate();
+      this.FFirstDayOfWeek = $mod.TJQXDayOfWeek.dowMonday;
+      this.FIsLoaded = false;
+      this.FKind = $mod.TJQXInputKind.diTime;
+      this.FMaxDate = 0;
+      this.FMinDate = 0;
+      this.FMultiSelect = false;
+      this.FShowToday = false;
+      this.FWeekNumbers = false;
+      this.SetHeight(21);
+      this.SetWidth(220);
+      this.FRequiredScripts.Add("jqxdatetimeinput.js");
+      this.FRequiredScripts.Add("jqxcalendar.js");
+      this.FRequiredScripts.Add("globalization\/globalize.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxDateTimeInput("theme",this.GetTheme(AValue));
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("FirstDayOfWeek",2,$mod.$rtti["TJQXDayOfWeek"],"FFirstDayOfWeek","SetFirstDayOfWeek");
+    $r.addProperty("Date",3,pas.System.$rtti["TDateTime"],"GetDate","SetDate");
+    $r.addProperty("EndDate",3,pas.System.$rtti["TDateTime"],"GetEndDate","SetEndDate");
+    $r.addProperty("Kind",2,$mod.$rtti["TJQXInputKind"],"FKind","SetKind");
+    $r.addProperty("MaxDate",2,pas.System.$rtti["TDateTime"],"FMaxDate","SetMaxDate");
+    $r.addProperty("MinDate",2,pas.System.$rtti["TDateTime"],"FMinDate","SetMinDate");
+    $r.addProperty("MultiSelect",2,rtl.boolean,"FMultiSelect","SetMultiSelect");
+    $r.addProperty("ShowToday",2,rtl.boolean,"FShowToday","SetShowToday");
+    $r.addProperty("WeekNumbers",2,rtl.boolean,"FWeekNumbers","SetWeekNumbers");
+    $r.addProperty("OnDateClick",0,$mod.$rtti["TJQXDateEvent"],"FOnDateClick","FOnDateClick");
+  });
+  rtl.createClass($mod,"TWebJQXDateTimeInput",$mod.TJQXDateTimeInput,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXMenu",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FIsLoaded = false;
+      this.FMode = 0;
+      this.FMenu = null;
+      this.FUpdateCount$1 = 0;
+      this.FOnItemClick = null;
+    };
+    this.$final = function () {
+      this.FMenu = undefined;
+      this.FOnItemClick = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleItemClick = function (Event) {
+      var Result = false;
+      var Args = null;
+      var h = null;
+      var it = null;
+      Args = $mod.TJQXMenuEventArgs.$create("Create");
+      h = Event.args;
+      it = this.GetItemByName(this.FMenu.FItems,h.id);
+      if (it != null) {
+        Args.FSource = it;
+        if (it.FOnClick != null) it.FOnClick;
+        if (this.FOnItemClick != null) this.FOnItemClick(this,Args);
+        if (this.FMenu.FOnChange != null) this.FMenu.FOnChange(this,it,false);
+      };
+      Args = rtl.freeLoc(Args);
+      Result = true;
+      return Result;
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.IsUpdating()) return;
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxMenu("width",pas.SysUtils.IntToStr(this.GetWidth()) + "px");
+        jQuery(this.GetJQID()).jqxMenu("height",pas.SysUtils.IntToStr(this.GetHeight()) + "px");
+        jQuery(this.GetJQID()).on("itemclick",rtl.createCallback(this,"HandleItemClick"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.IsUpdating()) return;
+      if (!this.FIsLoaded) return;
+      if ((this.GetElementHandle() != null) && (this.FMenu != null)) {
+        jQuery(this.GetJQID()).jqxMenu(JSON.parse('{"source": ' + this.GetMenuSource(this.FMenu.FItems) + ', "width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        var $tmp1 = this.FMode;
+        if ($tmp1 === $mod.TJQXMenuMode.mmHorizontal) {
+          jQuery(this.GetJQID()).jqxMenu("mode","horizontal")}
+         else if ($tmp1 === $mod.TJQXMenuMode.mmVertical) {
+          jQuery(this.GetJQID()).jqxMenu("mode","vertical")}
+         else if ($tmp1 === $mod.TJQXMenuMode.mmPopup) jQuery(this.GetJQID()).jqxMenu("mode","popup");
+        jQuery(this.GetJQID()).jqxMenu("theme",this.GetTheme(this.FTheme));
+        jQuery(this.GetJQID()).jqxMenu("disabled",!this.FEnabled);
+        jQuery(this.GetJQID()).jqxMenu("width",pas.SysUtils.IntToStr(this.GetWidth()) + "px");
+        jQuery(this.GetJQID()).jqxMenu("height",pas.SysUtils.IntToStr(this.GetHeight()) + "px");
+      };
+    };
+    this.GetMenuSource = function (Item) {
+      var Result = "";
+      var I = 0;
+      var it = null;
+      Result = "";
+      if (Item.FItems != null) {
+        for (var $l1 = 0, $end2 = Item.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+          I = $l1;
+          it = rtl.getObject(Item.FItems.Get(I));
+          if (I > 0) Result = Result + ", ";
+          Result = Result + '{ "label": "' + it.FCaption + '", "id": "' + it.FName + '", "items": ' + this.GetMenuSource(it) + " }";
+        };
+      };
+      Result = "[" + Result + "]";
+      return Result;
+    };
+    this.GetItemByName = function (AMenu, Name) {
+      var Result = null;
+      var I = 0;
+      var it = null;
+      Result = null;
+      if (AMenu.FItems != null) {
+        for (var $l1 = 0, $end2 = AMenu.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+          I = $l1;
+          it = rtl.getObject(AMenu.FItems.Get(I));
+          if (it.FName === Name) {
+            Result = it;
+            if (it.FOnClick != null) Result.FOnClick = it.FOnClick;
+            return Result;
+          };
+          if (!(Result != null)) Result = this.GetItemByName(it,Name);
+        };
+      };
+      return Result;
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetMode = function (AValue) {
+      this.FMode = AValue;
+      this.UpdateElement();
+    };
+    this.SetMenu = function (AValue) {
+      if (AValue != null) {
+        this.FMenu = AValue;
+        this.FMenu.SetVisible(false);
+        this.UpdateElement();
+      };
+    };
+    this.ToggleItem = function (AMenuItem, Disabled) {
+      if (!this.FIsLoaded) return;
+      if (!(AMenuItem != null)) return;
+      if (AMenuItem.FName === "") return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxMenu("disable",AMenuItem.FName,Disabled);
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FIsLoaded = false;
+      this.SetMode($mod.TJQXMenuMode.mmHorizontal);
+      this.SetHeight(20);
+      this.SetWidth(220);
+      this.FRequiredScripts.Add("jqxmenu.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.BeginUpdate = function () {
+      this.FUpdateCount$1 += 1;
+    };
+    this.EndUpdate = function () {
+      if (this.FUpdateCount$1 > 0) {
+        this.FUpdateCount$1 -= 1;
+        if (this.FUpdateCount$1 === 0) this.UpdateElement();
+      };
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxMenu("theme",this.GetTheme(AValue));
+    };
+    this.SetItemEnabled = function (AMenuItem) {
+      this.ToggleItem(AMenuItem,false);
+    };
+    this.SetItemDisabled = function (AMenuItem) {
+      this.ToggleItem(AMenuItem,true);
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("Mode",2,$mod.$rtti["TJQXMenuMode"],"FMode","SetMode",{Default: $mod.TJQXMenuMode.mmHorizontal});
+    $r.addProperty("Menu",2,pas["WEBLib.Menus"].$rtti["TMainMenu"],"FMenu","SetMenu");
+    $r.addProperty("OnItemClick",0,$mod.$rtti["TJQXItemEvent"],"FOnItemClick","FOnItemClick");
+  });
+  rtl.createClass($mod,"TWebJQXMenu",$mod.TJQXMenu,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXMaskedInput",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FMask = "";
+      this.FText = "";
+      this.FOnChange = null;
+      this.FIsLoaded = false;
+    };
+    this.$final = function () {
+      this.FOnChange = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleMaskedInputChange = function (Event) {
+      var Result = false;
+      if (this.FOnChange != null) this.FOnChange(this);
+      Result = true;
+      return Result;
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.IsUpdating()) return;
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxMaskedInput(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + ', "mask": "' + this.FMask + '"}'));
+        jQuery(this.GetJQID()).on("valueChanged",rtl.createCallback(this,"HandleMaskedInputChange"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.IsUpdating()) return;
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        if (!this.FIsLoaded) {
+          if (this.GetContainer() != null) {
+            if (document.getElementById(this.GetJQID()) != null) {
+              jQuery(this.GetJQID()).jqxMaskedInput(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + ', "mask": "' + this.FMask + '"}'));
+              jQuery(this.GetJQID()).on("valueChanged",rtl.createCallback(this,"HandleMaskedInputChange"));
+              this.UpdateElement();
+            };
+          };
+        };
+      };
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        if (this.FIsLoaded) {
+          jQuery(this.GetJQID()).jqxMaskedInput(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + ', "mask": "' + this.FMask + '"}'));
+          jQuery(this.GetJQID()).jqxMaskedInput("disabled",!this.FEnabled);
+          jQuery(this.GetJQID()).jqxMaskedInput("value",this.GetText());
+          jQuery(this.GetJQID()).jqxMaskedInput("theme",this.GetTheme(this.FTheme));
+        };
+      };
+    };
+    this.GetText = function () {
+      var Result = "";
+      if (!this.FIsLoaded) return Result;
+      Result = jQuery(this.GetJQID()).jqxMaskedInput("value");
+      if (!pas.System.Assigned(Result)) Result = this.FText;
+      return Result;
+    };
+    this.SetMask = function (AValue) {
+      this.FMask = AValue;
+      this.UpdateElement();
+    };
+    this.SetText = function (AValue) {
+      this.FText = AValue;
+      if (!this.FIsLoaded) return;
+      jQuery(this.GetJQID()).jqxMaskedInput("value",AValue);
+      this.UpdateElement();
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FMask = "(###)###-####";
+      this.SetHeight(21);
+      this.SetWidth(120);
+      this.FIsLoaded = false;
+      this.FRequiredScripts.Add("jqxmaskedinput.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxMaskedInput("theme",this.GetTheme(AValue));
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("Mask",2,rtl.string,"FMask","SetMask");
+    $r.addProperty("Text",3,rtl.string,"GetText","SetText");
+    $r.addProperty("OnChange",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnChange","FOnChange");
+  });
+  rtl.createClass($mod,"TWebJQXMaskedInput",$mod.TJQXMaskedInput,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXColorPicker",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FColor$1 = 0;
+      this.FColorMode = 0;
+      this.FOnChange = null;
+      this.FUpdateCount$1 = 0;
+      this.FIsLoaded = false;
+    };
+    this.$final = function () {
+      this.FOnChange = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleChange = function (Event) {
+      var Result = false;
+      if (this.FOnChange != null) this.FOnChange(this);
+      Result = true;
+      return Result;
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.IsUpdating()) return;
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxColorPicker(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        jQuery(this.GetJQID()).on("colorchange",rtl.createCallback(this,"HandleChange"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.IsUpdating()) return;
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) {
+          jQuery(this.GetJQID()).jqxColorPicker("setColor","#" + pas["WEBLib.Graphics"].ColorToHex(this.FColor$1));
+          if (this.FColorMode === $mod.TJQXColorMode.cmHue) {
+            jQuery(this.GetJQID()).jqxColorPicker("colorMode","hue")}
+           else jQuery(this.GetJQID()).jqxColorPicker("colorMode","saturation");
+          jQuery(this.GetJQID()).jqxColorPicker("disabled",!this.FEnabled);
+          jQuery(this.GetJQID()).jqxColorPicker("width",pas.SysUtils.IntToStr(this.GetWidth()) + "px");
+          jQuery(this.GetJQID()).jqxColorPicker("height",pas.SysUtils.IntToStr(this.GetHeight()) + "px");
+        };
+      };
+    };
+    this.BindEvents = function () {
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.SetColorPickerColor(255);
+      this.SetColorMode($mod.TJQXColorMode.cmSaturation);
+      this.SetEnabled(true);
+      this.SetHeight(200);
+      this.SetWidth(200);
+      this.FIsLoaded = false;
+      this.FRequiredScripts.Add("jqxcolorpicker.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.BeginUpdate = function () {
+      this.FUpdateCount$1 += 1;
+    };
+    this.EndUpdate = function () {
+      if (this.FUpdateCount$1 > 0) {
+        this.FUpdateCount$1 -= 1;
+        if (this.FUpdateCount$1 === 0) this.UpdateElement();
+      };
+    };
+    this.GetColor = function () {
+      var Result = 0;
+      var o = null;
+      Result = this.FColor$1;
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) {
+          o = jQuery(this.GetJQID()).jqxColorPicker("getColor");
+          if (pas.System.Assigned(0)) Result = pas["WEBLib.Graphics"].HexToColor("" + o["hex"]);
+        };
+      };
+      return Result;
+    };
+    this.SetColorPickerColor = function (AValue) {
+      this.FColor$1 = AValue;
+      this.UpdateElement();
+    };
+    this.SetColorMode = function (AValue) {
+      this.FColorMode = AValue;
+      this.UpdateElement();
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("Color",3,pas["WEBLib.Graphics"].$rtti["TColor"],"GetColor","SetColorPickerColor",{Default: 0});
+    $r.addProperty("ColorMode",2,$mod.$rtti["TJQXColorMode"],"FColorMode","SetColorMode",{Default: $mod.TJQXColorMode.cmSaturation});
+    $r.addProperty("OnChange",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnChange","FOnChange");
+  });
+  rtl.createClass($mod,"TWebJQXColorPicker",$mod.TJQXColorPicker,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXComboBox",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FAutoComplete = false;
+      this.FDisabled = null;
+      this.FItemIndex = 0;
+      this.FItems = null;
+      this.FSelected = null;
+      this.FMultiSelect = false;
+      this.FTextHint = "";
+      this.FOnChange = null;
+      this.FIsLoaded = false;
+    };
+    this.$final = function () {
+      this.FDisabled = undefined;
+      this.FItems = undefined;
+      this.FSelected = undefined;
+      this.FOnChange = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleChange = function (Event) {
+      var Result = false;
+      if (this.FOnChange != null) this.FOnChange(this);
+      Result = true;
+      return Result;
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.IsUpdating()) return;
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxComboBox(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        jQuery(this.GetJQID()).on("change",rtl.createCallback(this,"HandleChange"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      var I = 0;
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.IsUpdating()) return;
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) {
+          jQuery(this.GetJQID()).jqxComboBox(JSON.parse('{"source": ' + this.ItemsToJSON() + "}"));
+          jQuery(this.GetJQID()).jqxComboBox("disabled",!this.FEnabled);
+          jQuery(this.GetJQID()).jqxComboBox("selectedIndex",this.FItemIndex);
+          jQuery(this.GetJQID()).jqxComboBox("width",pas.SysUtils.IntToStr(this.GetWidth()) + "px");
+          jQuery(this.GetJQID()).jqxComboBox("height",pas.SysUtils.IntToStr(this.GetHeight()) + "px");
+          jQuery(this.GetJQID()).jqxComboBox("enableBrowserBoundsDetection",true);
+          jQuery(this.GetJQID()).jqxComboBox("checkboxes",this.FMultiSelect);
+          jQuery(this.GetJQID()).jqxComboBox("autoComplete",this.FAutoComplete);
+          jQuery(this.GetJQID()).jqxComboBox("placeHolder",this.FTextHint);
+          jQuery(this.GetJQID()).jqxComboBox("theme",this.GetTheme(this.FTheme));
+          for (var $l1 = 0, $end2 = this.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+            I = $l1;
+            if (this.GetDisabled(I)) {
+              jQuery(this.GetJQID()).jqxComboBox("disableAt",I)}
+             else jQuery(this.GetJQID()).jqxComboBox("enableAt",I);
+            if (this.FSelected.GetCount() > I) {
+              if (this.FSelected.Get(I)) {
+                jQuery(this.GetJQID()).jqxComboBox("checkIndex",I)}
+               else jQuery(this.GetJQID()).jqxComboBox("uncheckIndex",I);
+            };
+          };
+        };
+      };
+    };
+    this.HandleItemsChanged = function (Sender) {
+      this.UpdateElement();
+    };
+    this.GetDisabled = function (AIndex) {
+      var Result = false;
+      if (AIndex < this.FDisabled.GetCount()) {
+        Result = !(this.FDisabled.Get(AIndex) == false)}
+       else Result = false;
+      return Result;
+    };
+    this.SetDisabled = function (AIndex, AValue) {
+      while (AIndex >= this.FDisabled.GetCount()) this.FDisabled.Add(false);
+      this.FDisabled.Put(AIndex,AValue);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        if (AValue) {
+          jQuery(this.GetJQID()).jqxComboBox("disableAt",AIndex)}
+         else jQuery(this.GetJQID()).jqxComboBox("enableAt",AIndex);
+      };
+    };
+    this.GetSelected = function (AIndex) {
+      var Result = false;
+      var items = null;
+      var o = null;
+      var I = 0;
+      if (AIndex < this.FSelected.GetCount()) {
+        Result = !(this.FSelected.Get(AIndex) == false)}
+       else Result = false;
+      if (!this.FIsLoaded) return Result;
+      if (this.GetElementHandle() != null) {
+        Result = false;
+        items = jQuery(this.GetJQID()).jqxComboBox("getCheckedItems");
+        for (var $l1 = 0, $end2 = items.length - 1; $l1 <= $end2; $l1++) {
+          I = $l1;
+          o = rtl.getObject(items[I]);
+          if (o["index"] == AIndex) Result = true;
+        };
+      };
+      return Result;
+    };
+    this.SetSelected = function (AIndex, AValue) {
+      while (AIndex >= this.FSelected.GetCount()) this.FSelected.Add(false);
+      this.FSelected.Put(AIndex,AValue);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        if (AValue) {
+          jQuery(this.GetJQID()).jqxComboBox("checkIndex",AIndex)}
+         else jQuery(this.GetJQID()).jqxComboBox("uncheckIndex",AIndex);
+      };
+    };
+    this.SetAutoComplete = function (AValue) {
+      this.FAutoComplete = AValue;
+      this.UpdateElement();
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetMultiSelect = function (AValue) {
+      this.FMultiSelect = AValue;
+      this.UpdateElement();
+    };
+    this.SetTextHint = function (AValue) {
+      this.FTextHint = AValue;
+      this.UpdateElement();
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FAutoComplete = false;
+      this.FItemIndex = -1;
+      this.FItems = pas.Classes.TStringList.$create("Create$1");
+      this.FItems.FOnChange = rtl.createCallback(this,"HandleItemsChanged");
+      this.FDisabled = pas.Classes.TList.$create("Create$1");
+      this.FSelected = pas.Classes.TList.$create("Create$1");
+      this.FMultiSelect = false;
+      this.SetEnabled(true);
+      this.SetHeight(21);
+      this.SetWidth(200);
+      this.FIsLoaded = false;
+      this.FRequiredScripts.Add("jqxbuttons.js");
+      this.FRequiredScripts.Add("jqxscrollbar.js");
+      this.FRequiredScripts.Add("jqxlistbox.js");
+      this.FRequiredScripts.Add("jqxcombobox.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.Destroy = function () {
+      rtl.free(this,"FItems");
+      rtl.free(this,"FDisabled");
+      rtl.free(this,"FSelected");
+      pas["WEBLib.Controls"].TControl.Destroy.call(this);
+    };
+    this.ItemsToJSON = function () {
+      var Result = "";
+      var I = 0;
+      for (var $l1 = 0, $end2 = this.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+        I = $l1;
+        if (I > 0) Result = Result + ", ";
+        Result = Result + '"' + this.FItems.Get(I) + '"';
+      };
+      Result = "[" + Result + "]";
+      return Result;
+    };
+    this.GetItemIndex = function () {
+      var Result = 0;
+      Result = this.FItemIndex;
+      if (!this.FIsLoaded) return Result;
+      if (this.GetElementHandle() != null) Result = pas.SysUtils.StrToInt(jQuery(this.GetJQID()).jqxComboBox("selectedIndex").toString());
+      return Result;
+    };
+    this.SetItemIndex = function (AIndex) {
+      this.FItemIndex = AIndex;
+      this.UpdateElement();
+    };
+    this.SetItems = function (AItems) {
+      this.FItems.Assign(AItems);
+      this.UpdateElement();
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxComboBox("theme",this.GetTheme(AValue));
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("AutoComplete",2,rtl.boolean,"FAutoComplete","SetAutoComplete",{Default: false});
+    $r.addProperty("ItemIndex",3,rtl.longint,"GetItemIndex","SetItemIndex",{Default: -1});
+    $r.addProperty("Items",2,pas.Classes.$rtti["TStringList"],"FItems","SetItems");
+    $r.addProperty("MultiSelect",2,rtl.boolean,"FMultiSelect","SetMultiSelect",{Default: false});
+    $r.addProperty("TextHint",2,rtl.string,"FTextHint","SetTextHint");
+    $r.addProperty("OnChange",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnChange","FOnChange");
+  });
+  rtl.createClass($mod,"TWebJQXComboBox",$mod.TJQXComboBox,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXDropDownList",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FDisabled = null;
+      this.FItemIndex = 0;
+      this.FItems = null;
+      this.FSelected = null;
+      this.FMultiSelect = false;
+      this.FTextHint = "";
+      this.FOnChange = null;
+      this.FIsLoaded = false;
+    };
+    this.$final = function () {
+      this.FDisabled = undefined;
+      this.FItems = undefined;
+      this.FSelected = undefined;
+      this.FOnChange = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleChange = function (Event) {
+      var Result = false;
+      if (this.FOnChange != null) this.FOnChange(this);
+      Result = true;
+      return Result;
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.IsUpdating()) return;
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxDropDownList(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        jQuery(this.GetJQID()).on("change",rtl.createCallback(this,"HandleChange"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      var I = 0;
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.IsUpdating()) return;
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) {
+          jQuery(this.GetJQID()).jqxDropDownList(JSON.parse('{"source": ' + this.ItemsToJSON() + "}"));
+          jQuery(this.GetJQID()).jqxDropDownList("disabled",!this.FEnabled);
+          jQuery(this.GetJQID()).jqxDropDownList("selectedIndex",this.FItemIndex);
+          jQuery(this.GetJQID()).jqxDropDownList("width",pas.SysUtils.IntToStr(this.GetWidth()) + "px");
+          jQuery(this.GetJQID()).jqxDropDownList("height",pas.SysUtils.IntToStr(this.GetHeight()) + "px");
+          jQuery(this.GetJQID()).jqxDropDownList("enableBrowserBoundsDetection",true);
+          jQuery(this.GetJQID()).jqxDropDownList("checkboxes",this.FMultiSelect);
+          jQuery(this.GetJQID()).jqxDropDownList("placeHolder",this.FTextHint);
+          jQuery(this.GetJQID()).jqxDropDownList("theme",this.GetTheme(this.FTheme));
+          for (var $l1 = 0, $end2 = this.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+            I = $l1;
+            if (this.GetDisabled(I)) {
+              jQuery(this.GetJQID()).jqxDropDownList("disableAt",I)}
+             else jQuery(this.GetJQID()).jqxDropDownList("enableAt",I);
+            if (this.FSelected.GetCount() > I) {
+              if (this.FSelected.Get(I)) {
+                jQuery(this.GetJQID()).jqxDropDownList("checkIndex",I)}
+               else jQuery(this.GetJQID()).jqxDropDownList("uncheckIndex",I);
+            };
+          };
+        };
+      };
+    };
+    this.HandleItemsChanged = function (Sender) {
+      this.UpdateElement();
+    };
+    this.GetDisabled = function (AIndex) {
+      var Result = false;
+      if (AIndex < this.FDisabled.GetCount()) {
+        Result = !(this.FDisabled.Get(AIndex) == false)}
+       else Result = false;
+      return Result;
+    };
+    this.SetDisabled = function (AIndex, AValue) {
+      while (AIndex >= this.FDisabled.GetCount()) this.FDisabled.Add(false);
+      this.FDisabled.Put(AIndex,AValue);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        if (AValue) {
+          jQuery(this.GetJQID()).jqxDropDownList("disableAt",AIndex)}
+         else jQuery(this.GetJQID()).jqxDropDownList("enableAt",AIndex);
+      };
+    };
+    this.GetSelected = function (AIndex) {
+      var Result = false;
+      var items = null;
+      var o = null;
+      var I = 0;
+      if (AIndex < this.FSelected.GetCount()) {
+        Result = !(this.FSelected.Get(AIndex) == false)}
+       else Result = false;
+      if (this.GetElementHandle() != null) {
+        Result = false;
+        if (!this.FIsLoaded) return Result;
+        items = jQuery(this.GetJQID()).jqxDropDownList("getCheckedItems");
+        for (var $l1 = 0, $end2 = items.length - 1; $l1 <= $end2; $l1++) {
+          I = $l1;
+          o = rtl.getObject(items[I]);
+          if (o["index"] == AIndex) Result = true;
+        };
+      };
+      return Result;
+    };
+    this.SetSelected = function (AIndex, AValue) {
+      while (AIndex >= this.FSelected.GetCount()) this.FSelected.Add(false);
+      this.FSelected.Put(AIndex,AValue);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        if (AValue) {
+          jQuery(this.GetJQID()).jqxDropDownList("checkIndex",AIndex)}
+         else jQuery(this.GetJQID()).jqxDropDownList("uncheckIndex",AIndex);
+      };
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetMultiSelect = function (AValue) {
+      this.FMultiSelect = AValue;
+      this.UpdateElement();
+    };
+    this.SetTextHint = function (AValue) {
+      this.FTextHint = AValue;
+      this.UpdateElement();
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FItemIndex = -1;
+      this.FItems = pas.Classes.TStringList.$create("Create$1");
+      this.FItems.FOnChange = rtl.createCallback(this,"HandleItemsChanged");
+      this.FDisabled = pas.Classes.TList.$create("Create$1");
+      this.FSelected = pas.Classes.TList.$create("Create$1");
+      this.FMultiSelect = false;
+      this.FTextHint = "";
+      this.SetEnabled(true);
+      this.SetHeight(21);
+      this.SetWidth(200);
+      this.FIsLoaded = false;
+      this.FRequiredScripts.Add("jqxbuttons.js");
+      this.FRequiredScripts.Add("jqxscrollbar.js");
+      this.FRequiredScripts.Add("jqxlistbox.js");
+      this.FRequiredScripts.Add("jqxcombobox.js");
+      this.FRequiredScripts.Add("jqxdropdownlist.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.Destroy = function () {
+      rtl.free(this,"FItems");
+      rtl.free(this,"FDisabled");
+      rtl.free(this,"FSelected");
+      pas["WEBLib.Controls"].TControl.Destroy.call(this);
+    };
+    this.ItemsToJSON = function () {
+      var Result = "";
+      var I = 0;
+      for (var $l1 = 0, $end2 = this.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+        I = $l1;
+        if (I > 0) Result = Result + ", ";
+        Result = Result + '"' + this.FItems.Get(I) + '"';
+      };
+      Result = "[" + Result + "]";
+      return Result;
+    };
+    this.GetItemIndex = function () {
+      var Result = 0;
+      Result = this.FItemIndex;
+      if (!this.FIsLoaded) return Result;
+      if (this.GetElementHandle() != null) Result = pas.SysUtils.StrToInt(jQuery(this.GetJQID()).jqxDropDownList("selectedIndex").toString());
+      return Result;
+    };
+    this.SetItemIndex = function (AIndex) {
+      this.FItemIndex = AIndex;
+      this.UpdateElement();
+    };
+    this.SetItems = function (AItems) {
+      this.FItems.Assign(AItems);
+      this.UpdateElement();
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxDropDownList("theme",this.GetTheme(AValue));
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("ItemIndex",3,rtl.longint,"GetItemIndex","SetItemIndex",{Default: -1});
+    $r.addProperty("Items",2,pas.Classes.$rtti["TStringList"],"FItems","SetItems");
+    $r.addProperty("MultiSelect",2,rtl.boolean,"FMultiSelect","SetMultiSelect",{Default: false});
+    $r.addProperty("TextHint",2,rtl.string,"FTextHint","SetTextHint");
+    $r.addProperty("OnChange",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnChange","FOnChange");
+  });
+  rtl.createClass($mod,"TWebJQXDropDownList",$mod.TJQXDropDownList,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXNumberInput",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FDigits = 0;
+      this.FDecimalDigits = 0;
+      this.FInputMode = 0;
+      this.FMaxValue = 0.0;
+      this.FMinValue = 0.0;
+      this.FShowSpinButtons = false;
+      this.FSpinButtonsStep = 0;
+      this.FSymbol = "";
+      this.FSymbolPosition = 0;
+      this.FValue = 0.0;
+      this.FOnChange = null;
+      this.FIsLoaded = false;
+    };
+    this.$final = function () {
+      this.FOnChange = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleNumberInputChange = function (Event) {
+      var Result = false;
+      if (this.FOnChange != null) this.FOnChange(this);
+      Result = true;
+      return Result;
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.IsUpdating()) return;
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxNumberInput(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        jQuery(this.GetJQID()).on("valueChanged",rtl.createCallback(this,"HandleNumberInputChange"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.IsUpdating()) return;
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) {
+          jQuery(this.GetJQID()).jqxNumberInput(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+          jQuery(this.GetJQID()).jqxNumberInput("disabled",!this.FEnabled);
+          jQuery(this.GetJQID()).jqxNumberInput("spinButtons",this.FShowSpinButtons);
+          jQuery(this.GetJQID()).jqxNumberInput("spinButtonsStep",this.FSpinButtonsStep);
+          jQuery(this.GetJQID()).jqxNumberInput("symbol",this.FSymbol);
+          jQuery(this.GetJQID()).jqxNumberInput("theme",this.GetTheme(this.FTheme));
+          if (this.FSymbolPosition === $mod.TJQXSymbolPosition.spLeft) {
+            jQuery(this.GetJQID()).jqxNumberInput("symbolPosition","left")}
+           else jQuery(this.GetJQID()).jqxNumberInput("symbolPosition","right");
+          jQuery(this.GetJQID()).jqxNumberInput("setDecimal",this.FValue);
+          jQuery(this.GetJQID()).jqxNumberInput("digits",this.FDigits);
+          jQuery(this.GetJQID()).jqxNumberInput("decimalDigits",this.FDecimalDigits);
+          jQuery(this.GetJQID()).jqxNumberInput("max",this.FMaxValue);
+          jQuery(this.GetJQID()).jqxNumberInput("min",this.FMinValue);
+          if (this.FInputMode === $mod.TJQXInputMode.imAdvanced) {
+            jQuery(this.GetJQID()).jqxNumberInput("inputMode","advanced")}
+           else jQuery(this.GetJQID()).jqxNumberInput("inputMode","simple");
+          jQuery(this.GetJQID()).jqxNumberInput("decimalSeparator",pas.SysUtils.DecimalSeparator);
+          jQuery(this.GetJQID()).jqxNumberInput("groupSeparator",pas.SysUtils.ThousandSeparator);
+        };
+      };
+    };
+    this.BindEvents = function () {
+    };
+    this.GetValue = function () {
+      var Result = 0.0;
+      var id = "";
+      var dbl = 0.0;
+      Result = this.FValue;
+      if (!this.FIsLoaded) return Result;
+      id = this.GetJQID();
+      dbl = $(id).jqxNumberInput('getDecimal');
+      Result = dbl;
+      return Result;
+    };
+    this.SetDigits = function (AValue) {
+      if (AValue > 0) this.FDigits = AValue;
+      this.UpdateElement();
+    };
+    this.SetDecimalDigits = function (AValue) {
+      if (AValue >= 0) this.FDecimalDigits = AValue;
+      this.UpdateElement();
+    };
+    this.SetInputMode = function (AValue) {
+      this.FInputMode = AValue;
+      this.UpdateElement();
+    };
+    this.SetMaxValue = function (AValue) {
+      if (AValue <= 99999999) this.FMaxValue = AValue;
+      this.UpdateElement();
+    };
+    this.SetMinValue = function (AValue) {
+      if (AValue >= -99999999) this.FMinValue = AValue;
+      this.UpdateElement();
+    };
+    this.SetShowSpinButtons = function (AValue) {
+      this.FShowSpinButtons = AValue;
+      this.UpdateElement();
+    };
+    this.SetSpinButtonsStep = function (AValue) {
+      this.FSpinButtonsStep = AValue;
+      this.UpdateElement();
+    };
+    this.SetSymbol = function (AValue) {
+      this.FSymbol = AValue;
+      this.UpdateElement();
+    };
+    this.SetSymbolPosition = function (AValue) {
+      this.FSymbolPosition = AValue;
+      this.UpdateElement();
+    };
+    this.SetValue = function (AValue) {
+      this.FValue = AValue;
+      if (!this.FIsLoaded) return;
+      jQuery(this.GetJQID()).jqxNumberInput("setDecimal",AValue);
+      this.UpdateElement();
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FDigits = 3;
+      this.FDecimalDigits = 0;
+      this.FInputMode = $mod.TJQXInputMode.imAdvanced;
+      this.FMaxValue = 100;
+      this.FMinValue = 0;
+      this.FShowSpinButtons = true;
+      this.FSpinButtonsStep = 1;
+      this.FSymbol = "";
+      this.FSymbolPosition = $mod.TJQXSymbolPosition.spLeft;
+      this.FValue = 0;
+      this.SetHeight(21);
+      this.SetWidth(120);
+      this.FIsLoaded = false;
+      this.FRequiredScripts.Add("jqxnumberinput.js");
+      this.FRequiredScripts.Add("jqxbuttons.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxNumberInput("theme",this.GetTheme(AValue));
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("Digits",2,rtl.longint,"FDigits","SetDigits");
+    $r.addProperty("DecimalDigits",2,rtl.longint,"FDecimalDigits","SetDecimalDigits");
+    $r.addProperty("InputMode",2,$mod.$rtti["TJQXInputMode"],"FInputMode","SetInputMode");
+    $r.addProperty("MaxValue",2,rtl.double,"FMaxValue","SetMaxValue");
+    $r.addProperty("MinValue",2,rtl.double,"FMinValue","SetMinValue");
+    $r.addProperty("ShowSpinButtons",2,rtl.boolean,"FShowSpinButtons","SetShowSpinButtons");
+    $r.addProperty("SpinButtonsStep",2,rtl.longint,"FSpinButtonsStep","SetSpinButtonsStep");
+    $r.addProperty("Symbol",2,rtl.string,"FSymbol","SetSymbol");
+    $r.addProperty("SymbolPosition",2,$mod.$rtti["TJQXSymbolPosition"],"FSymbolPosition","SetSymbolPosition");
+    $r.addProperty("Value",3,rtl.double,"GetValue","SetValue");
+    $r.addProperty("OnChange",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnChange","FOnChange");
+  });
+  rtl.createClass($mod,"TWebJQXNumberInput",$mod.TJQXNumberInput,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXRating",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FItemCount = 0;
+      this.FValue = 0.0;
+      this.FOnChange = null;
+      this.FIsLoaded = false;
+    };
+    this.$final = function () {
+      this.FOnChange = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleRatingChange = function (Event) {
+      var Result = false;
+      if (this.FOnChange != null) this.FOnChange(this);
+      Result = true;
+      return Result;
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxRating(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        jQuery(this.GetJQID()).on("change",rtl.createCallback(this,"HandleRatingChange"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) {
+          jQuery(this.GetJQID()).jqxRating(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+          jQuery(this.GetJQID()).jqxRating("disabled",!this.FEnabled);
+          jQuery(this.GetJQID()).jqxRating("setValue",this.FValue);
+          jQuery(this.GetJQID()).jqxRating("count",this.FItemCount);
+          jQuery(this.GetJQID()).jqxRating("itemHeight",this.GetHeight());
+          if (this.FItemCount > 0) {
+            jQuery(this.GetJQID()).jqxRating("itemWidth",this.GetWidth() / this.FItemCount)}
+           else jQuery(this.GetJQID()).jqxRating("itemWidth",this.GetWidth());
+        };
+      };
+    };
+    this.BindEvents = function () {
+    };
+    this.GetValue = function () {
+      var Result = 0.0;
+      var s = "";
+      if (!this.FIsLoaded) return Result;
+      s = jQuery(this.GetJQID()).jqxRating("getValue").toString();
+      if (s !== "") Result = pas.SysUtils.StrToFloat(s);
+      if (!pas.System.Assigned(Result)) Result = this.FValue;
+      return Result;
+    };
+    this.SetItemCount = function (AValue) {
+      if (AValue > 0) this.FItemCount = AValue;
+      this.UpdateElement();
+    };
+    this.SetValue = function (AValue) {
+      this.FValue = AValue;
+      if (!this.FIsLoaded) return;
+      this.UpdateElement();
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FItemCount = 5;
+      this.FValue = 0;
+      this.SetHeight(20);
+      this.SetWidth(100);
+      this.FIsLoaded = false;
+      this.FRequiredScripts.Add("jqxrating.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("ItemCount",2,rtl.longint,"FItemCount","SetItemCount");
+    $r.addProperty("Value",3,rtl.double,"GetValue","SetValue");
+    $r.addProperty("OnChange",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnChange","FOnChange");
+  });
+  rtl.createClass($mod,"TWebJQXRating",$mod.TJQXRating,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXButton",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FIsLoaded = false;
+      this.FOnClick$1 = null;
+      this.FCaption = "";
+      this.FRoundedBorders = false;
+      this.FImageURL = "";
+      this.FImageHeight = 0;
+      this.FImagePosition = 0;
+      this.FCaptionPosition = 0;
+      this.FImageWidth = 0;
+      this.FCaptionImageRelation = 0;
+      this.FTemplate = 0;
+    };
+    this.$final = function () {
+      this.FOnClick$1 = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleClick = function (Event) {
+      var Result = false;
+      Result = false;
+      if (!this.FEnabled) return Result;
+      if (this.FOnClick$1 != null) this.FOnClick$1(this);
+      Result = true;
+      return Result;
+    };
+    this.SetCaption = function (Value) {
+      this.FCaption = Value;
+      this.UpdateElement();
+    };
+    this.SetRoundedBorders = function (Value) {
+      this.FRoundedBorders = Value;
+      this.UpdateElement();
+    };
+    this.SetCaptionImageRelation = function (Value) {
+      this.FCaptionImageRelation = Value;
+      this.UpdateElement();
+    };
+    this.SetCaptionPosition = function (Value) {
+      this.FCaptionPosition = Value;
+      this.UpdateElement();
+    };
+    this.SetImagePosition = function (Value) {
+      this.FImagePosition = Value;
+      this.UpdateElement();
+    };
+    this.SetImageHeight = function (Value) {
+      this.FImageHeight = Value;
+      this.UpdateElement();
+    };
+    this.SetImageURL = function (Value) {
+      this.FImageURL = Value;
+      this.UpdateElement();
+    };
+    this.SetImageWidth = function (Value) {
+      this.FImageWidth = Value;
+      this.UpdateElement();
+    };
+    this.SetTemplate = function (Value) {
+      this.FTemplate = Value;
+      this.UpdateElement();
+    };
+    this.InitJQuery = function () {
+      var elbutton = null;
+      var elid = "";
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        elbutton = document.createElement("INPUT");
+        elbutton.setAttribute("id",this.GetID() + "Button");
+        this.GetElementHandle().appendChild(elbutton);
+        elid = this.GetJQID() + "Button";
+        this.FIsLoaded = true;
+        jQuery(elid).jqxButton(JSON.parse('{"value": "' + this.FCaption + '", "width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        jQuery(elid).on("click",rtl.createCallback(this,"HandleClick"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      var sborders = "";
+      var stpos = "";
+      var sipos = "";
+      var sirel = "";
+      var stemplate = "";
+      var elid = "";
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) {
+          elid = this.GetJQID() + "Button";
+          jQuery(elid).jqxButton(JSON.parse('{"value": "' + this.FCaption + '", "width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+          jQuery(elid).jqxButton("disabled",!this.FEnabled);
+          jQuery(elid).jqxButton("value",this.FCaption);
+          jQuery(elid).jqxButton("theme",this.GetTheme(this.FTheme));
+          var $tmp1 = this.FCaptionPosition;
+          if ($tmp1 === $mod.TJQXPosition.xpLeft) {
+            stpos = "left"}
+           else if ($tmp1 === $mod.TJQXPosition.xpTop) {
+            stpos = "top"}
+           else if ($tmp1 === $mod.TJQXPosition.xpCenter) {
+            stpos = "center"}
+           else if ($tmp1 === $mod.TJQXPosition.xpBottom) {
+            stpos = "bottom"}
+           else if ($tmp1 === $mod.TJQXPosition.xpRight) {
+            stpos = "right"}
+           else if ($tmp1 === $mod.TJQXPosition.xpTopLeft) {
+            stpos = "topLeft"}
+           else if ($tmp1 === $mod.TJQXPosition.xpBottomLeft) {
+            stpos = "bottomLeft"}
+           else if ($tmp1 === $mod.TJQXPosition.xpTopRight) {
+            stpos = "topRight"}
+           else if ($tmp1 === $mod.TJQXPosition.xpBottomRight) stpos = "bottomRight";
+          jQuery(elid).jqxButton("textPosition",stpos);
+          var $tmp2 = this.FImagePosition;
+          if ($tmp2 === $mod.TJQXPosition.xpLeft) {
+            sipos = "left"}
+           else if ($tmp2 === $mod.TJQXPosition.xpTop) {
+            sipos = "top"}
+           else if ($tmp2 === $mod.TJQXPosition.xpCenter) {
+            sipos = "center"}
+           else if ($tmp2 === $mod.TJQXPosition.xpBottom) {
+            sipos = "bottom"}
+           else if ($tmp2 === $mod.TJQXPosition.xpRight) {
+            sipos = "right"}
+           else if ($tmp2 === $mod.TJQXPosition.xpTopLeft) {
+            sipos = "topLeft"}
+           else if ($tmp2 === $mod.TJQXPosition.xpBottomLeft) {
+            sipos = "bottomLeft"}
+           else if ($tmp2 === $mod.TJQXPosition.xpTopRight) {
+            sipos = "topRight"}
+           else if ($tmp2 === $mod.TJQXPosition.xpBottomRight) sipos = "bottomRight";
+          jQuery(elid).jqxButton("imgPosition",sipos);
+          jQuery(elid).jqxButton("imgWidth",this.FImageWidth);
+          jQuery(elid).jqxButton("imgHeight",this.FImageHeight);
+          jQuery(elid).jqxButton("imgSrc",this.FImageURL);
+          var $tmp3 = this.FCaptionImageRelation;
+          if ($tmp3 === $mod.TJQXImagePosition.ipAfterImage) {
+            sirel = "imageBeforeText"}
+           else if ($tmp3 === $mod.TJQXImagePosition.ipAboveImage) {
+            sirel = "textAboveImage"}
+           else if ($tmp3 === $mod.TJQXImagePosition.ipBelowImage) {
+            sirel = "imageAboveText"}
+           else if ($tmp3 === $mod.TJQXImagePosition.ipBeforeImage) {
+            sirel = "textBeforeImage"}
+           else if ($tmp3 === $mod.TJQXImagePosition.ipOverlay) sirel = "overlay";
+          jQuery(elid).jqxButton("textImageRelation",sirel);
+          var $tmp4 = this.FTemplate;
+          if ($tmp4 === $mod.TJQXTemplate.ttDefault) {
+            stemplate = "default"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttPrimary) {
+            stemplate = "primary"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttSuccess) {
+            stemplate = "success"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttWarning) {
+            stemplate = "warning"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttDanger) {
+            stemplate = "danger"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttInfo) stemplate = "info";
+          jQuery(elid).jqxButton("template",stemplate);
+          sborders = "";
+          if (this.FRoundedBorders) sborders = "all";
+          jQuery(elid).jqxButton("roundedCorners",sborders);
+        };
+      };
+    };
+    this.BindEvents = function () {
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetTop = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetTop.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FCaption = this.FName;
+      this.FCaptionPosition = $mod.TJQXPosition.xpLeft;
+      this.FCaptionImageRelation = $mod.TJQXImagePosition.ipAfterImage;
+      this.FImageURL = "";
+      this.FImagePosition = $mod.TJQXPosition.xpLeft;
+      this.FImageHeight = 16;
+      this.FImageWidth = 16;
+      this.FRoundedBorders = true;
+      this.FTemplate = $mod.TJQXTemplate.ttDefault;
+      this.SetWidth(96);
+      this.SetHeight(25);
+      this.SetElementPosition(pas["WEBLib.Controls"].TElementPosition.epAbsolute);
+      this.FRequiredScripts.Add("jqxbuttons.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID() + "Button").jqxButton("theme",this.GetTheme(AValue));
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("Caption",2,rtl.string,"FCaption","SetCaption");
+    $r.addProperty("CaptionPosition",2,$mod.$rtti["TJQXPosition"],"FCaptionPosition","SetCaptionPosition",{Default: $mod.TJQXPosition.xpLeft});
+    $r.addProperty("CaptionImageRelation",2,$mod.$rtti["TJQXImagePosition"],"FCaptionImageRelation","SetCaptionImageRelation",{Default: $mod.TJQXImagePosition.ipAfterImage});
+    $r.addProperty("ImageURL",2,rtl.string,"FImageURL","SetImageURL");
+    $r.addProperty("ImagePosition",2,$mod.$rtti["TJQXPosition"],"FImagePosition","SetImagePosition",{Default: $mod.TJQXPosition.xpLeft});
+    $r.addProperty("ImageHeight",2,rtl.longint,"FImageHeight","SetImageHeight",{Default: 16});
+    $r.addProperty("ImageWidth",2,rtl.longint,"FImageWidth","SetImageWidth",{Default: 16});
+    $r.addProperty("RoundedBorders",2,rtl.boolean,"FRoundedBorders","SetRoundedBorders",{Default: true});
+    $r.addProperty("Template",2,$mod.$rtti["TJQXTemplate"],"FTemplate","SetTemplate",{Default: $mod.TJQXTemplate.ttDefault});
+    $r.addProperty("OnClick",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnClick$1","FOnClick$1");
+  });
+  rtl.createClass($mod,"TWebJQXButton",$mod.TJQXButton,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXButtonGroup",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FSelectedButton = null;
+      this.FIsLoaded = false;
+      this.FTemplate = 0;
+      this.FMode = 0;
+      this.FEnableHover = false;
+      this.FItems = null;
+      this.FOnClick$1 = null;
+    };
+    this.$final = function () {
+      this.FSelectedButton = undefined;
+      this.FItems = undefined;
+      this.FOnClick$1 = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleClick = function (Event) {
+      var Result = false;
+      var Args = null;
+      Result = false;
+      if (!this.FEnabled) return Result;
+      if (this.FOnClick$1 != null) {
+        Args = $mod.TJQXButtonEventArgs.$create("Create");
+        Args.FButtonIndex = pas.SysUtils.StrToInt("" + Event.args["index"]);
+        this.FOnClick$1(this,Args);
+        Args = rtl.freeLoc(Args);
+      };
+      Result = true;
+      return Result;
+    };
+    this.SetTemplate = function (Value) {
+      this.FTemplate = Value;
+      this.UpdateElement();
+    };
+    this.SetMode = function (Value) {
+      this.FMode = Value;
+      this.UpdateElement();
+    };
+    this.SetEnableHover = function (Value) {
+      this.FEnableHover = Value;
+      this.UpdateElement();
+    };
+    this.SetItems = function (AItems) {
+      this.FItems.Assign(AItems);
+      this.UpdateElement();
+    };
+    this.GetButtonSelect = function (Button) {
+      var Result = false;
+      var a = null;
+      var o = null;
+      var I = 0;
+      var v = "";
+      if (Button < this.FSelectedButton.GetCount()) {
+        Result = !(this.FSelectedButton.Get(Button) == false)}
+       else Result = false;
+      if (!this.FIsLoaded) return Result;
+      if (this.GetElementHandle() != null) {
+        if (this.FMode === $mod.TJQXGroupMode.gmRadioButton) {
+          o = jQuery(this.GetJQID()).jqxButtonGroup("getSelection");
+          if (o != null) {
+            I = pas.SysUtils.StrToInt(o.toString());
+            Result = I === Button;
+          };
+        } else if (this.FMode === $mod.TJQXGroupMode.gmCheckBox) {
+          a = jQuery(this.GetJQID()).jqxButtonGroup("getSelection");
+          for (var $l1 = 0, $end2 = a.length - 1; $l1 <= $end2; $l1++) {
+            I = $l1;
+            v = "" + a[I];
+            if (v !== "") {
+              Result = pas.SysUtils.StrToInt(v) === Button;
+              if (Result) return Result;
+            };
+          };
+        };
+      };
+      return Result;
+    };
+    this.SetButtonSelect = function (Button, Value) {
+      while (Button >= this.FSelectedButton.GetCount()) this.FSelectedButton.Add(false);
+      if ((this.GetButtonSelect(Button) === true) && Value) return;
+      this.FSelectedButton.Put(Button,Value);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxButtonGroup("setSelection",Button);
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxButtonGroup(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        jQuery(this.GetJQID()).on("buttonclick",rtl.createCallback(this,"HandleClick"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      var smode = "";
+      var stemplate = "";
+      var I = 0;
+      var innerHTML = "";
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (!(this.GetContainer() != null)) return;
+      innerHTML = "";
+      if (this.FItems.GetCount() > 0) {
+        for (var $l1 = 0, $end2 = this.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+          I = $l1;
+          if (this.FItems.Get(I) !== "") {
+            innerHTML = innerHTML + '<div style="height:' + pas.SysUtils.IntToStr(this.GetHeight()) + 'px">' + this.FItems.Get(I) + "<\/div>"}
+           else innerHTML = innerHTML + '<div style="height:' + pas.SysUtils.IntToStr(this.GetHeight()) + 'px">&nbsp;<\/div>';
+        };
+      };
+      this.GetContainer().innerHTML = innerHTML;
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) {
+          jQuery(this.GetJQID()).jqxButtonGroup(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+          var $tmp3 = this.FMode;
+          if ($tmp3 === $mod.TJQXGroupMode.gmDefault) {
+            smode = "default"}
+           else if ($tmp3 === $mod.TJQXGroupMode.gmCheckBox) {
+            smode = "checkbox"}
+           else if ($tmp3 === $mod.TJQXGroupMode.gmRadioButton) smode = "radio";
+          jQuery(this.GetJQID()).jqxButtonGroup("mode",smode);
+          var $tmp4 = this.FTemplate;
+          if ($tmp4 === $mod.TJQXTemplate.ttDefault) {
+            stemplate = "default"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttPrimary) {
+            stemplate = "primary"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttSuccess) {
+            stemplate = "success"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttWarning) {
+            stemplate = "warning"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttDanger) {
+            stemplate = "danger"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttInfo) stemplate = "info";
+          jQuery(this.GetJQID()).jqxButtonGroup("template",stemplate);
+          jQuery(this.GetJQID()).jqxButtonGroup("enableHover",this.FEnableHover);
+          jQuery(this.GetJQID()).jqxButtonGroup("disabled",!this.FEnabled);
+          jQuery(this.GetJQID()).jqxButtonGroup("theme",this.GetTheme(this.FTheme));
+          if (this.FMode !== $mod.TJQXGroupMode.gmDefault) {
+            for (var $l5 = 0, $end6 = this.FItems.GetCount() - 1; $l5 <= $end6; $l5++) {
+              I = $l5;
+              jQuery(this.GetJQID()).jqxButtonGroup("setSelection",this.GetButtonSelect(I));
+            };
+          };
+        };
+        this.FixMargin();
+      };
+    };
+    this.BindEvents = function () {
+    };
+    this.FixMargin = function () {
+      var jqid = "";
+      jqid = this.GetJQID();
+      $(jqid).children().first().css({
+        marginLeft: '0px'
+      });
+    };
+    this.DoItemsChanged = function (Sender) {
+      this.UpdateElement();
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FSelectedButton = pas.Classes.TList.$create("Create$1");
+      this.FEnableHover = true;
+      this.FItems = pas.Classes.TStringList.$create("Create$1");
+      this.FItems.FOnChange = rtl.createCallback(this,"DoItemsChanged");
+      this.FMode = $mod.TJQXGroupMode.gmDefault;
+      this.FTemplate = $mod.TJQXTemplate.ttDefault;
+      this.SetWidth(250);
+      this.SetHeight(25);
+      this.FItems.Add("Button 1");
+      this.FRequiredScripts.Add("jqxbuttongroup.js");
+      this.FRequiredScripts.Add("jqxradiobutton.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.Destroy = function () {
+      rtl.free(this,"FSelectedButton");
+      rtl.free(this,"FItems");
+      pas["WEBLib.Controls"].TControl.Destroy.call(this);
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        jQuery(this.GetJQID()).jqxButtonGroup("theme",this.GetTheme(AValue));
+        this.FixMargin();
+      };
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("EnableHover",2,rtl.boolean,"FEnableHover","SetEnableHover",{Default: true});
+    $r.addProperty("Items",2,pas.Classes.$rtti["TStringList"],"FItems","SetItems");
+    $r.addProperty("Mode",2,$mod.$rtti["TJQXGroupMode"],"FMode","SetMode",{Default: $mod.TJQXGroupMode.gmDefault});
+    $r.addProperty("Template",2,$mod.$rtti["TJQXTemplate"],"FTemplate","SetTemplate",{Default: $mod.TJQXTemplate.ttDefault});
+    $r.addProperty("OnClick",0,$mod.$rtti["TJQXButtonEvent"],"FOnClick$1","FOnClick$1");
+  });
+  rtl.createClass($mod,"TWebJQXButtonGroup",$mod.TJQXButtonGroup,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  $mod.$rtti.$Class("TJQXKnob");
+  $mod.$rtti.$Class("TJQXKnobAppearance");
+  rtl.createClass($mod,"TJQXKnobLabels",pas.Classes.TPersistent,function () {
+    this.$init = function () {
+      pas.Classes.TPersistent.$init.call(this);
+      this.FOwner = null;
+      this.FVisible = false;
+      this.FStep = 0;
+      this.FOffset = 0;
+    };
+    this.$final = function () {
+      this.FOwner = undefined;
+      pas.Classes.TPersistent.$final.call(this);
+    };
+    this.SetOffset = function (Value) {
+      this.FOffset = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetStep = function (Value) {
+      this.FStep = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetVisible = function (Value) {
+      this.FVisible = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.Create$1 = function (AOwner) {
+      this.FOffset = 88;
+      this.FStep = 10;
+      this.FVisible = true;
+      this.FOwner = AOwner;
+      return this;
+    };
+    this.Destroy = function () {
+      pas.System.TObject.Destroy.call(this);
+    };
+    this.Assign = function (Source) {
+      pas.Classes.TPersistent.Assign.apply(this,arguments);
+      if ($mod.TJQXKnobLabels.isPrototypeOf(Source)) {
+        this.FOffset = rtl.as(Source,$mod.TJQXKnobLabels).FOffset;
+        this.FStep = rtl.as(Source,$mod.TJQXKnobLabels).FStep;
+        this.FVisible = rtl.as(Source,$mod.TJQXKnobLabels).FVisible;
+      };
+    };
+    this.GetOwner = function () {
+      var Result = null;
+      Result = this.FOwner;
+      return Result;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("Offset",2,rtl.longint,"FOffset","SetOffset",{Default: 88});
+    $r.addProperty("Step",2,rtl.longint,"FStep","SetStep",{Default: 10});
+    $r.addProperty("Visible",2,rtl.boolean,"FVisible","SetVisible",{Default: true});
+  });
+  rtl.createClass($mod,"TJQXKnobProgressBar",pas.Classes.TPersistent,function () {
+    this.$init = function () {
+      pas.Classes.TPersistent.$init.call(this);
+      this.FOwner = null;
+      this.FBorderColor = 0;
+      this.FSize = 0;
+      this.FBackgroundColor = 0;
+      this.FOffset = 0;
+      this.FColor = 0;
+    };
+    this.$final = function () {
+      this.FOwner = undefined;
+      pas.Classes.TPersistent.$final.call(this);
+    };
+    this.SetBackgroundColor = function (Value) {
+      this.FBackgroundColor = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetBorderColor = function (Value) {
+      this.FBorderColor = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetColor = function (Value) {
+      this.FColor = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetOffset = function (Value) {
+      this.FOffset = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetSize = function (Value) {
+      this.FSize = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.Create$1 = function (AOwner) {
+      this.FColor = 12632256;
+      this.FSize = 9;
+      this.FOffset = 60;
+      this.FBackgroundColor = 8421504;
+      this.FBorderColor = 0;
+      this.FOwner = AOwner;
+      return this;
+    };
+    this.Destroy = function () {
+      pas.System.TObject.Destroy.call(this);
+    };
+    this.Assign = function (Source) {
+      pas.Classes.TPersistent.Assign.apply(this,arguments);
+      if ($mod.TJQXKnobProgressBar.isPrototypeOf(Source)) {
+        this.FColor = rtl.as(Source,$mod.TJQXKnobProgressBar).FColor;
+        this.FSize = rtl.as(Source,$mod.TJQXKnobProgressBar).FSize;
+        this.FOffset = rtl.as(Source,$mod.TJQXKnobProgressBar).FOffset;
+        this.FBackgroundColor = rtl.as(Source,$mod.TJQXKnobProgressBar).FBackgroundColor;
+        this.FBorderColor = rtl.as(Source,$mod.TJQXKnobProgressBar).FBorderColor;
+      };
+    };
+    this.GetOwner = function () {
+      var Result = null;
+      Result = this.FOwner;
+      return Result;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("Color",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FColor","SetColor",{Default: 12632256});
+    $r.addProperty("Size",2,rtl.longint,"FSize","SetSize",{Default: 9});
+    $r.addProperty("Offset",2,rtl.longint,"FOffset","SetOffset",{Default: 60});
+    $r.addProperty("BackgroundColor",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FBackgroundColor","SetBackgroundColor",{Default: 8421504});
+    $r.addProperty("BorderColor",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FBorderColor","SetBorderColor",{Default: 0});
+  });
+  rtl.createClass($mod,"TJQXKnobMarks",pas.Classes.TPersistent,function () {
+    this.$init = function () {
+      pas.Classes.TPersistent.$init.call(this);
+      this.FOwner = null;
+      this.FOffset = 0;
+      this.FMajorSize = 0;
+      this.FColorProgress = 0;
+      this.FWidth = 0;
+      this.FBorderColorRemaining = 0;
+      this.FBorderColorProgress = 0;
+      this.FMinorInterval = 0;
+      this.FSize = 0;
+      this.FColorRemaining = 0;
+      this.FMajorInterval = 0;
+      this.FMarkType = 0;
+    };
+    this.$final = function () {
+      this.FOwner = undefined;
+      pas.Classes.TPersistent.$final.call(this);
+    };
+    this.SetOffset = function (Value) {
+      this.FOffset = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetBorderColorProgress = function (Value) {
+      this.FBorderColorProgress = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetBorderColorRemaining = function (Value) {
+      this.FBorderColorRemaining = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetColorProgress = function (Value) {
+      this.FColorProgress = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetColorRemaining = function (Value) {
+      this.FColorRemaining = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetMajorInterval = function (Value) {
+      this.FMajorInterval = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetMajorSize = function (Value) {
+      this.FMajorSize = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetMarkType = function (Value) {
+      this.FMarkType = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetMinorInterval = function (Value) {
+      this.FMinorInterval = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetSize = function (Value) {
+      this.FSize = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetWidth = function (Value) {
+      this.FWidth = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.Create$1 = function (AOwner) {
+      pas.System.TObject.Create.call(this);
+      this.FColorRemaining = 8421504;
+      this.FBorderColorRemaining = 8421504;
+      this.FColorProgress = 12632256;
+      this.FBorderColorProgress = 12632256;
+      this.FMarkType = $mod.TJQXKnobMarkType.mtLine;
+      this.FOffset = 71;
+      this.FWidth = 3;
+      this.FSize = 6;
+      this.FMajorSize = 9;
+      this.FMajorInterval = 10;
+      this.FMinorInterval = 2;
+      this.FOwner = AOwner;
+      return this;
+    };
+    this.Destroy = function () {
+      pas.System.TObject.Destroy.call(this);
+    };
+    this.Assign = function (Source) {
+      pas.Classes.TPersistent.Assign.apply(this,arguments);
+      if ($mod.TJQXKnobMarks.isPrototypeOf(Source)) {
+        this.FOffset = rtl.as(Source,$mod.TJQXKnobMarks).FOffset;
+        this.FMajorSize = rtl.as(Source,$mod.TJQXKnobMarks).FMajorSize;
+        this.FColorProgress = rtl.as(Source,$mod.TJQXKnobMarks).FColorProgress;
+        this.FWidth = rtl.as(Source,$mod.TJQXKnobMarks).FWidth;
+        this.FBorderColorRemaining = rtl.as(Source,$mod.TJQXKnobMarks).FBorderColorRemaining;
+        this.FBorderColorProgress = rtl.as(Source,$mod.TJQXKnobMarks).FBorderColorProgress;
+        this.FMinorInterval = rtl.as(Source,$mod.TJQXKnobMarks).FMinorInterval;
+        this.FSize = rtl.as(Source,$mod.TJQXKnobMarks).FSize;
+        this.FColorRemaining = rtl.as(Source,$mod.TJQXKnobMarks).FColorRemaining;
+        this.FMajorInterval = rtl.as(Source,$mod.TJQXKnobMarks).FMajorInterval;
+        this.FMarkType = rtl.as(Source,$mod.TJQXKnobMarks).FMarkType;
+      };
+    };
+    this.GetOwner = function () {
+      var Result = null;
+      Result = this.FOwner;
+      return Result;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("ColorRemaining",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FColorRemaining","SetColorRemaining",{Default: 8421504});
+    $r.addProperty("BorderColorRemaining",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FBorderColorRemaining","SetBorderColorRemaining",{Default: 8421504});
+    $r.addProperty("ColorProgress",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FColorProgress","SetColorProgress",{Default: 12632256});
+    $r.addProperty("BorderColorProgress",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FBorderColorProgress","SetBorderColorProgress",{Default: 12632256});
+    $r.addProperty("MarkType",2,$mod.$rtti["TJQXKnobMarkType"],"FMarkType","SetMarkType",{Default: $mod.TJQXKnobMarkType.mtLine});
+    $r.addProperty("Offset",2,rtl.longint,"FOffset","SetOffset",{Default: 71});
+    $r.addProperty("Width",2,rtl.longint,"FWidth","SetWidth",{Default: 3});
+    $r.addProperty("Size",2,rtl.longint,"FSize","SetSize",{Default: 6});
+    $r.addProperty("MajorSize",2,rtl.longint,"FMajorSize","SetMajorSize",{Default: 9});
+    $r.addProperty("MajorInterval",2,rtl.longint,"FMajorInterval","SetMajorInterval",{Default: 10});
+    $r.addProperty("MinorInterval",2,rtl.longint,"FMinorInterval","SetMinorInterval",{Default: 2});
+  });
+  rtl.createClass($mod,"TJQXKnobPointer",pas.Classes.TPersistent,function () {
+    this.$init = function () {
+      pas.Classes.TPersistent.$init.call(this);
+      this.FOwner = null;
+      this.FOffset = 0;
+      this.FColor = 0;
+      this.FWidth = 0;
+      this.FVisible = false;
+      this.FSize = 0;
+      this.FPointerType = 0;
+      this.FBorderColor = 0;
+    };
+    this.$final = function () {
+      this.FOwner = undefined;
+      pas.Classes.TPersistent.$final.call(this);
+    };
+    this.SetOffset = function (Value) {
+      this.FOffset = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetVisible = function (Value) {
+      this.FVisible = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetColor = function (Value) {
+      this.FColor = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetPointerType = function (Value) {
+      this.FPointerType = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetSize = function (Value) {
+      this.FSize = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetWidth = function (Value) {
+      this.FWidth = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetBorderColor = function (Value) {
+      this.FBorderColor = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.Create$1 = function (AOwner) {
+      this.FPointerType = $mod.TJQXKnobPointerType.ptArrow;
+      this.FColor = 8421504;
+      this.FBorderColor = 12632256;
+      this.FSize = 59;
+      this.FOffset = 49;
+      this.FVisible = true;
+      this.FWidth = 20;
+      this.FOwner = AOwner;
+      return this;
+    };
+    this.Destroy = function () {
+      pas.System.TObject.Destroy.call(this);
+    };
+    this.Assign = function (Source) {
+      pas.Classes.TPersistent.Assign.apply(this,arguments);
+      if ($mod.TJQXKnobPointer.isPrototypeOf(Source)) {
+        this.FPointerType = rtl.as(Source,$mod.TJQXKnobPointer).FPointerType;
+        this.FColor = rtl.as(Source,$mod.TJQXKnobPointer).FColor;
+        this.FBorderColor = rtl.as(Source,$mod.TJQXKnobPointer).FBorderColor;
+        this.FSize = rtl.as(Source,$mod.TJQXKnobPointer).FSize;
+        this.FOffset = rtl.as(Source,$mod.TJQXKnobPointer).FOffset;
+        this.FVisible = rtl.as(Source,$mod.TJQXKnobPointer).FVisible;
+        this.FWidth = rtl.as(Source,$mod.TJQXKnobPointer).FWidth;
+      };
+    };
+    this.GetOwner = function () {
+      var Result = null;
+      Result = this.FOwner;
+      return Result;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("PointerType",2,$mod.$rtti["TJQXKnobPointerType"],"FPointerType","SetPointerType",{Default: $mod.TJQXKnobPointerType.ptArrow});
+    $r.addProperty("Color",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FColor","SetColor",{Default: 8421504});
+    $r.addProperty("BorderColor",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FBorderColor","SetBorderColor",{Default: 12632256});
+    $r.addProperty("Size",2,rtl.longint,"FSize","SetSize",{Default: 59});
+    $r.addProperty("Offset",2,rtl.longint,"FOffset","SetOffset",{Default: 49});
+    $r.addProperty("Visible",2,rtl.boolean,"FVisible","SetVisible",{Default: true});
+    $r.addProperty("Width",2,rtl.longint,"FWidth","SetWidth",{Default: 20});
+  });
+  rtl.createClass($mod,"TJQXKnobAppearance",pas.Classes.TPersistent,function () {
+    this.$init = function () {
+      pas.Classes.TPersistent.$init.call(this);
+      this.FOwner = null;
+      this.FLabels = null;
+      this.FProgressBar = null;
+      this.FMarks = null;
+      this.FPointer = null;
+      this.FBorderColor = 0;
+      this.FColor = 0;
+      this.FBorderWidth = 0;
+    };
+    this.$final = function () {
+      this.FOwner = undefined;
+      this.FLabels = undefined;
+      this.FProgressBar = undefined;
+      this.FMarks = undefined;
+      this.FPointer = undefined;
+      pas.Classes.TPersistent.$final.call(this);
+    };
+    this.SetBorderColor = function (Value) {
+      this.FBorderColor = Value;
+      this.FOwner.UpdateElement();
+    };
+    this.SetBorderWidth = function (Value) {
+      this.FBorderWidth = Value;
+      this.FOwner.UpdateElement();
+    };
+    this.SetColor = function (Value) {
+      this.FColor = Value;
+      this.FOwner.UpdateElement();
+    };
+    this.Create$1 = function (AOwner) {
+      pas.System.TObject.Create.call(this);
+      this.FColor = -1;
+      this.FBorderColor = -1;
+      this.FBorderWidth = 1;
+      this.FLabels = $mod.TJQXKnobLabels.$create("Create$1",[this]);
+      this.FProgressBar = $mod.TJQXKnobProgressBar.$create("Create$1",[this]);
+      this.FMarks = $mod.TJQXKnobMarks.$create("Create$1",[this]);
+      this.FPointer = $mod.TJQXKnobPointer.$create("Create$1",[this]);
+      this.FOwner = AOwner;
+      return this;
+    };
+    this.Destroy = function () {
+      rtl.free(this,"FLabels");
+      rtl.free(this,"FProgressBar");
+      rtl.free(this,"FMarks");
+      rtl.free(this,"FPointer");
+      pas.System.TObject.Destroy.call(this);
+    };
+    this.Assign = function (Source) {
+      pas.Classes.TPersistent.Assign.apply(this,arguments);
+      if ($mod.TJQXKnobAppearance.isPrototypeOf(Source)) {
+        this.FColor = rtl.as(Source,$mod.TJQXKnobAppearance).FColor;
+        this.FBorderColor = rtl.as(Source,$mod.TJQXKnobAppearance).FBorderColor;
+        this.FBorderWidth = rtl.as(Source,$mod.TJQXKnobAppearance).FBorderWidth;
+        this.FLabels = rtl.as(Source,$mod.TJQXKnobAppearance).FLabels;
+        this.FProgressBar = rtl.as(Source,$mod.TJQXKnobAppearance).FProgressBar;
+        this.FMarks = rtl.as(Source,$mod.TJQXKnobAppearance).FMarks;
+        this.FPointer = rtl.as(Source,$mod.TJQXKnobAppearance).FPointer;
+      };
+    };
+    this.GetOwner = function () {
+      var Result = null;
+      Result = this.FOwner;
+      return Result;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("Color",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FColor","SetColor",{Default: -1});
+    $r.addProperty("BorderColor",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FBorderColor","SetBorderColor",{Default: -1});
+    $r.addProperty("BorderWidth",2,rtl.longint,"FBorderWidth","SetBorderWidth",{Default: 1});
+    $r.addProperty("Labels",0,$mod.$rtti["TJQXKnobLabels"],"FLabels","FLabels");
+    $r.addProperty("ProgressBar",0,$mod.$rtti["TJQXKnobProgressBar"],"FProgressBar","FProgressBar");
+    $r.addProperty("Marks",0,$mod.$rtti["TJQXKnobMarks"],"FMarks","FMarks");
+    $r.addProperty("Pointer",0,$mod.$rtti["TJQXKnobPointer"],"FPointer","FPointer");
+  });
+  rtl.createClass($mod,"TJQXKnob",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FValue = 0.0;
+      this.FOnChange = null;
+      this.FIsLoaded = false;
+      this.FEndAngle = 0;
+      this.FStartAngle = 0;
+      this.FAppearance = null;
+      this.FMaximum = 0;
+      this.FMinimum = 0;
+      this.FStep = 0;
+    };
+    this.$final = function () {
+      this.FOnChange = undefined;
+      this.FAppearance = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.SetEndAngle = function (Value) {
+      this.FEndAngle = Value;
+      this.UpdateElement();
+    };
+    this.SetStartAngle = function (Value) {
+      this.FStartAngle = Value;
+      this.UpdateElement();
+    };
+    this.HandleKnobChange = function (Event) {
+      var Result = false;
+      if (this.FOnChange != null) this.FOnChange(this);
+      Result = true;
+      return Result;
+    };
+    this.SetAppearance = function (Value) {
+      this.FAppearance.Assign(Value);
+    };
+    this.SetMaximum = function (Value) {
+      this.FMaximum = Value;
+      this.UpdateElement();
+    };
+    this.SetMinimum = function (Value) {
+      this.FMinimum = Value;
+      this.UpdateElement();
+    };
+    this.SetStep = function (Value) {
+      this.FStep = Value;
+      this.UpdateElement();
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxKnob(JSON.parse('{"startAngle": ' + pas.SysUtils.IntToStr(this.FStartAngle) + ', "endAngle": ' + pas.SysUtils.IntToStr(this.FEndAngle) + ', "width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        jQuery(this.GetJQID()).on("change",rtl.createCallback(this,"HandleKnobChange"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      var sline = "";
+      var spointer = "";
+      var sbgcolor = "";
+      var sbcolor = "";
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) {
+          jQuery(this.GetJQID()).jqxKnob(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+          jQuery(this.GetJQID()).jqxKnob(JSON.parse('{"labels": {"offset": "' + pas.SysUtils.IntToStr(this.FAppearance.FLabels.FOffset) + '%", "step": ' + pas.SysUtils.IntToStr(this.FAppearance.FLabels.FStep) + ', "visible": ' + pas.SysUtils.LowerCase(pas.SysUtils.BoolToStr(this.FAppearance.FLabels.FVisible,true)) + "}}"));
+          jQuery(this.GetJQID()).jqxKnob(JSON.parse('{"progressBar": {"style": { "fill": "' + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FProgressBar.FColor) + '"}, "size": "' + pas.SysUtils.IntToStr(this.FAppearance.FProgressBar.FSize) + '%", "offset": "' + pas.SysUtils.IntToStr(this.FAppearance.FProgressBar.FOffset) + '%", "background": {"fill": "' + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FProgressBar.FBackgroundColor) + '", "stroke": "' + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FProgressBar.FBorderColor) + '"}}}'));
+          sline = "line";
+          if (this.FAppearance.FMarks.FMarkType === $mod.TJQXKnobMarkType.mtCircle) sline = "circle";
+          jQuery(this.GetJQID()).jqxKnob(JSON.parse('{"marks": {"colorRemaining": {"color": "' + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FMarks.FColorRemaining) + '", "border": "' + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FMarks.FBorderColorRemaining) + '"}, "colorProgress": {"color": "' + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FMarks.FColorProgress) + '", "border": "' + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FMarks.FBorderColorProgress) + '"}, "type": "' + sline + '", "offset": "' + pas.SysUtils.IntToStr(this.FAppearance.FMarks.FOffset) + '%", "thickness": ' + pas.SysUtils.IntToStr(this.FAppearance.FMarks.FWidth) + ', "size": "' + pas.SysUtils.IntToStr(this.FAppearance.FMarks.FSize) + '%", "majorSize": "' + pas.SysUtils.IntToStr(this.FAppearance.FMarks.FMajorSize) + '%", "majorInterval": ' + pas.SysUtils.IntToStr(this.FAppearance.FMarks.FMajorInterval) + ', "minorInterval": ' + pas.SysUtils.IntToStr(this.FAppearance.FMarks.FMinorInterval) + "}}"));
+          var $tmp1 = this.FAppearance.FPointer.FPointerType;
+          if ($tmp1 === $mod.TJQXKnobPointerType.ptArrow) {
+            spointer = "arrow"}
+           else if ($tmp1 === $mod.TJQXKnobPointerType.ptCircle) {
+            spointer = "circle"}
+           else if ($tmp1 === $mod.TJQXKnobPointerType.ptLine) spointer = "line";
+          jQuery(this.GetJQID()).jqxKnob(JSON.parse('{"pointer": {"type": "' + spointer + '", "style": { "fill": "' + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FPointer.FColor) + '", "stroke": "' + pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FPointer.FBorderColor) + '" }, "size": "' + pas.SysUtils.IntToStr(this.FAppearance.FPointer.FSize) + '%", "offset": "' + pas.SysUtils.IntToStr(this.FAppearance.FPointer.FOffset) + '%", "thickness": ' + pas.SysUtils.IntToStr(this.FAppearance.FPointer.FWidth) + " }}"));
+          sbgcolor = "transparent";
+          if (this.FAppearance.FColor !== -1) sbgcolor = pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FColor);
+          sbcolor = "transparent";
+          if (this.FAppearance.FBorderColor !== -1) sbcolor = pas["WEBLib.Graphics"].ColorToHTML(this.FAppearance.FBorderColor);
+          jQuery(this.GetJQID()).jqxKnob(JSON.parse('{"style": {"fill": "' + sbgcolor + '", "stroke": "' + sbcolor + '", "strokeWidth": ' + pas.SysUtils.IntToStr(this.FAppearance.FBorderWidth) + "}}"));
+          jQuery(this.GetJQID()).jqxKnob("disabled",!this.FEnabled);
+          jQuery(this.GetJQID()).jqxKnob("step",this.FStep);
+          jQuery(this.GetJQID()).jqxKnob("max",this.FMaximum);
+          jQuery(this.GetJQID()).jqxKnob("min",this.FMinimum);
+          jQuery(this.GetJQID()).jqxKnob("value",this.FValue);
+        };
+      };
+    };
+    this.BindEvents = function () {
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+    };
+    this.GetValue = function () {
+      var Result = 0.0;
+      var s = "";
+      var o = null;
+      if (!this.FIsLoaded) return Result;
+      o = jQuery(this.GetJQID()).jqxKnob("value");
+      s = o.toString();
+      Result = pas.SysUtils.StrToFloat(s);
+      if (!pas.System.Assigned(Result)) Result = this.FValue;
+      return Result;
+    };
+    this.SetValue = function (AValue) {
+      this.FValue = AValue;
+      if (!this.FIsLoaded) return;
+      jQuery(this.GetJQID()).jqxKnob("val",AValue);
+      this.UpdateElement();
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FAppearance = $mod.TJQXKnobAppearance.$create("Create$1",[this]);
+      this.FValue = 0;
+      this.FStartAngle = 120;
+      this.FEndAngle = 420;
+      this.FMaximum = 100;
+      this.FMinimum = 0;
+      this.FStep = 1;
+      this.SetWidth(200);
+      this.SetHeight(200);
+      this.FIsLoaded = false;
+      this.FRequiredScripts.Add("jqxdraw.js");
+      this.FRequiredScripts.Add("jqxknob.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.Destroy = function () {
+      rtl.free(this,"FAppearance");
+      pas["WEBLib.Controls"].TControl.Destroy.call(this);
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("Appearance",2,$mod.$rtti["TJQXKnobAppearance"],"FAppearance","SetAppearance");
+    $r.addProperty("Maximum",2,rtl.longint,"FMaximum","SetMaximum",{Default: 100});
+    $r.addProperty("Minimum",2,rtl.longint,"FMinimum","SetMinimum",{Default: 0});
+    $r.addProperty("Step",2,rtl.longint,"FStep","SetStep",{Default: 1});
+    $r.addProperty("Value",3,rtl.double,"GetValue","SetValue");
+    $r.addProperty("StartAngle",2,rtl.longint,"FStartAngle","SetStartAngle",{Default: 120});
+    $r.addProperty("EndAngle",2,rtl.longint,"FEndAngle","SetEndAngle",{Default: 420});
+    $r.addProperty("OnChange",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnChange","FOnChange");
+  });
+  rtl.createClass($mod,"TWebJQXKnob",$mod.TJQXKnob,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  $mod.$rtti.$Class("TJQXProgressBar");
+  $mod.$rtti.$Class("TJQXProgressBarColors");
+  rtl.createClass($mod,"TJQXProgressBarColor",pas.Classes.TCollectionItem,function () {
+    this.$init = function () {
+      pas.Classes.TCollectionItem.$init.call(this);
+      this.FStop = 0;
+      this.FOwner = null;
+      this.FColor = 0;
+    };
+    this.$final = function () {
+      this.FOwner = undefined;
+      pas.Classes.TCollectionItem.$final.call(this);
+    };
+    this.SetStop = function (Value) {
+      this.FStop = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetColor = function (Value) {
+      this.FColor = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.Create$1 = function (Collection) {
+      pas.Classes.TCollectionItem.Create$1.apply(this,arguments);
+      this.FColor = -1;
+      this.FStop = 0;
+      if ($mod.TJQXProgressBarColors.isPrototypeOf(Collection)) {
+        this.FOwner = rtl.as(Collection,$mod.TJQXProgressBarColors);
+      };
+      return this;
+    };
+    this.Destroy = function () {
+      pas.Classes.TCollectionItem.Destroy.call(this);
+    };
+    this.Assign = function (Source) {
+      if ($mod.TJQXProgressBarColor.isPrototypeOf(Source)) {
+        this.FColor = rtl.as(Source,$mod.TJQXProgressBarColor).FColor;
+        this.FStop = rtl.as(Source,$mod.TJQXProgressBarColor).FStop;
+      };
+    };
+    this.GetOwner = function () {
+      var Result = null;
+      Result = this.FOwner;
+      return Result;
+    };
+    this.GetDisplayName = function () {
+      var Result = "";
+      Result = "Color " + pas.SysUtils.IntToStr(this.GetIndex());
+      return Result;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("Color",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FColor","SetColor");
+    $r.addProperty("Stop",2,rtl.longint,"FStop","SetStop");
+  });
+  rtl.createClass($mod,"TJQXProgressBarColors",pas.Classes.TCollection,function () {
+    this.$init = function () {
+      pas.Classes.TCollection.$init.call(this);
+      this.FOwner = null;
+    };
+    this.$final = function () {
+      this.FOwner = undefined;
+      pas.Classes.TCollection.$final.call(this);
+    };
+    this.GetItems = function (Index) {
+      var Result = null;
+      Result = this.GetItem(Index);
+      return Result;
+    };
+    this.SetItems = function (Index, Value) {
+      this.SetItem(Index,Value);
+    };
+    this.Update = function (Item) {
+      pas.Classes.TCollection.Update.apply(this,arguments);
+    };
+    this.Create$2 = function (AOwner) {
+      pas.Classes.TCollection.Create$1.call(this,$mod.TJQXProgressBarColor);
+      this.FOwner = AOwner;
+      return this;
+    };
+    this.GetOwner = function () {
+      var Result = null;
+      Result = this.FOwner;
+      return Result;
+    };
+    this.Add$1 = function () {
+      var Result = null;
+      Result = pas.Classes.TCollection.Add.call(this);
+      return Result;
+    };
+    this.Insert$1 = function (Index) {
+      var Result = null;
+      Result = pas.Classes.TCollection.Insert.call(this,Index);
+      return Result;
+    };
+  });
+  rtl.createClass($mod,"TJQXProgressBar",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FValue = 0;
+      this.FIsLoaded = false;
+      this.FLayout = 0;
+      this.FShowValue = false;
+      this.FOrientation = 0;
+      this.FMaximum = 0;
+      this.FMinimum = 0;
+      this.FAnimationDuration = 0;
+      this.FColorRanges = null;
+      this.FTemplate = 0;
+    };
+    this.$final = function () {
+      this.FColorRanges = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.SetLayout = function (Value) {
+      this.FLayout = Value;
+      this.UpdateElement();
+    };
+    this.SetOrientation = function (Value) {
+      this.FOrientation = Value;
+      this.UpdateElement();
+    };
+    this.SetShowValue = function (Value) {
+      this.FShowValue = Value;
+      this.UpdateElement();
+    };
+    this.SetMaximum = function (Value) {
+      this.FMaximum = Value;
+      this.UpdateElement();
+    };
+    this.SetMinimum = function (Value) {
+      this.FMinimum = Value;
+      this.UpdateElement();
+    };
+    this.SetAnimationDuration = function (Value) {
+      this.FAnimationDuration = Value;
+      this.UpdateElement();
+    };
+    this.SetColorRanges = function (Value) {
+      this.FColorRanges.Assign(Value);
+      this.UpdateElement();
+    };
+    this.SetTemplate = function (Value) {
+      this.FTemplate = Value;
+      this.UpdateElement();
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxProgressBar(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      var sorientation = "";
+      var slayout = "";
+      var stemplate = "";
+      var id = "";
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) {
+          id = this.GetJQID();
+          jQuery(this.GetJQID()).jqxProgressBar(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+          jQuery(this.GetJQID()).jqxProgressBar("animationDuration",this.FAnimationDuration);
+          sorientation = "horizontal";
+          if (this.FOrientation === $mod.TJQXProgressOrientation.poVertical) sorientation = "vertical";
+          jQuery(this.GetJQID()).jqxProgressBar("orientation",sorientation);
+          slayout = "normal";
+          if (this.FLayout === $mod.TJQXProgressLayout.plReverse) slayout = "reverse";
+          jQuery(this.GetJQID()).jqxProgressBar("layout",slayout);
+          var $tmp1 = this.FTemplate;
+          if ($tmp1 === $mod.TJQXTemplate.ttDefault) {
+            stemplate = "default"}
+           else if ($tmp1 === $mod.TJQXTemplate.ttPrimary) {
+            stemplate = "primary"}
+           else if ($tmp1 === $mod.TJQXTemplate.ttSuccess) {
+            stemplate = "success"}
+           else if ($tmp1 === $mod.TJQXTemplate.ttWarning) {
+            stemplate = "warning"}
+           else if ($tmp1 === $mod.TJQXTemplate.ttDanger) {
+            stemplate = "danger"}
+           else if ($tmp1 === $mod.TJQXTemplate.ttInfo) stemplate = "info";
+          jQuery(id).jqxProgressBar("template",stemplate);
+          let template = $(id).jqxProgressBar('template');
+          $(id).find('.jqx-fill-state-pressed').addClass('jqx-' + template);
+          jQuery(this.GetJQID()).jqxProgressBar("disabled",!this.FEnabled);
+          jQuery(this.GetJQID()).jqxProgressBar("max",this.FMaximum);
+          jQuery(this.GetJQID()).jqxProgressBar("min",this.FMinimum);
+          jQuery(this.GetJQID()).jqxProgressBar("value",this.FValue);
+          jQuery(this.GetJQID()).jqxProgressBar(pas.JS.New(["colorRanges",this.ColorsToArray()]));
+          jQuery(this.GetJQID()).jqxProgressBar("showText",this.FShowValue);
+          jQuery(this.GetJQID()).jqxProgressBar("theme",this.GetTheme(this.FTheme));
+        };
+      };
+    };
+    this.ColorsToArray = function () {
+      var Result = null;
+      var I = 0;
+      Result = new Array();
+      for (var $l1 = 0, $end2 = this.FColorRanges.GetCount() - 1; $l1 <= $end2; $l1++) {
+        I = $l1;
+        Result.push(pas.JS.New(["stop",this.FColorRanges.GetItems(I).FStop,"color",pas["WEBLib.Graphics"].ColorToHTML(this.FColorRanges.GetItems(I).FColor)]));
+      };
+      return Result;
+    };
+    this.SetValue = function (AValue) {
+      this.FValue = AValue;
+      if (!this.FIsLoaded) return;
+      jQuery(this.GetJQID()).jqxProgressBar("val",AValue);
+      this.UpdateElement();
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FAnimationDuration = 300;
+      this.FColorRanges = $mod.TJQXProgressBarColors.$create("Create$2",[this]);
+      this.FMaximum = 100;
+      this.FMinimum = 0;
+      this.FValue = 0;
+      this.SetWidth(200);
+      this.SetHeight(21);
+      this.FShowValue = true;
+      this.FOrientation = $mod.TJQXProgressOrientation.poHorizontal;
+      this.FLayout = $mod.TJQXProgressLayout.plNormal;
+      this.FTemplate = $mod.TJQXTemplate.ttDefault;
+      this.FIsLoaded = false;
+      this.FRequiredScripts.Add("jqxprogressbar.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.Destroy = function () {
+      rtl.free(this,"FColorRanges");
+      pas["WEBLib.Controls"].TControl.Destroy.call(this);
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxProgressBar("theme",this.GetTheme(AValue));
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("AnimationDuration",2,rtl.longint,"FAnimationDuration","SetAnimationDuration",{Default: 300});
+    $r.addProperty("ColorRanges",2,$mod.$rtti["TJQXProgressBarColors"],"FColorRanges","SetColorRanges");
+    $r.addProperty("Maximum",2,rtl.longint,"FMaximum","SetMaximum",{Default: 100});
+    $r.addProperty("Minimum",2,rtl.longint,"FMinimum","SetMinimum",{Default: 0});
+    $r.addProperty("Value",2,rtl.longint,"FValue","SetValue");
+    $r.addProperty("ShowValue",2,rtl.boolean,"FShowValue","SetShowValue",{Default: true});
+    $r.addProperty("Template",2,$mod.$rtti["TJQXTemplate"],"FTemplate","SetTemplate",{Default: $mod.TJQXTemplate.ttDefault});
+    $r.addProperty("Orientation",2,$mod.$rtti["TJQXProgressOrientation"],"FOrientation","SetOrientation",{Default: $mod.TJQXProgressOrientation.poHorizontal});
+    $r.addProperty("Layout",2,$mod.$rtti["TJQXProgressLayout"],"FLayout","SetLayout",{Default: $mod.TJQXProgressLayout.plNormal});
+  });
+  rtl.createClass($mod,"TWebJQXProgressBar",$mod.TJQXProgressBar,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXSlider",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FValue = 0.0;
+      this.FOnChange = null;
+      this.FIsLoaded = false;
+      this.FLayout = 0;
+      this.FMaximumValue = 0.0;
+      this.FTemplate = 0;
+      this.FMinorTickSize = 0;
+      this.FShowRangeSlider = false;
+      this.FMaximum = 0.0;
+      this.FMinimumValue = 0.0;
+      this.FTicksFrequency = 0;
+      this.FMinimum = 0.0;
+      this.FShowRange = false;
+      this.FShowButtons = false;
+      this.FShowTicks = false;
+      this.FMinorTicksFrequency = 0;
+      this.FButtonsPosition = 0;
+      this.FTicksPosition = 0;
+      this.FTickSize = 0;
+      this.FShowMinorTicks = false;
+      this.FStep = 0.0;
+      this.FMode = 0;
+    };
+    this.$final = function () {
+      this.FOnChange = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleSliderChange = function (Event) {
+      var Result = false;
+      var Args = null;
+      var o = null;
+      var s = "";
+      if (this.FOnChange != null) {
+        Args = $mod.TJQXSliderEventArgs.$create("Create");
+        if (!this.FShowRangeSlider) {
+          Args.FValue = pas.SysUtils.StrToFloat("" + Event.args["value"]);
+          this.FValue = Args.FValue;
+        } else {
+          o = jQuery(this.GetJQID()).jqxSlider("getValue");
+          if (o != null) {
+            s = "" + o["rangeStart"];
+            if (s !== "") Args.FMinimumValue = pas.SysUtils.StrToFloat(s);
+            s = "" + o["rangeEnd"];
+            if (s !== "") Args.FMaximumValue = pas.SysUtils.StrToFloat(s);
+          };
+        };
+        this.FOnChange(this,Args);
+        Args = rtl.freeLoc(Args);
+      };
+      Result = true;
+      return Result;
+    };
+    this.SetButtonsPosition = function (Value) {
+      this.FButtonsPosition = Value;
+    };
+    this.SetLayout = function (Value) {
+      this.FLayout = Value;
+      this.UpdateElement();
+    };
+    this.SetMaximum = function (Value) {
+      this.FMaximum = Value;
+      this.UpdateElement();
+    };
+    this.SetMaximumValue = function (Value) {
+      this.FMaximumValue = Value;
+      this.UpdateElement();
+    };
+    this.SetMinimum = function (Value) {
+      this.FMinimum = Value;
+      this.UpdateElement();
+    };
+    this.SetMinimumValue = function (Value) {
+      this.FMinimumValue = Value;
+      this.UpdateElement();
+    };
+    this.SetMinorTicksFrequency = function (Value) {
+      this.FMinorTicksFrequency = Value;
+      this.UpdateElement();
+    };
+    this.SetMinorTickSize = function (Value) {
+      this.FMinorTickSize = Value;
+      this.UpdateElement();
+    };
+    this.SetShowButtons = function (Value) {
+      this.FShowButtons = Value;
+      this.UpdateElement();
+    };
+    this.SetShowRange = function (Value) {
+      this.FShowRange = Value;
+      this.UpdateElement();
+    };
+    this.SetShowRangeSlider = function (Value) {
+      this.FShowRangeSlider = Value;
+      this.UpdateElement();
+    };
+    this.SetShowTicks = function (Value) {
+      this.FShowTicks = Value;
+      this.UpdateElement();
+    };
+    this.SetTemplate = function (Value) {
+      this.FTemplate = Value;
+      this.UpdateElement();
+    };
+    this.SetTicksFrequency = function (Value) {
+      this.FTicksFrequency = Value;
+      this.UpdateElement();
+    };
+    this.SetTickSize = function (Value) {
+      this.FTickSize = Value;
+      this.UpdateElement();
+    };
+    this.SetTicksPosition = function (Value) {
+      this.FTicksPosition = Value;
+      this.UpdateElement();
+    };
+    this.SetShowMinorTicks = function (Value) {
+      this.FShowMinorTicks = Value;
+      this.UpdateElement();
+    };
+    this.SetStep = function (Value) {
+      this.FStep = Value;
+      this.UpdateElement();
+    };
+    this.SetMode = function (Value) {
+      this.FMode = Value;
+      this.UpdateElement();
+    };
+    this.GetMaximumValue = function () {
+      var Result = 0.0;
+      var s = "";
+      var o = null;
+      Result = this.FMaximumValue;
+      if (!this.FIsLoaded) return Result;
+      if (this.FShowRangeSlider) {
+        o = jQuery(this.GetJQID()).jqxSlider("getValue");
+        if (o != null) {
+          s = "" + o["rangeEnd"];
+          if (s !== "") Result = pas.SysUtils.StrToFloat(s);
+        };
+      };
+      return Result;
+    };
+    this.GetMinimumValue = function () {
+      var Result = 0.0;
+      var s = "";
+      var o = null;
+      Result = this.FMinimumValue;
+      if (!this.FIsLoaded) return Result;
+      if (this.FShowRangeSlider) {
+        o = jQuery(this.GetJQID()).jqxSlider("getValue");
+        if (o != null) {
+          s = "" + o["rangeStart"];
+          if (s !== "") Result = pas.SysUtils.StrToFloat(s);
+        };
+      };
+      return Result;
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.IsUpdating()) return;
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        this.FValue = 5;
+        jQuery(this.GetJQID()).jqxSlider(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        jQuery(this.GetJQID()).jqxSlider("value",this.FValue);
+        jQuery(this.GetJQID()).on("change",rtl.createCallback(this,"HandleSliderChange"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      var stemplate = "";
+      var slayout = "";
+      var bpos = "";
+      var tpos = "";
+      var smode = "";
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.IsUpdating()) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) {
+          jQuery(this.GetJQID()).jqxSlider(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+          jQuery(this.GetJQID()).jqxSlider(JSON.parse('{"disabled": ' + pas.SysUtils.LowerCase(pas.SysUtils.BoolToStr(!this.FEnabled,true)) + "}"));
+          jQuery(this.GetJQID()).jqxSlider("rangeSlider",this.FShowRangeSlider);
+          jQuery(this.GetJQID()).jqxSlider("theme",this.GetTheme(this.FTheme));
+          if (this.FShowRangeSlider) {
+            jQuery(this.GetJQID()).jqxSlider("setValue",this.FMinimumValue,this.FMaximumValue)}
+           else jQuery(this.GetJQID()).jqxSlider("setValue",this.FValue);
+          jQuery(this.GetJQID()).jqxSlider("max",this.FMaximum);
+          jQuery(this.GetJQID()).jqxSlider("min",this.FMinimum);
+          jQuery(this.GetJQID()).jqxSlider("step",this.FStep);
+          var $tmp1 = this.FButtonsPosition;
+          if ($tmp1 === $mod.TJQXHorizontalPosition.hpBoth) {
+            bpos = "both"}
+           else if ($tmp1 === $mod.TJQXHorizontalPosition.hpLeft) {
+            bpos = "left"}
+           else if ($tmp1 === $mod.TJQXHorizontalPosition.hpRight) bpos = "right";
+          jQuery(this.GetJQID()).jqxSlider("buttonsPosition",bpos);
+          var $tmp2 = this.FTicksPosition;
+          if ($tmp2 === $mod.TJQXVerticalPosition.vpBoth) {
+            tpos = "both"}
+           else if ($tmp2 === $mod.TJQXVerticalPosition.vpTop) {
+            tpos = "top"}
+           else if ($tmp2 === $mod.TJQXVerticalPosition.vpBottom) tpos = "bottom";
+          jQuery(this.GetJQID()).jqxSlider("ticksPosition",tpos);
+          jQuery(this.GetJQID()).jqxSlider("ticksFrequency",this.FTicksFrequency);
+          jQuery(this.GetJQID()).jqxSlider("tickSize",this.FTickSize);
+          jQuery(this.GetJQID()).jqxSlider("minorTicksFrequency",this.FMinorTicksFrequency);
+          jQuery(this.GetJQID()).jqxSlider("minorTickSize",this.FMinorTickSize);
+          jQuery(this.GetJQID()).jqxSlider("showTicks",this.FShowTicks);
+          jQuery(this.GetJQID()).jqxSlider("showMinorTicks",this.FShowMinorTicks);
+          jQuery(this.GetJQID()).jqxSlider("showButtons",this.FShowButtons);
+          jQuery(this.GetJQID()).jqxSlider("showRange",this.FShowRange);
+          var $tmp3 = this.FMode;
+          if ($tmp3 === $mod.TJQXSliderMode.smDefault) {
+            smode = "default"}
+           else if ($tmp3 === $mod.TJQXSliderMode.smFixed) smode = "fixed";
+          jQuery(this.GetJQID()).jqxSlider("mode",smode);
+          var $tmp4 = this.FTemplate;
+          if ($tmp4 === $mod.TJQXTemplate.ttDefault) {
+            stemplate = "default"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttPrimary) {
+            stemplate = "primary"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttSuccess) {
+            stemplate = "success"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttWarning) {
+            stemplate = "warning"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttDanger) {
+            stemplate = "danger"}
+           else if ($tmp4 === $mod.TJQXTemplate.ttInfo) stemplate = "info";
+          jQuery(this.GetJQID()).jqxSlider("template",stemplate);
+          slayout = "normal";
+          if (this.FLayout === $mod.TJQXProgressLayout.plReverse) slayout = "reverse";
+          jQuery(this.GetJQID()).jqxSlider("layout",slayout);
+        };
+      };
+    };
+    this.UpdateSize = function () {
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) jQuery(this.GetJQID()).jqxSlider(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+      };
+    };
+    this.BindEvents = function () {
+    };
+    this.GetValue = function () {
+      var Result = 0.0;
+      var s = "";
+      var o = null;
+      Result = this.FValue;
+      if (!this.FIsLoaded) return Result;
+      if (!this.FShowRangeSlider) {
+        o = jQuery(this.GetJQID()).jqxSlider("value");
+        s = o.toString();
+        Result = pas.SysUtils.StrToFloat(s);
+      };
+      return Result;
+    };
+    this.SetValue = function (AValue) {
+      this.FValue = AValue;
+      if (!this.FIsLoaded) return;
+      if (!this.FShowRangeSlider) jQuery(this.GetJQID()).jqxSlider("value",AValue);
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateSize();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateSize();
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FButtonsPosition = $mod.TJQXHorizontalPosition.hpBoth;
+      this.FTicksPosition = $mod.TJQXVerticalPosition.vpBoth;
+      this.FTicksFrequency = 2;
+      this.FTickSize = 5;
+      this.FMinorTicksFrequency = 2;
+      this.FMinorTickSize = 5;
+      this.FShowButtons = true;
+      this.FShowTicks = true;
+      this.FShowMinorTicks = true;
+      this.FShowRange = true;
+      this.FShowRangeSlider = false;
+      this.FMaximumValue = 10;
+      this.FMinimumValue = 0;
+      this.FMaximum = 10;
+      this.FMinimum = 0;
+      this.FMode = $mod.TJQXSliderMode.smDefault;
+      this.FStep = 2;
+      this.FTemplate = $mod.TJQXTemplate.ttDefault;
+      this.FLayout = $mod.TJQXProgressLayout.plNormal;
+      this.FValue = 0;
+      this.FIsLoaded = false;
+      this.SetWidth(300);
+      this.SetHeight(25);
+      this.FRequiredScripts.Add("jqxbuttons.js");
+      this.FRequiredScripts.Add("jqxslider.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxSlider("theme",this.GetTheme(AValue));
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("ButtonsPosition",2,$mod.$rtti["TJQXHorizontalPosition"],"FButtonsPosition","SetButtonsPosition",{Default: $mod.TJQXHorizontalPosition.hpBoth});
+    $r.addProperty("TicksPosition",2,$mod.$rtti["TJQXVerticalPosition"],"FTicksPosition","SetTicksPosition",{Default: $mod.TJQXVerticalPosition.vpBoth});
+    $r.addProperty("TicksFrequency",2,rtl.longint,"FTicksFrequency","SetTicksFrequency",{Default: 2});
+    $r.addProperty("TickSize",2,rtl.longint,"FTickSize","SetTickSize",{Default: 5});
+    $r.addProperty("MinorTicksFrequency",2,rtl.longint,"FMinorTicksFrequency","SetMinorTicksFrequency",{Default: 2});
+    $r.addProperty("MinorTickSize",2,rtl.longint,"FMinorTickSize","SetMinorTickSize",{Default: 5});
+    $r.addProperty("ShowButtons",2,rtl.boolean,"FShowButtons","SetShowButtons",{Default: true});
+    $r.addProperty("ShowTicks",2,rtl.boolean,"FShowTicks","SetShowTicks",{Default: true});
+    $r.addProperty("ShowMinorTicks",2,rtl.boolean,"FShowMinorTicks","SetShowMinorTicks",{Default: true});
+    $r.addProperty("ShowRange",2,rtl.boolean,"FShowRange","SetShowRange",{Default: true});
+    $r.addProperty("ShowRangeSlider",2,rtl.boolean,"FShowRangeSlider","SetShowRangeSlider",{Default: false});
+    $r.addProperty("MaximumValue",3,rtl.double,"GetMaximumValue","SetMaximumValue",{Default: 10});
+    $r.addProperty("MinimumValue",3,rtl.double,"GetMinimumValue","SetMinimumValue",{Default: 0});
+    $r.addProperty("Maximum",2,rtl.double,"FMaximum","SetMaximum",{Default: 10});
+    $r.addProperty("Minimum",2,rtl.double,"FMinimum","SetMinimum",{Default: 0});
+    $r.addProperty("Mode",2,$mod.$rtti["TJQXSliderMode"],"FMode","SetMode",{Default: $mod.TJQXSliderMode.smDefault});
+    $r.addProperty("Step",2,rtl.double,"FStep","SetStep",{Default: 2});
+    $r.addProperty("Template",2,$mod.$rtti["TJQXTemplate"],"FTemplate","SetTemplate",{Default: $mod.TJQXTemplate.ttDefault});
+    $r.addProperty("Layout",2,$mod.$rtti["TJQXProgressLayout"],"FLayout","SetLayout",{Default: $mod.TJQXProgressLayout.plNormal});
+    $r.addProperty("Value",3,rtl.double,"GetValue","SetValue");
+    $r.addProperty("OnChange",0,$mod.$rtti["TJQXSliderEvent"],"FOnChange","FOnChange");
+  });
+  rtl.createClass($mod,"TWebJQXSlider",$mod.TJQXSlider,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXRangeSelector",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FOnChange = null;
+      this.FIsLoaded = false;
+      this.FMaximumValue = 0.0;
+      this.FMaximum = 0.0;
+      this.FMinimumValue = 0.0;
+      this.FMinimum = 0.0;
+      this.FResizable = false;
+      this.FMinorTicksInterval = 0;
+      this.FMajorTicksInterval = 0;
+      this.FShowMinorTicks = false;
+      this.FShowMajorTicks = false;
+      this.FMoveOnClick = false;
+      this.FShowMarkers = false;
+    };
+    this.$final = function () {
+      this.FOnChange = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleRangeChange = function (Event) {
+      var Result = false;
+      if (this.FOnChange != null) this.FOnChange(this);
+      Result = true;
+      return Result;
+    };
+    this.SetMaximum = function (Value) {
+      this.FMaximum = Value;
+      this.UpdateElement();
+    };
+    this.SetMaximumValue = function (Value) {
+      this.FMaximumValue = Value;
+      this.UpdateElement();
+    };
+    this.SetMinimum = function (Value) {
+      this.FMinimum = Value;
+      this.UpdateElement();
+    };
+    this.SetMinimumValue = function (Value) {
+      this.FMinimumValue = Value;
+      this.UpdateElement();
+    };
+    this.GetMaximumValue = function () {
+      var Result = 0.0;
+      var s = "";
+      var o = null;
+      Result = this.FMaximumValue;
+      if (!this.FIsLoaded) return Result;
+      o = jQuery(this.GetJQID()).jqxRangeSelector("getRange");
+      if (o != null) {
+        s = "" + o["to"];
+        if (s !== "") Result = pas.SysUtils.StrToFloat(s);
+      };
+      this.FMaximumValue = Result;
+      return Result;
+    };
+    this.GetMinimumValue = function () {
+      var Result = 0.0;
+      var s = "";
+      var o = null;
+      Result = this.FMinimumValue;
+      if (!this.FIsLoaded) return Result;
+      o = jQuery(this.GetJQID()).jqxRangeSelector("getRange");
+      if (o != null) {
+        s = "" + o["from"];
+        if (s !== "") Result = pas.SysUtils.StrToFloat(s);
+      };
+      this.FMinimumValue = Result;
+      return Result;
+    };
+    this.SetMajorTicksInterval = function (Value) {
+      this.FMajorTicksInterval = Value;
+      this.UpdateElement();
+    };
+    this.SetMinorTicksInterval = function (Value) {
+      this.FMinorTicksInterval = Value;
+      this.UpdateElement();
+    };
+    this.SetResizable = function (Value) {
+      this.FResizable = Value;
+      this.UpdateElement();
+    };
+    this.SetShowMinorTicks = function (Value) {
+      this.FShowMinorTicks = Value;
+      this.UpdateElement();
+    };
+    this.SetShowMajorTicks = function (Value) {
+      this.FShowMajorTicks = Value;
+      this.UpdateElement();
+    };
+    this.SetMoveOnClick = function (Value) {
+      this.FMoveOnClick = Value;
+      this.UpdateElement();
+    };
+    this.SetShowMarkers = function (Value) {
+      this.FShowMarkers = Value;
+      this.UpdateElement();
+    };
+    this.InitJQuery = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxRangeSelector(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight() - 50) + "}"));
+        jQuery(this.GetJQID()).on("change",rtl.createCallback(this,"HandleRangeChange"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) {
+          this.GetElementHandle().style.setProperty("overflow","visible");
+          jQuery(this.GetJQID()).jqxRangeSelector(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight() - 50) + "}"));
+          jQuery(this.GetJQID()).jqxRangeSelector("max",this.FMaximum);
+          jQuery(this.GetJQID()).jqxRangeSelector("min",this.FMinimum);
+          jQuery(this.GetJQID()).jqxRangeSelector(JSON.parse('{"range": {"from": ' + pas.SysUtils.FloatToStr(this.FMinimumValue) + ', "to": ' + pas.SysUtils.FloatToStr(this.FMaximumValue) + "}}"));
+          jQuery(this.GetJQID()).jqxRangeSelector("resizable",this.FResizable);
+          jQuery(this.GetJQID()).jqxRangeSelector("disabled",!this.FEnabled);
+          jQuery(this.GetJQID()).jqxRangeSelector("majorTicksInterval",this.FMajorTicksInterval);
+          jQuery(this.GetJQID()).jqxRangeSelector("minorTicksInterval",this.FMinorTicksInterval);
+          jQuery(this.GetJQID()).jqxRangeSelector("moveOnClick",this.FMoveOnClick);
+          jQuery(this.GetJQID()).jqxRangeSelector("showMajorTicks",this.FShowMajorTicks);
+          jQuery(this.GetJQID()).jqxRangeSelector("showMinorTicks",this.FShowMinorTicks);
+          jQuery(this.GetJQID()).jqxRangeSelector("showMarkers",this.FShowMarkers);
+          jQuery(this.GetJQID()).jqxRangeSelector("theme",this.GetTheme(this.FTheme));
+        };
+      };
+    };
+    this.BindEvents = function () {
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FMinimum = 0;
+      this.FMaximum = 10;
+      this.FMinimumValue = 0;
+      this.FMaximumValue = 10;
+      this.FMajorTicksInterval = 5;
+      this.FMinorTicksInterval = 1;
+      this.FMoveOnClick = true;
+      this.FResizable = true;
+      this.FShowMajorTicks = true;
+      this.FShowMinorTicks = true;
+      this.FShowMarkers = true;
+      this.SetHeight(60);
+      this.SetWidth(200);
+      this.FRequiredScripts.Add("jqxdata.js");
+      this.FRequiredScripts.Add("jqxrangeselector.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        jQuery(this.GetJQID()).jqxRangeSelector("theme",this.GetTheme(AValue));
+        this.UpdateElement();
+      };
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("MaximumValue",3,rtl.double,"GetMaximumValue","SetMaximumValue",{Default: 10});
+    $r.addProperty("MinimumValue",3,rtl.double,"GetMinimumValue","SetMinimumValue",{Default: 0});
+    $r.addProperty("Maximum",2,rtl.double,"FMaximum","SetMaximum",{Default: 10});
+    $r.addProperty("Minimum",2,rtl.double,"FMinimum","SetMinimum",{Default: 0});
+    $r.addProperty("MajorTicksInterval",2,rtl.longint,"FMajorTicksInterval","SetMajorTicksInterval",{Default: 5});
+    $r.addProperty("MinorTicksInterval",2,rtl.longint,"FMinorTicksInterval","SetMinorTicksInterval",{Default: 1});
+    $r.addProperty("MoveOnClick",2,rtl.boolean,"FMoveOnClick","SetMoveOnClick",{Default: true});
+    $r.addProperty("Resizable",2,rtl.boolean,"FResizable","SetResizable",{Default: true});
+    $r.addProperty("ShowMajorTicks",2,rtl.boolean,"FShowMajorTicks","SetShowMajorTicks",{Default: true});
+    $r.addProperty("ShowMinorTicks",2,rtl.boolean,"FShowMinorTicks","SetShowMinorTicks",{Default: true});
+    $r.addProperty("ShowMarkers",2,rtl.boolean,"FShowMarkers","SetShowMarkers",{Default: true});
+    $r.addProperty("OnChange",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnChange","FOnChange");
+  });
+  rtl.createClass($mod,"TWebJQXRangeSelector",$mod.TJQXRangeSelector,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  $mod.$rtti.$Class("TJQXTagCloud");
+  $mod.$rtti.$Class("TJQXCloudTags");
+  rtl.createClass($mod,"TJQXCloudTag",pas.Classes.TCollectionItem,function () {
+    this.$init = function () {
+      pas.Classes.TCollectionItem.$init.call(this);
+      this.FOwner = null;
+      this.FTagValue = 0;
+      this.FTag = 0;
+      this.FTagName = "";
+      this.FTagLabel = "";
+    };
+    this.$final = function () {
+      this.FOwner = undefined;
+      pas.Classes.TCollectionItem.$final.call(this);
+    };
+    this.SetTagName = function (Value) {
+      this.FTagName = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetTagValue = function (Value) {
+      this.FTagValue = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.SetTagLabel = function (Value) {
+      this.FTagLabel = Value;
+      this.FOwner.FOwner.UpdateElement();
+    };
+    this.Create$1 = function (Collection) {
+      pas.Classes.TCollectionItem.Create$1.apply(this,arguments);
+      this.FTag = -1;
+      this.FTagName = "Tag " + pas.SysUtils.IntToStr(this.GetIndex());
+      this.FTagValue = 0;
+      if ($mod.TJQXCloudTags.isPrototypeOf(Collection)) {
+        this.FOwner = rtl.as(Collection,$mod.TJQXCloudTags);
+      };
+      return this;
+    };
+    this.Destroy = function () {
+      pas.Classes.TCollectionItem.Destroy.call(this);
+    };
+    this.Assign = function (Source) {
+      if ($mod.TJQXCloudTag.isPrototypeOf(Source)) {
+        this.FTag = rtl.as(Source,$mod.TJQXCloudTag).FTag;
+        this.FTagName = rtl.as(Source,$mod.TJQXCloudTag).FTagName;
+        this.FTagValue = rtl.as(Source,$mod.TJQXCloudTag).FTagValue;
+      };
+    };
+    this.GetOwner = function () {
+      var Result = null;
+      Result = this.FOwner;
+      return Result;
+    };
+    this.GetDisplayName = function () {
+      var Result = "";
+      Result = "Tag " + pas.SysUtils.IntToStr(this.GetIndex());
+      return Result;
+    };
+    var $r = this.$rtti;
+    $r.addProperty("Tag",0,rtl.longint,"FTag","FTag");
+    $r.addProperty("TagLabel",2,rtl.string,"FTagLabel","SetTagLabel");
+    $r.addProperty("TagName",2,rtl.string,"FTagName","SetTagName");
+    $r.addProperty("TagValue",2,rtl.longint,"FTagValue","SetTagValue");
+  });
+  rtl.createClass($mod,"TJQXCloudTags",pas.Classes.TCollection,function () {
+    this.$init = function () {
+      pas.Classes.TCollection.$init.call(this);
+      this.FOwner = null;
+    };
+    this.$final = function () {
+      this.FOwner = undefined;
+      pas.Classes.TCollection.$final.call(this);
+    };
+    this.GetItems = function (Index) {
+      var Result = null;
+      Result = this.GetItem(Index);
+      return Result;
+    };
+    this.SetItems = function (Index, Value) {
+      this.SetItem(Index,Value);
+    };
+    this.Update = function (Item) {
+      pas.Classes.TCollection.Update.apply(this,arguments);
+    };
+    this.Create$2 = function (AOwner) {
+      pas.Classes.TCollection.Create$1.call(this,$mod.TJQXCloudTag);
+      this.FOwner = AOwner;
+      return this;
+    };
+    this.GetOwner = function () {
+      var Result = null;
+      Result = this.FOwner;
+      return Result;
+    };
+    this.Add$1 = function () {
+      var Result = null;
+      Result = pas.Classes.TCollection.Add.call(this);
+      return Result;
+    };
+    this.Insert$1 = function (Index) {
+      var Result = null;
+      Result = pas.Classes.TCollection.Insert.call(this,Index);
+      return Result;
+    };
+  });
+  rtl.createClass($mod,"TJQXTagCloud",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FIsLoaded = false;
+      this.FItems = null;
+      this.FSortBy = 0;
+      this.FOnClick$1 = null;
+      this.FSortOrder = 0;
+      this.FTextCase = 0;
+      this.FDisplayLimit = 0;
+      this.FDisplayMinValue = 0;
+      this.FDisplayTopWeighted = false;
+      this.FMaxColor = 0;
+      this.FMinColor = 0;
+      this.FDisplayMaxValue = 0;
+      this.FMaxFontSize = 0;
+      this.FMinFontSize = 0;
+    };
+    this.$final = function () {
+      this.FItems = undefined;
+      this.FOnClick$1 = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.SetSortBy = function (Value) {
+      this.FSortBy = Value;
+      this.UpdateElement();
+    };
+    this.SetSortOrder = function (Value) {
+      this.FSortOrder = Value;
+      this.UpdateElement();
+    };
+    this.SetTextCase = function (Value) {
+      this.FTextCase = Value;
+      this.UpdateElement();
+    };
+    this.SetDisplayLimit = function (Value) {
+      this.FDisplayLimit = Value;
+      this.UpdateElement();
+    };
+    this.SetDisplayMaxValue = function (Value) {
+      this.FDisplayMaxValue = Value;
+      this.UpdateElement();
+    };
+    this.SetDisplayMinValue = function (Value) {
+      this.FDisplayMinValue = Value;
+      this.UpdateElement();
+    };
+    this.SetDisplayTopWeighted = function (Value) {
+      this.FDisplayTopWeighted = Value;
+      this.UpdateElement();
+    };
+    this.SetMaxColor = function (Value) {
+      this.FMaxColor = Value;
+      this.UpdateElement();
+    };
+    this.SetMinColor = function (Value) {
+      this.FMinColor = Value;
+      this.UpdateElement();
+    };
+    this.SetMaxFontSize = function (Value) {
+      this.FMaxFontSize = Value;
+      this.UpdateElement();
+    };
+    this.SetMinFontSize = function (Value) {
+      this.FMinFontSize = Value;
+      this.UpdateElement();
+    };
+    this.InitJQuery = function () {
+      var jqid = "";
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jqid = this.GetJQID();
+        var source =
+            {
+                localData: null,
+                dataType: "array",
+                dataFields: [
+                    {name: 'name', type: 'string'},
+                    {name: 'rating', type: 'number'}
+                ]
+            };
+            var dataAdapter = new $.jqx.dataAdapter(source, {});
+        
+            $(jqid).jqxTagCloud({
+                source: dataAdapter,
+                displayMember: 'name'
+            });
+        jQuery(this.GetJQID()).on("itemClick",rtl.createCallback(this,"HandleItemClick"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      var a = null;
+      var ar = null;
+      var ssort = "";
+      var ssortorder = "";
+      var stextcase = "";
+      var ilimit = 0;
+      var imaxval = 0;
+      var cmax = "";
+      var cmin = "";
+      var scolor = "";
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (this.GetElementHandle() != null) {
+        if (this.FIsLoaded) {
+          ar = new Array();
+          ar.push(pas.JS.New(["name","name","type","string"]));
+          ar.push(pas.JS.New(["name","rating","type","number"]));
+          a = new $.jqx.dataAdapter(pas.JS.New(["datatype","array","datafields",ar,"localdata",this.DataToArray()]));
+          jQuery(this.GetJQID()).jqxTagCloud("source",a);
+          jQuery(this.GetJQID()).jqxTagCloud(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+          jQuery(this.GetJQID()).jqxTagCloud("valueMember","rating");
+          ssort = "none";
+          var $tmp1 = this.FSortBy;
+          if ($tmp1 === $mod.TJQXTagCloudSort.tcsLabel) {
+            ssort = "label"}
+           else if ($tmp1 === $mod.TJQXTagCloudSort.tcsValue) ssort = "value";
+          jQuery(this.GetJQID()).jqxTagCloud("sortBy",ssort);
+          ssortorder = "ascending";
+          if (this.FSortOrder === $mod.TJQXSortOrder.soDescending) ssortorder = "descending";
+          jQuery(this.GetJQID()).jqxTagCloud("sortOrder",ssortorder);
+          stextcase = "none";
+          var $tmp2 = this.FTextCase;
+          if ($tmp2 === $mod.TJQXTextCase.tcUpperCase) {
+            stextcase = "allUpper"}
+           else if ($tmp2 === $mod.TJQXTextCase.tcLowerCase) {
+            stextcase = "allLower"}
+           else if ($tmp2 === $mod.TJQXTextCase.tcFirstUpper) {
+            stextcase = "firstUpper"}
+           else if ($tmp2 === $mod.TJQXTextCase.tcCamelCase) stextcase = "titleCase";
+          jQuery(this.GetJQID()).jqxTagCloud("alterTextCase",stextcase);
+          ilimit = 9999;
+          if (this.FDisplayLimit >= 0) ilimit = this.FDisplayLimit;
+          jQuery(this.GetJQID()).jqxTagCloud("displayLimit",ilimit);
+          jQuery(this.GetJQID()).jqxTagCloud("takeTopWeightedItems",this.FDisplayTopWeighted);
+          imaxval = 9999;
+          if (this.FDisplayMaxValue > this.FDisplayMinValue) imaxval = this.FDisplayMaxValue;
+          jQuery(this.GetJQID()).jqxTagCloud("minValueToDisplay",this.FDisplayMinValue);
+          jQuery(this.GetJQID()).jqxTagCloud("maxValueToDisplay",imaxval);
+          jQuery(this.GetJQID()).jqxTagCloud("minFontSize",this.FMinFontSize);
+          jQuery(this.GetJQID()).jqxTagCloud("maxFontSize",this.FMaxFontSize);
+          cmax = "";
+          if (this.FMaxColor !== -1) cmax = pas["WEBLib.Graphics"].ColorToHTML(this.FMaxColor);
+          cmin = "";
+          if (this.FMinColor !== -1) cmin = pas["WEBLib.Graphics"].ColorToHTML(this.FMinColor);
+          scolor = "";
+          if (cmin !== "") {
+            scolor = cmin}
+           else if (cmax !== "") scolor = cmax;
+          jQuery(this.GetJQID()).jqxTagCloud("minColor",cmin);
+          jQuery(this.GetJQID()).jqxTagCloud("maxColor",cmax);
+          jQuery(this.GetJQID()).jqxTagCloud("textColor",scolor);
+          jQuery(this.GetJQID()).jqxTagCloud("disabled",!this.FEnabled);
+        };
+      };
+    };
+    this.BindEvents = function () {
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.DataToArray = function () {
+      var Result = null;
+      var I = 0;
+      Result = new Array();
+      for (var $l1 = 0, $end2 = this.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+        I = $l1;
+        Result.push(pas.JS.New(["name",this.FItems.GetItems(I).FTagLabel,"rating",this.FItems.GetItems(I).FTagValue]));
+      };
+      return Result;
+    };
+    this.HandleItemClick = function (Event) {
+      var Result = false;
+      var Args = null;
+      Result = false;
+      if (!this.FEnabled) return Result;
+      if (this.FOnClick$1 != null) {
+        Args = $mod.TJQXTagEventArgs.$create("Create");
+        Args.FTagIndex = pas.SysUtils.StrToInt("" + Event.args["index"]);
+        Args.FDisplayIndex = pas.SysUtils.StrToInt("" + Event.args["visibleIndex"]);
+        Args.FTagLabel = "" + Event.args["label"];
+        Args.FTagValue = pas.SysUtils.StrToInt("" + Event.args["value"]);
+        this.FOnClick$1(this,Args);
+        Args = rtl.freeLoc(Args);
+      };
+      Result = true;
+      return Result;
+    };
+    this.CreateInitialize = function () {
+      var ltag = null;
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FDisplayLimit = -1;
+      this.FDisplayTopWeighted = false;
+      this.FDisplayMaxValue = -1;
+      this.FDisplayMinValue = -1;
+      this.FItems = $mod.TJQXCloudTags.$create("Create$2",[this]);
+      this.FMaxColor = -1;
+      this.FMinColor = -1;
+      this.FMaxFontSize = 36;
+      this.FMinFontSize = 8;
+      this.FSortBy = $mod.TJQXTagCloudSort.tcsNone;
+      this.FSortOrder = $mod.TJQXSortOrder.soAscending;
+      this.FTextCase = $mod.TJQXTextCase.tcOriginal;
+      this.SetHeight(200);
+      this.SetWidth(200);
+      this.FRequiredScripts.Add("jqxdata.js");
+      this.FRequiredScripts.Add("jqxtagcloud.js");
+      ltag = this.FItems.Add$1();
+      ltag.SetTagLabel("Tag Item 1");
+      ltag.SetTagValue(50);
+      ltag = this.FItems.Add$1();
+      ltag.SetTagLabel("Tag Item 2");
+      ltag.SetTagValue(100);
+      ltag = this.FItems.Add$1();
+      ltag.SetTagLabel("Tag Item 3");
+      ltag.SetTagValue(75);
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.Destroy = function () {
+      rtl.free(this,"FItems");
+      pas["WEBLib.Controls"].TControl.Destroy.call(this);
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("DisplayLimit",2,rtl.longint,"FDisplayLimit","SetDisplayLimit",{Default: -1});
+    $r.addProperty("DisplayTopWeighted",2,rtl.boolean,"FDisplayTopWeighted","SetDisplayTopWeighted",{Default: false});
+    $r.addProperty("DisplayMaxValue",2,rtl.longint,"FDisplayMaxValue","SetDisplayMaxValue",{Default: -1});
+    $r.addProperty("DisplayMinValue",2,rtl.longint,"FDisplayMinValue","SetDisplayMinValue",{Default: -1});
+    $r.addProperty("Items",0,$mod.$rtti["TJQXCloudTags"],"FItems","FItems");
+    $r.addProperty("MaxColor",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FMaxColor","SetMaxColor",{Default: -1});
+    $r.addProperty("MinColor",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FMinColor","SetMinColor",{Default: -1});
+    $r.addProperty("MaxFontSize",2,rtl.longint,"FMaxFontSize","SetMaxFontSize",{Default: 36});
+    $r.addProperty("MinFontSize",2,rtl.longint,"FMinFontSize","SetMinFontSize",{Default: 8});
+    $r.addProperty("SortBy",2,$mod.$rtti["TJQXTagCloudSort"],"FSortBy","SetSortBy",{Default: $mod.TJQXTagCloudSort.tcsNone});
+    $r.addProperty("SortOrder",2,$mod.$rtti["TJQXSortOrder"],"FSortOrder","SetSortOrder",{Default: $mod.TJQXSortOrder.soAscending});
+    $r.addProperty("TextCase",2,$mod.$rtti["TJQXTextCase"],"FTextCase","SetTextCase",{Default: $mod.TJQXTextCase.tcOriginal});
+    $r.addProperty("OnClick",0,$mod.$rtti["TJQXTagEvent"],"FOnClick$1","FOnClick$1");
+  });
+  rtl.createClass($mod,"TWebJQXTagCloud",$mod.TJQXTagCloud,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXResponsivePanel",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FIsLoaded = false;
+      this.FOnOpen = null;
+      this.FAutoClose = false;
+      this.FOnClose = null;
+      this.FOnCollapse = null;
+      this.FOnExpand = null;
+      this.FToggleButtonSize = 0;
+      this.FCollapseBreakPoint = 0;
+      this.FAnimationType = 0;
+    };
+    this.$final = function () {
+      this.FOnOpen = undefined;
+      this.FOnClose = undefined;
+      this.FOnCollapse = undefined;
+      this.FOnExpand = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleOpen = function (Event) {
+      var Result = false;
+      if (this.FOnOpen != null) this.FOnOpen(this);
+      Result = true;
+      return Result;
+    };
+    this.HandleClose = function (Event) {
+      var Result = false;
+      if (this.FOnClose != null) this.FOnClose(this);
+      Result = true;
+      return Result;
+    };
+    this.HandleCollapse = function (Event) {
+      var Result = false;
+      if (this.FOnCollapse != null) this.FOnCollapse(this);
+      Result = true;
+      return Result;
+    };
+    this.HandleExpand = function (Event) {
+      var Result = false;
+      if (this.FOnExpand != null) this.FOnExpand(this);
+      Result = true;
+      return Result;
+    };
+    this.SetAutoClose = function (Value) {
+      this.FAutoClose = Value;
+      this.UpdateElement();
+    };
+    this.SetCollapsBreakPoint = function (Value) {
+      this.FCollapseBreakPoint = Value;
+      this.UpdateElement();
+    };
+    this.SetToggleButtonSize = function (Value) {
+      this.FToggleButtonSize = Value;
+      this.UpdateElement();
+    };
+    this.SetAnimationType = function (Value) {
+      this.FAnimationType = Value;
+      this.UpdateElement();
+    };
+    this.InitJQuery = function () {
+      var idContent = "";
+      var idButton = "";
+      var content = null;
+      var button = null;
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.FIsLoaded) return;
+      if (!this.FScriptLoaded) return;
+      if (!(this.GetContainer() != null)) return;
+      idContent = this.GetID() + "DIV";
+      idButton = this.GetID() + "BTN";
+      button = document.createElement("DIV");
+      button.setAttribute("id",idButton);
+      content = document.createElement("DIV");
+      content.setAttribute("id",idContent);
+      while (this.GetContainer().firstChild != null) content.appendChild(this.GetContainer().children.item(0));
+      this.GetContainer().appendChild(button);
+      this.GetContainer().appendChild(content);
+      if (this.GetElementHandle() != null) {
+        idContent = this.GetContentID();
+        idButton = this.GetButtonID();
+        this.FIsLoaded = true;
+        $(idContent).jqxResponsivePanel({
+            toggleButton: $(idButton),
+        });
+        jQuery(idContent).jqxResponsivePanel(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        jQuery(idContent).on("open",rtl.createCallback(this,"HandleOpen"));
+        jQuery(idContent).on("close",rtl.createCallback(this,"HandleClose"));
+        jQuery(idContent).on("collapse",rtl.createCallback(this,"HandleCollapse"));
+        jQuery(idContent).on("expand",rtl.createCallback(this,"HandleExpand"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      var satype = "";
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        jQuery(this.GetContentID()).jqxResponsivePanel("autoClose",pas.SysUtils.BoolToStr(this.FAutoClose,true));
+        jQuery(this.GetContentID()).jqxResponsivePanel("collapseBreakpoint",this.FCollapseBreakPoint);
+        jQuery(this.GetContentID()).jqxResponsivePanel("toggleButtonSize",this.FToggleButtonSize);
+        jQuery(this.GetContentID()).jqxResponsivePanel("toggleButtonSize",this.FToggleButtonSize);
+        satype = "none";
+        if (this.FAnimationType === $mod.TJQXAnimationType.atSlide) {
+          satype = "slide"}
+         else if (this.FAnimationType === $mod.TJQXAnimationType.atFade) satype = "fade";
+        jQuery(this.GetContentID()).jqxResponsivePanel("animationType",satype);
+        jQuery(this.GetContentID()).jqxResponsivePanel("animationDirection","top");
+      };
+    };
+    this.BindEvents = function () {
+    };
+    this.GetContentID = function () {
+      var Result = "";
+      Result = this.GetJQID() + "DIV";
+      return Result;
+    };
+    this.GetButtonID = function () {
+      var Result = "";
+      Result = this.GetJQID() + "BTN";
+      return Result;
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FAnimationType = $mod.TJQXAnimationType.atNone;
+      this.FAutoClose = true;
+      this.FCollapseBreakPoint = 1000;
+      this.FToggleButtonSize = 30;
+      this.SetHeight(200);
+      this.SetWidth(200);
+      this.SetWidthPercent(100);
+      this.SetWidthStyle(pas["WEBLib.Controls"].TSizeStyle.ssPercent);
+      this.FRequiredScripts.Add("jqxresponsivepanel.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetContentID()).jqxResponsivePanel("theme",this.GetTheme(AValue));
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.Open = function () {
+      jQuery(this.GetContentID()).jqxResponsivePanel("open");
+    };
+    this.Close = function () {
+      jQuery(this.GetContentID()).jqxResponsivePanel("close");
+    };
+    this.Refresh = function () {
+      jQuery(this.GetContentID()).jqxResponsivePanel("refresh");
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("AnimationType",2,$mod.$rtti["TJQXAnimationType"],"FAnimationType","SetAnimationType",{Default: $mod.TJQXAnimationType.atNone});
+    $r.addProperty("AutoClose",2,rtl.boolean,"FAutoClose","SetAutoClose",{Default: true});
+    $r.addProperty("CollapseBreakPoint",2,rtl.longint,"FCollapseBreakPoint","SetCollapsBreakPoint",{Default: 1000});
+    $r.addProperty("ToggleButtonSize",2,rtl.longint,"FToggleButtonSize","SetToggleButtonSize",{Default: 30});
+    $r.addProperty("OnOpen",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnOpen","FOnOpen");
+    $r.addProperty("OnClose",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnClose","FOnClose");
+    $r.addProperty("OnCollapse",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnCollapse","FOnCollapse");
+    $r.addProperty("OnExpand",0,pas["WEBLib.Controls"].$rtti["TNotifyEvent"],"FOnExpand","FOnExpand");
+  });
+  rtl.createClass($mod,"TWebJQXResponsivePanel",$mod.TJQXResponsivePanel,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXTabSheet",pas["WEBLib.ExtCtrls"].TDivPanel,function () {
+    this.$init = function () {
+      pas["WEBLib.ExtCtrls"].TDivPanel.$init.call(this);
+      this.FCaption$1 = "";
+    };
+    this.BindEvents = function () {
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.ExtCtrls"].TCustomPanel.CreateInitialize.call(this);
+      this.SetColor(16777215);
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("Caption",0,rtl.string,"FCaption$1","FCaption$1");
+  });
+  rtl.createClass($mod,"TWebJQXTabSheet",$mod.TJQXTabSheet,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+  rtl.createClass($mod,"TJQXTabs",$mod.TJQXCustomControl,function () {
+    this.$init = function () {
+      $mod.TJQXCustomControl.$init.call(this);
+      this.FIsLoaded = false;
+      this.FTabIndex = 0;
+      this.FScrollPosition = 0;
+      this.FCollapsible = false;
+      this.FToggleMode = 0;
+      this.FSelectionTracker = false;
+      this.FReorder = false;
+      this.FEnableHover = false;
+      this.FPosition = 0;
+      this.FEnableScrollAnimation = false;
+      this.FScrollStep = 0;
+      this.FOnTabClick = null;
+      this.FOnSelected = null;
+    };
+    this.$final = function () {
+      this.FOnTabClick = undefined;
+      this.FOnSelected = undefined;
+      $mod.TJQXCustomControl.$final.call(this);
+    };
+    this.HandleTabClick = function (Event) {
+      var Result = false;
+      var Args = null;
+      var index = "";
+      if (this.FOnTabClick != null) {
+        Args = $mod.TJQXTabEventArgs.$create("Create");
+        index = "" + Event.args["item"];
+        if (index !== "") {
+          Args.FTabIndex = pas.SysUtils.StrToInt(index)}
+         else Args.FTabIndex = -1;
+        this.FOnTabClick(this,Args);
+        Args = rtl.freeLoc(Args);
+      };
+      Result = true;
+      return Result;
+    };
+    this.HandleSelected = function (Event) {
+      var Result = false;
+      var Args = null;
+      var index = "";
+      this.GetTabIndex();
+      if (this.FOnSelected != null) {
+        Args = $mod.TJQXTabEventArgs.$create("Create");
+        index = "" + Event.args["item"];
+        if (index !== "") {
+          Args.FTabIndex = pas.SysUtils.StrToInt(index)}
+         else Args.FTabIndex = -1;
+        this.FOnSelected(this,Args);
+        Args = rtl.freeLoc(Args);
+      };
+      Result = true;
+      return Result;
+    };
+    this.SetTabIndex = function (Value) {
+      this.FTabIndex = Value;
+      this.UpdateElement();
+    };
+    this.SetCollapsible = function (Value) {
+      this.FCollapsible = Value;
+      this.UpdateElement();
+    };
+    this.SetEnableHover = function (Value) {
+      this.FEnableHover = Value;
+      this.UpdateElement();
+    };
+    this.SetEnableScrollAnimation = function (Value) {
+      this.FEnableScrollAnimation = Value;
+      this.UpdateElement();
+    };
+    this.SetPosition = function (Value) {
+      this.FPosition = Value;
+      this.UpdateElement();
+    };
+    this.SetReorder = function (Value) {
+      this.FReorder = Value;
+      this.UpdateElement();
+    };
+    this.SetScrollPosition = function (Value) {
+      this.FScrollPosition = Value;
+      this.UpdateElement();
+    };
+    this.SetSelectionTracker = function (Value) {
+      this.FSelectionTracker = Value;
+      this.UpdateElement();
+    };
+    this.SetToggleMode = function (Value) {
+      this.FToggleMode = Value;
+      this.UpdateElement();
+    };
+    this.SetScrollStep = function (Value) {
+      this.FScrollStep = Value;
+      this.UpdateElement();
+    };
+    this.GetTabIndex = function () {
+      var Result = 0;
+      var index = "";
+      if (!this.FIsLoaded) return Result;
+      if (this.GetElementHandle() != null) {
+        index = JSON.stringify(jQuery(this.GetJQID()).jqxTabs("selectedItem"));
+        if ((index !== "") && (index !== "null")) this.FTabIndex = pas.SysUtils.StrToInt(index);
+      };
+      Result = this.FTabIndex;
+      return Result;
+    };
+    this.InitJQuery = function () {
+      var listitem = null;
+      var list = null;
+      var I = 0;
+      pas["WEBLib.Controls"].TjQueryCustomControl.InitJQuery.call(this);
+      if (this.FIsLoaded) return;
+      if (!(this.GetContainer() != null)) return;
+      if (!this.FScriptLoaded) return;
+      if (this.GetControlsCount() <= 0) return;
+      list = document.createElement("UL");
+      for (var $l1 = 0, $end2 = this.GetControlsCount() - 1; $l1 <= $end2; $l1++) {
+        I = $l1;
+        listitem = document.createElement("LI");
+        listitem.innerHTML = this.GetControls(I).FCaption$1;
+        list.appendChild(listitem);
+      };
+      this.GetContainer().appendChild(list);
+      for (var $l3 = 0, $end4 = this.GetControlsCount() - 1; $l3 <= $end4; $l3++) {
+        I = $l3;
+        if ($mod.TJQXTabSheet.isPrototypeOf(this.GetControls(I))) {
+          this.GetControls(I).GetElementHandle().style.setProperty("top","");
+          this.GetControls(I).GetElementHandle().style.setProperty("border-width","0px");
+          this.GetControls(I).GetElementHandle().style.setProperty("white-space","");
+        };
+      };
+      if (this.GetElementHandle() != null) {
+        this.FIsLoaded = true;
+        jQuery(this.GetJQID()).jqxTabs(JSON.parse('{"width": ' + pas.SysUtils.IntToStr(this.GetWidth()) + ', "height": ' + pas.SysUtils.IntToStr(this.GetHeight()) + "}"));
+        jQuery(this.GetJQID()).on("selected",rtl.createCallback(this,"HandleSelected"));
+        jQuery(this.GetJQID()).on("tabclick",rtl.createCallback(this,"HandleTabClick"));
+        this.UpdateElement();
+      };
+    };
+    this.UpdateElement = function () {
+      var spos = "";
+      var sscrollpos = "";
+      var stoggle = "";
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) {
+        if (!this.FEnabled) {
+          this.GetElementHandle().style.setProperty("pointer-events","none")}
+         else this.GetElementHandle().style.setProperty("pointer-events","auto");
+        spos = "top";
+        if (this.FPosition === $mod.TJQXTabPosition.tpBottom) spos = "bottom";
+        sscrollpos = "right";
+        if (this.FScrollPosition === $mod.TJQXHorizontalPosition.hpBoth) {
+          sscrollpos = "both"}
+         else if (this.FScrollPosition === $mod.TJQXHorizontalPosition.hpLeft) sscrollpos = "left";
+        stoggle = "click";
+        if (this.FToggleMode === $mod.TJQXToggleMode.tmDoubleClick) {
+          stoggle = "dblclick"}
+         else if (this.FToggleMode === $mod.TJQXToggleMode.tmMouseEnter) stoggle = "mouseenter";
+        jQuery(this.GetJQID()).jqxTabs("collapsible",this.FCollapsible);
+        jQuery(this.GetJQID()).jqxTabs("enabledHover",this.FEnableHover);
+        jQuery(this.GetJQID()).jqxTabs("enableScrollAnimation",this.FEnableScrollAnimation);
+        jQuery(this.GetJQID()).jqxTabs("position",spos);
+        jQuery(this.GetJQID()).jqxTabs("reorder",this.FReorder);
+        jQuery(this.GetJQID()).jqxTabs("selectionTracker",this.FSelectionTracker);
+        jQuery(this.GetJQID()).jqxTabs("scrollPosition",sscrollpos);
+        jQuery(this.GetJQID()).jqxTabs("scrollStep",this.FScrollStep);
+        jQuery(this.GetJQID()).jqxTabs("toggleMode",stoggle);
+        jQuery(this.GetJQID()).jqxTabs("theme",this.GetTheme(this.FTheme));
+        jQuery(this.GetJQID()).jqxTabs("selectedItem",this.FTabIndex);
+      };
+    };
+    this.BindEvents = function () {
+    };
+    this.SetEnabled = function (Value) {
+      pas["WEBLib.Controls"].TControl.SetEnabled.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetWidth = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetWidth.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.SetHeight = function (AValue) {
+      pas["WEBLib.Controls"].TControl.SetHeight.apply(this,arguments);
+      this.UpdateElement();
+    };
+    this.CreateInitialize = function () {
+      pas["WEBLib.Controls"].TjQueryCustomControl.CreateInitialize.call(this);
+      this.FCollapsible = false;
+      this.FEnableHover = true;
+      this.FEnableScrollAnimation = true;
+      this.FPosition = $mod.TJQXTabPosition.tpTop;
+      this.FReorder = false;
+      this.FSelectionTracker = false;
+      this.FScrollPosition = $mod.TJQXHorizontalPosition.hpRight;
+      this.FScrollStep = 70;
+      this.FToggleMode = $mod.TJQXToggleMode.tmClick;
+      this.SetHeight(200);
+      this.SetWidth(200);
+      this.FRequiredScripts.Add("jqxtabs.js");
+      this.SetScriptLoaded(!this.AddRequiredScripts());
+    };
+    this.SetTheme = function (AValue) {
+      $mod.TJQXCustomControl.SetTheme.apply(this,arguments);
+      if (!this.FIsLoaded) return;
+      if (this.GetElementHandle() != null) jQuery(this.GetJQID()).jqxTabs("theme",this.GetTheme(AValue));
+    };
+    rtl.addIntf(this,pas.System.IUnknown);
+    var $r = this.$rtti;
+    $r.addProperty("Collapsible",2,rtl.boolean,"FCollapsible","SetCollapsible",{Default: false});
+    $r.addProperty("EnableHover",2,rtl.boolean,"FEnableHover","SetEnableHover",{Default: true});
+    $r.addProperty("EnableScrollAnimation",2,rtl.boolean,"FEnableScrollAnimation","SetEnableScrollAnimation",{Default: true});
+    $r.addProperty("Position",2,$mod.$rtti["TJQXTabPosition"],"FPosition","SetPosition",{Default: $mod.TJQXTabPosition.tpTop});
+    $r.addProperty("Reorder",2,rtl.boolean,"FReorder","SetReorder",{Default: false});
+    $r.addProperty("SelectionTracker",2,rtl.boolean,"FSelectionTracker","SetSelectionTracker",{Default: false});
+    $r.addProperty("ScrollPosition",2,$mod.$rtti["TJQXHorizontalPosition"],"FScrollPosition","SetScrollPosition",{Default: $mod.TJQXHorizontalPosition.hpRight});
+    $r.addProperty("ScrollStep",2,rtl.longint,"FScrollStep","SetScrollStep",{Default: 70});
+    $r.addProperty("ToggleMode",2,$mod.$rtti["TJQXToggleMode"],"FToggleMode","SetToggleMode",{Default: $mod.TJQXToggleMode.tmClick});
+    $r.addProperty("TabIndex",3,rtl.longint,"GetTabIndex","SetTabIndex",{Default: 0});
+    $r.addProperty("OnTabClick",0,$mod.$rtti["TJQXTabEvent"],"FOnTabClick","FOnTabClick");
+    $r.addProperty("OnSelected",0,$mod.$rtti["TJQXTabEvent"],"FOnSelected","FOnSelected");
+  });
+  rtl.createClass($mod,"TWebJQXTabs",$mod.TJQXTabs,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+},["WEBLib.Dialogs"],function () {
+  "use strict";
+  var $mod = this;
+  var $impl = $mod.$impl;
+  $impl.TMSJQWIDGETSLIBRARYURL = "";
+  $impl.JSDateToTDate = function (AValue) {
+    var Result = 0.0;
+    var y = 0;
+    var m = 0;
+    var d = 0;
+    Result = 0;
+    if (!(AValue != null)) return Result;
+    y = AValue.getFullYear();
+    m = AValue.getMonth() + 1;
+    d = AValue.getDate();
+    Result = pas.SysUtils.EncodeDate(y,m,d);
+    return Result;
+  };
+  $impl.TDateToJSDate = function (AValue) {
+    var Result = null;
+    var y = 0;
+    var m = 0;
+    var d = 0;
+    Result = new Date(1970,0,1,0,0,0,0);
+    if (!pas.System.Assigned(AValue)) return Result;
+    pas.SysUtils.DecodeDate(AValue,{get: function () {
+        return y;
+      }, set: function (v) {
+        y = v;
+      }},{get: function () {
+        return m;
+      }, set: function (v) {
+        m = v;
+      }},{get: function () {
+        return d;
+      }, set: function (v) {
+        d = v;
+      }});
+    Result = new Date(y,m - 1,d,0,0,0,0);
+    return Result;
+  };
+});
 rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],function () {
   "use strict";
   var $mod = this;
   var $impl = $mod.$impl;
   this.drawReaction = function (canvas, srcNode, destNode) {
-    var pt = pas.Types.TPoint.$new();
     var pSrc = pas.Types.TPoint.$new();
     var pDest = pas.Types.TPoint.$new();
     pSrc.$assign(rtl.as(srcNode,pas.uNetwork.TNode).getCenter());
@@ -37525,7 +42669,42 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
   "use strict";
   var $mod = this;
   var $impl = $mod.$impl;
-  $impl.SegmentIntersects = function (v1, v2, v) {
+  rtl.recNewT($impl,"TPointF",function () {
+    this.x = 0.0;
+    this.y = 0.0;
+    this.$eq = function (b) {
+      return (this.x === b.x) && (this.y === b.y);
+    };
+    this.$assign = function (s) {
+      this.x = s.x;
+      this.y = s.y;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TPointF",{});
+    $r.addField("x",rtl.double);
+    $r.addField("y",rtl.double);
+  });
+  $mod.$rtti.$DynArray("TPointDynArray",{eltype: $mod.$rtti["TPointF"]});
+  $impl.Angle = function (x, y) {
+    var Result = 0.0;
+    if (Math.abs(x) < 1e-5) {
+      if (Math.abs(y) < 1e-5) {
+        Result = 0.0;
+        return Result;
+      } else if (y > 0.0) {
+        Result = 3.1415 * 0.5;
+        return Result;
+      } else {
+        Result = 3.1415 * 1.5;
+        return Result;
+      }}
+     else if (x < 0.0) {
+      Result = Math.atan(y / x) + 3.1415;
+      return Result;
+    } else Result = Math.atan(y / x);
+    return Result;
+  };
+  $impl.segmentIntersects = function (v1, v2, v) {
     var Result = false;
     var xlk = 0;
     var ylk = 0;
@@ -37560,6 +42739,56 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
     };
     return Result;
   };
+  $impl.drawArrow = function (canvas, tip, dxdt, dydt) {
+    var dx = 0;
+    var dy = 0;
+    var alpha = 0.0;
+    var cosine = 0.0;
+    var sine = 0.0;
+    var pg = [];
+    var adX = 0.0;
+    var adY = 0.0;
+    var scalingFactor = 0.0;
+    var scale = 0.0;
+    var fpt = [];
+    var i = 0;
+    pg = rtl.arraySetLength(pg,$impl.TPointF,4);
+    scale = 1;
+    scalingFactor = 1;
+    alpha = -$impl.Angle(dxdt,dydt);
+    cosine = Math.cos(alpha);
+    sine = Math.sin(alpha);
+    adX = pas.System.Trunc(6 * scalingFactor) * Math.cos(-alpha);
+    adY = pas.System.Trunc(6 * scalingFactor) * Math.sin(-alpha);
+    tip.x = tip.x + pas.System.Trunc(adX);
+    tip.y = tip.y + pas.System.Trunc(adY);
+    pg[0].x = pas.System.Trunc((0 * scale * cosine) + (14 * scale * sine));
+    pg[0].y = pas.System.Trunc((-0 * scale * sine) + (14 * scale * cosine));
+    pg[1].x = pas.System.Trunc((7 * scale * cosine) + (7 * scale * sine));
+    pg[1].y = pas.System.Trunc((-7 * scale * sine) + (7 * scale * cosine));
+    pg[2].x = pas.System.Trunc((0 * scale * cosine) + (0 * scale * sine));
+    pg[2].y = pas.System.Trunc((-0 * scale * sine) + (0 * scale * cosine));
+    pg[3].x = pas.System.Trunc((14 * scale * cosine) + (7 * scale * sine));
+    pg[3].y = pas.System.Trunc((-14 * scale * sine) + (7 * scale * cosine));
+    dx = pas.System.Trunc(tip.x - pg[3].x) & 0xFFFFFFFF;
+    dy = pas.System.Trunc(tip.y - pg[3].y) & 0xFFFFFFFF;
+    pg[0].x = pg[0].x + dx;
+    pg[0].y = pg[0].y + dy;
+    pg[1].x = pg[1].x + dx;
+    pg[1].y = pg[1].y + dy;
+    pg[2].x = pg[2].x + dx;
+    pg[2].y = pg[2].y + dy;
+    pg[3].x = tip.x;
+    pg[3].y = tip.y;
+    fpt = rtl.arraySetLength(fpt,pas.Types.TPoint,4);
+    for (i = 0; i <= 3; i++) {
+      fpt[i].x = pas.System.Trunc(pg[i].x);
+      fpt[i].y = pas.System.Trunc(pg[i].y);
+    };
+    canvas.FPen.SetColor(0);
+    canvas.FBrush.FColor = 0;
+    canvas.Polygon(fpt);
+  };
   $impl.computeLineIntersection = function (node, pt, line) {
     var Result = false;
     var i = 0;
@@ -37571,7 +42800,7 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
       outerSegs[i - 1].q.$assign(outerSegs[i - 1].q);
     };
     Result = false;
-    for (i = 1; i <= 4; i++) if ($impl.SegmentIntersects(pas.uTypes.TLineSegment.$clone(outerSegs[i - 1]),pas.uTypes.TLineSegment.$clone(line),pt)) {
+    for (i = 1; i <= 4; i++) if ($impl.segmentIntersects(pas.uTypes.TLineSegment.$clone(outerSegs[i - 1]),pas.uTypes.TLineSegment.$clone(line),pt)) {
       Result = true;
       return Result;
     };
@@ -37583,25 +42812,6 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
     Result.p.y = pt1.y;
     Result.q.x = pt2.x;
     Result.q.y = pt2.y;
-    return Result;
-  };
-  $impl.Angle = function (x, y) {
-    var Result = 0.0;
-    if (Math.abs(x) < 1e-5) {
-      if (Math.abs(y) < 1e-5) {
-        Result = 0.0;
-        return Result;
-      } else if (y > 0.0) {
-        Result = 3.1415 * 0.5;
-        return Result;
-      } else {
-        Result = 3.1415 * 1.5;
-        return Result;
-      }}
-     else if (x < 0.0) {
-      Result = Math.atan(y / x) + 3.1415;
-      return Result;
-    } else Result = Math.atan(y / x);
     return Result;
   };
   $impl.drawLine = function (canvas, srcNode, destNode, pSrc, pDest) {
@@ -37624,9 +42834,45 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
     adY = endPt.y - pas.System.Trunc(adY);
     canvas.MoveTo(startPt.x,startPt.y);
     canvas.LineTo$1(adX,adY);
+    $impl.drawArrow(canvas,pas.Types.TPoint.$clone(endPt),pDest.x - pSrc.x,pDest.y - pSrc.y);
   };
 });
-rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics","WEBLib.Controls","Types","WEBLib.Forms","WEBLib.Dialogs","WEBLib.ExtCtrls","WEBLib.StdCtrls","uNetwork","WEBLib.Buttons"],function () {
+rtl.module("uDrawing",["System","WEBLib.Graphics","Types","uNetwork"],function () {
+  "use strict";
+  var $mod = this;
+  this.drawNodes = function (canvas, network) {
+    var i = 0;
+    var r = pas.Types.TRect.$new();
+    for (var $l1 = 0, $end2 = rtl.length(network.nodes) - 1; $l1 <= $end2; $l1++) {
+      i = $l1;
+      if (network.nodes[i].selected) {
+        canvas.FPen.SetColor(255)}
+       else canvas.FPen.SetColor(network.nodes[i].outlineColor);
+      canvas.FBrush.FColor = network.nodes[i].fillColor;
+      r.$assign(pas.Types.Rect(network.nodes[i].x,network.nodes[i].y,network.nodes[i].x + network.nodes[i].w,network.nodes[i].y + network.nodes[i].h));
+      canvas.FPen.FWidth = 3;
+      canvas.RoundRect(network.nodes[i].x,network.nodes[i].y,network.nodes[i].x + network.nodes[i].w,network.nodes[i].y + network.nodes[i].h,25,25);
+    };
+  };
+  this.drawReactions = function (canvas, network) {
+    var i = 0;
+    var pSrc = pas.Types.TPoint.$new();
+    var pDest = pas.Types.TPoint.$new();
+    canvas.FPen.SetColor(0);
+    canvas.FPen.FWidth = 2;
+    for (var $l1 = 0, $end2 = rtl.length(network.reactions) - 1; $l1 <= $end2; $l1++) {
+      i = $l1;
+      pSrc.$assign(network.reactions[i].src.getCenter());
+      pDest.$assign(network.reactions[i].dest.getCenter());
+      if (network.reactions[i].selected) {
+        canvas.FPen.SetColor(255)}
+       else canvas.FPen.SetColor(0);
+      pas.uGraphUtils.drawReaction(canvas,network.reactions[i].src,network.reactions[i].dest);
+      canvas.FPen.SetColor(0);
+    };
+  };
+},["uGraphUtils"]);
+rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics","WEBLib.Controls","Types","WEBLib.Forms","WEBLib.Dialogs","WEBLib.ExtCtrls","WEBLib.StdCtrls","uNetwork","WEBLib.Buttons","WEBLib.JQCtrls"],function () {
   "use strict";
   var $mod = this;
   this.TMouseStatus = {"0": "sIdle", sIdle: 0, "1": "sAddNode", sAddNode: 1, "2": "sAddEdge", sAddEdge: 2, "3": "sMouseDown", sMouseDown: 3};
@@ -37638,11 +42884,16 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.paintBox = null;
       this.WebPanel1 = null;
       this.btnDraw = null;
-      this.lbl1 = null;
+      this.lblX = null;
       this.pnlLeft = null;
       this.btnIdle = null;
       this.btnAddNode = null;
       this.btnAddReaction = null;
+      this.lblY = null;
+      this.btnNodeFillColor = null;
+      this.btnNodeOutlineColor = null;
+      this.WebLabel1 = null;
+      this.WebLabel2 = null;
       this.srcNode = 0;
       this.destNode = 0;
       this.network = null;
@@ -37655,11 +42906,16 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.paintBox = undefined;
       this.WebPanel1 = undefined;
       this.btnDraw = undefined;
-      this.lbl1 = undefined;
+      this.lblX = undefined;
       this.pnlLeft = undefined;
       this.btnIdle = undefined;
       this.btnAddNode = undefined;
       this.btnAddReaction = undefined;
+      this.lblY = undefined;
+      this.btnNodeFillColor = undefined;
+      this.btnNodeOutlineColor = undefined;
+      this.WebLabel1 = undefined;
+      this.WebLabel2 = undefined;
       this.network = undefined;
       pas["WEBLib.Forms"].TForm.$final.call(this);
     };
@@ -37683,10 +42939,10 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       var n3 = null;
       var n4 = null;
       var i = 0;
-      n1 = this.network.addNode$1("node1",10,100);
-      n2 = this.network.addNode$1("node2",170,170);
-      n3 = this.network.addNode$1("node3",190,20);
-      n4 = this.network.addNode$1("node4",40,50);
+      n1 = this.network.addNode$1("node1",60,200);
+      n2 = this.network.addNode$1("node2",270,270);
+      n3 = this.network.addNode$1("node3",540,80);
+      n4 = this.network.addNode$1("node4",400,500);
       this.network.addReaction("r1",n1,n2);
       this.network.addReaction("r2",n2,n3);
       this.network.addReaction("r3",n3,n4);
@@ -37695,6 +42951,26 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
     };
     this.btnIdleClick = function (Sender) {
       this.mStatus = $mod.TMouseStatus.sIdle;
+    };
+    this.btnNodeFillColorSelect = function (Sender) {
+      var i = 0;
+      for (var $l1 = 0, $end2 = rtl.length(this.network.nodes) - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        if (this.network.nodes[i].selected) {
+          this.network.nodes[i].fillColor = this.btnNodeFillColor.GetColor();
+          this.paintBox.Invalidate();
+        };
+      };
+    };
+    this.btnNodeOutlineColorClick = function (Sender) {
+      var i = 0;
+      for (var $l1 = 0, $end2 = rtl.length(this.network.nodes) - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        if (this.network.nodes[i].selected) {
+          this.network.nodes[i].outlineColor = this.btnNodeOutlineColor.GetColor();
+          this.paintBox.Invalidate();
+        };
+      };
     };
     this.paintBoxMouseDown = function (Sender, Button, Shift, X, Y) {
       var i = 0;
@@ -37771,37 +43047,16 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.currentY = Y;
         this.paintBox.Invalidate();
       };
+      this.lblX.SetCaption("X: " + pas.SysUtils.IntToStr(X));
+      this.lblY.SetCaption("Y: " + pas.SysUtils.IntToStr(Y));
     };
     this.paintBoxMouseUp = function (Sender, Button, Shift, X, Y) {
       if (this.mStatus === $mod.TMouseStatus.sMouseDown) this.mStatus = $mod.TMouseStatus.sIdle;
+      this.paintBox.Invalidate();
     };
     this.paintBoxPaint = function (Sender) {
-      var pSrc = pas.Types.TPoint.$new();
-      var pDest = pas.Types.TPoint.$new();
-      var i = 0;
-      var r = pas.Types.TRect.$new();
-      this.paintBox.GetCanvas().FPen.SetColor(0);
-      this.paintBox.GetCanvas().FPen.FWidth = 2;
-      for (var $l1 = 0, $end2 = rtl.length(this.network.reactions) - 1; $l1 <= $end2; $l1++) {
-        i = $l1;
-        pSrc.$assign(this.network.reactions[i].src.getCenter());
-        pDest.$assign(this.network.reactions[i].dest.getCenter());
-        if (this.network.reactions[i].selected) {
-          this.paintBox.GetCanvas().FPen.SetColor(255)}
-         else this.paintBox.GetCanvas().FPen.SetColor(0);
-        pas.uGraphUtils.drawReaction(this.paintBox.GetCanvas(),this.network.reactions[i].src,this.network.reactions[i].dest);
-        this.paintBox.GetCanvas().FPen.SetColor(0);
-      };
-      for (var $l3 = 0, $end4 = rtl.length(this.network.nodes) - 1; $l3 <= $end4; $l3++) {
-        i = $l3;
-        if (this.network.nodes[i].selected) {
-          this.paintBox.GetCanvas().FPen.SetColor(255)}
-         else this.paintBox.GetCanvas().FPen.SetColor(this.network.nodes[i].outlineColor);
-        this.paintBox.GetCanvas().FBrush.FColor = this.network.nodes[i].fillColor;
-        r.$assign(pas.Types.Rect(this.network.nodes[i].x,this.network.nodes[i].y,this.network.nodes[i].x + this.network.nodes[i].w,this.network.nodes[i].y + this.network.nodes[i].h));
-        this.paintBox.GetCanvas().FPen.FWidth = 3;
-        this.paintBox.GetCanvas().RoundRect(this.network.nodes[i].x,this.network.nodes[i].y,this.network.nodes[i].x + this.network.nodes[i].w,this.network.nodes[i].y + this.network.nodes[i].h,25,25);
-      };
+      pas.uDrawing.drawReactions(this.paintBox.GetCanvas(),this.network);
+      pas.uDrawing.drawNodes(this.paintBox.GetCanvas(),this.network);
     };
     this.Delay = function (TickTime) {
       var Past = 0;
@@ -37818,20 +43073,30 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       pas["WEBLib.Forms"].TCustomForm.LoadDFMValues.call(this);
       this.paintBox = pas["WEBLib.ExtCtrls"].TPaintBox.$create("Create$1",[this]);
       this.WebPanel1 = pas["WEBLib.ExtCtrls"].TPanel.$create("Create$1",[this]);
-      this.lbl1 = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
+      this.lblX = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
+      this.lblY = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
       this.btnDraw = pas["WEBLib.StdCtrls"].TButton.$create("Create$1",[this]);
       this.pnlLeft = pas["WEBLib.ExtCtrls"].TPanel.$create("Create$1",[this]);
+      this.WebLabel1 = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
+      this.WebLabel2 = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
       this.btnIdle = pas["WEBLib.Buttons"].TSpeedButton.$create("Create$1",[this]);
       this.btnAddNode = pas["WEBLib.Buttons"].TSpeedButton.$create("Create$1",[this]);
       this.btnAddReaction = pas["WEBLib.Buttons"].TSpeedButton.$create("Create$1",[this]);
+      this.btnNodeFillColor = pas["WEBLib.StdCtrls"].TColorPicker.$create("Create$1",[this]);
+      this.btnNodeOutlineColor = pas["WEBLib.StdCtrls"].TColorPicker.$create("Create$1",[this]);
       this.paintBox.BeforeLoadDFMValues();
       this.WebPanel1.BeforeLoadDFMValues();
-      this.lbl1.BeforeLoadDFMValues();
+      this.lblX.BeforeLoadDFMValues();
+      this.lblY.BeforeLoadDFMValues();
       this.btnDraw.BeforeLoadDFMValues();
       this.pnlLeft.BeforeLoadDFMValues();
+      this.WebLabel1.BeforeLoadDFMValues();
+      this.WebLabel2.BeforeLoadDFMValues();
       this.btnIdle.BeforeLoadDFMValues();
       this.btnAddNode.BeforeLoadDFMValues();
       this.btnAddReaction.BeforeLoadDFMValues();
+      this.btnNodeFillColor.BeforeLoadDFMValues();
+      this.btnNodeOutlineColor.BeforeLoadDFMValues();
       try {
         this.SetName("Form1");
         this.SetLeft(0);
@@ -37866,20 +43131,27 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.WebPanel1.SetBorderColor(12632256);
         this.WebPanel1.SetBorderStyle(pas["WEBLib.Controls"].TBorderStyle.bsSingle);
         this.WebPanel1.SetChildOrderEx(3);
-        this.lbl1.SetParentComponent(this.WebPanel1);
-        this.lbl1.SetName("lbl1");
-        this.lbl1.SetLeft(572);
-        this.lbl1.SetTop(29);
-        this.lbl1.SetWidth(16);
-        this.lbl1.SetHeight(14);
-        this.lbl1.SetCaption("lbl1");
+        this.lblX.SetParentComponent(this.WebPanel1);
+        this.lblX.SetName("lblX");
+        this.lblX.SetLeft(172);
+        this.lblX.SetTop(18);
+        this.lblX.SetWidth(41);
+        this.lblX.SetHeight(14);
+        this.lblX.SetCaption("X: ");
+        this.lblY.SetParentComponent(this.WebPanel1);
+        this.lblY.SetName("lblY");
+        this.lblY.SetLeft(219);
+        this.lblY.SetTop(18);
+        this.lblY.SetWidth(48);
+        this.lblY.SetHeight(14);
+        this.lblY.SetCaption("Y:");
         this.btnDraw.SetParentComponent(this.WebPanel1);
         this.btnDraw.SetName("btnDraw");
         this.btnDraw.SetLeft(20);
         this.btnDraw.SetTop(17);
-        this.btnDraw.SetWidth(96);
+        this.btnDraw.SetWidth(133);
         this.btnDraw.SetHeight(25);
-        this.btnDraw.SetCaption("Draw");
+        this.btnDraw.SetCaption("Draw Sample Network");
         this.btnDraw.SetChildOrderEx(1);
         this.SetEvent(this.btnDraw,this,"OnClick","btnDrawClick");
         this.pnlLeft.SetParentComponent(this);
@@ -37892,6 +43164,20 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.pnlLeft.SetBorderColor(12632256);
         this.pnlLeft.SetBorderStyle(pas["WEBLib.Controls"].TBorderStyle.bsSingle);
         this.pnlLeft.SetChildOrderEx(2);
+        this.WebLabel1.SetParentComponent(this.pnlLeft);
+        this.WebLabel1.SetName("WebLabel1");
+        this.WebLabel1.SetLeft(10);
+        this.WebLabel1.SetTop(136);
+        this.WebLabel1.SetWidth(40);
+        this.WebLabel1.SetHeight(14);
+        this.WebLabel1.SetCaption("Outline");
+        this.WebLabel2.SetParentComponent(this.pnlLeft);
+        this.WebLabel2.SetName("WebLabel2");
+        this.WebLabel2.SetLeft(10);
+        this.WebLabel2.SetTop(194);
+        this.WebLabel2.SetWidth(33);
+        this.WebLabel2.SetHeight(14);
+        this.WebLabel2.SetCaption("Fill");
         this.btnIdle.SetParentComponent(this.pnlLeft);
         this.btnIdle.SetName("btnIdle");
         this.btnIdle.SetLeft(10);
@@ -37922,15 +43208,40 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnAddReaction.SetMaterialGlyph("trending_up");
         this.btnAddReaction.SetShowHint(true);
         this.SetEvent(this.btnAddReaction,this,"OnClick","btnAddReactionClick");
+        this.btnNodeFillColor.SetParentComponent(this.pnlLeft);
+        this.btnNodeFillColor.SetName("btnNodeFillColor");
+        this.btnNodeFillColor.SetLeft(10);
+        this.btnNodeFillColor.SetTop(214);
+        this.btnNodeFillColor.SetWidth(32);
+        this.btnNodeFillColor.SetHeight(32);
+        this.btnNodeFillColor.SetChildOrderEx(3);
+        this.btnNodeFillColor.SetColor$1(0);
+        this.btnNodeFillColor.SetRole("");
+        this.SetEvent(this.btnNodeFillColor,this,"OnSelect","btnNodeFillColorSelect");
+        this.btnNodeOutlineColor.SetParentComponent(this.pnlLeft);
+        this.btnNodeOutlineColor.SetName("btnNodeOutlineColor");
+        this.btnNodeOutlineColor.SetLeft(10);
+        this.btnNodeOutlineColor.SetTop(156);
+        this.btnNodeOutlineColor.SetWidth(32);
+        this.btnNodeOutlineColor.SetHeight(32);
+        this.btnNodeOutlineColor.SetChildOrderEx(3);
+        this.btnNodeOutlineColor.SetColor$1(0);
+        this.btnNodeOutlineColor.SetRole("");
+        this.SetEvent(this.btnNodeOutlineColor,this,"OnSelect","btnNodeOutlineColorClick");
       } finally {
         this.paintBox.AfterLoadDFMValues();
         this.WebPanel1.AfterLoadDFMValues();
-        this.lbl1.AfterLoadDFMValues();
+        this.lblX.AfterLoadDFMValues();
+        this.lblY.AfterLoadDFMValues();
         this.btnDraw.AfterLoadDFMValues();
         this.pnlLeft.AfterLoadDFMValues();
+        this.WebLabel1.AfterLoadDFMValues();
+        this.WebLabel2.AfterLoadDFMValues();
         this.btnIdle.AfterLoadDFMValues();
         this.btnAddNode.AfterLoadDFMValues();
         this.btnAddReaction.AfterLoadDFMValues();
+        this.btnNodeFillColor.AfterLoadDFMValues();
+        this.btnNodeOutlineColor.AfterLoadDFMValues();
       };
     };
     rtl.addIntf(this,pas.System.IUnknown);
@@ -37938,24 +43249,31 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
     $r.addField("paintBox",pas["WEBLib.ExtCtrls"].$rtti["TPaintBox"]);
     $r.addField("WebPanel1",pas["WEBLib.ExtCtrls"].$rtti["TPanel"]);
     $r.addField("btnDraw",pas["WEBLib.StdCtrls"].$rtti["TButton"]);
-    $r.addField("lbl1",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
+    $r.addField("lblX",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
     $r.addField("pnlLeft",pas["WEBLib.ExtCtrls"].$rtti["TPanel"]);
     $r.addField("btnIdle",pas["WEBLib.Buttons"].$rtti["TSpeedButton"]);
     $r.addField("btnAddNode",pas["WEBLib.Buttons"].$rtti["TSpeedButton"]);
     $r.addField("btnAddReaction",pas["WEBLib.Buttons"].$rtti["TSpeedButton"]);
+    $r.addField("lblY",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
+    $r.addField("btnNodeFillColor",pas["WEBLib.StdCtrls"].$rtti["TColorPicker"]);
+    $r.addField("btnNodeOutlineColor",pas["WEBLib.StdCtrls"].$rtti["TColorPicker"]);
+    $r.addField("WebLabel1",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
+    $r.addField("WebLabel2",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
     $r.addMethod("btnAddNodeClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnAddReactionClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("WebFormCreate",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnDrawClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnIdleClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
+    $r.addMethod("btnNodeFillColorSelect",0,[["Sender",pas.System.$rtti["TObject"]]]);
+    $r.addMethod("btnNodeOutlineColorClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("paintBoxMouseDown",0,[["Sender",pas.System.$rtti["TObject"]],["Button",pas["WEBLib.Controls"].$rtti["TMouseButton"]],["Shift",pas["WEBLib.Controls"].$rtti["TShiftState"]],["X",rtl.longint],["Y",rtl.longint]]);
     $r.addMethod("paintBoxMouseMove",0,[["Sender",pas.System.$rtti["TObject"]],["Shift",pas["WEBLib.Controls"].$rtti["TShiftState"]],["X",rtl.longint],["Y",rtl.longint]]);
     $r.addMethod("paintBoxMouseUp",0,[["Sender",pas.System.$rtti["TObject"]],["Button",pas["WEBLib.Controls"].$rtti["TMouseButton"]],["Shift",pas["WEBLib.Controls"].$rtti["TShiftState"]],["X",rtl.longint],["Y",rtl.longint]]);
     $r.addMethod("paintBoxPaint",0,[["Sender",pas.System.$rtti["TObject"]]]);
   });
   this.Form1 = null;
-},["uGraphUtils"]);
-rtl.module("program",["System","WEBLib.Forms","ufMain","uNetwork","uGraphUtils","uTypes"],function () {
+},["uGraphUtils","uDrawing"]);
+rtl.module("program",["System","WEBLib.Forms","ufMain","uNetwork","uGraphUtils","uTypes","uDrawing"],function () {
   "use strict";
   var $mod = this;
   $mod.$main = function () {
