@@ -42880,7 +42880,6 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.btnNodeOutlineColor = null;
       this.WebLabel1 = null;
       this.WebLabel2 = null;
-      this.WebJQXSlider1 = null;
       this.srcNode = 0;
       this.destNode = 0;
       this.network = null;
@@ -42903,7 +42902,6 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.btnNodeOutlineColor = undefined;
       this.WebLabel1 = undefined;
       this.WebLabel2 = undefined;
-      this.WebJQXSlider1 = undefined;
       this.network = undefined;
       pas["WEBLib.Forms"].TForm.$final.call(this);
     };
@@ -43050,7 +43048,6 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.lblX = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
       this.lblY = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
       this.btnDraw = pas["WEBLib.StdCtrls"].TButton.$create("Create$1",[this]);
-      this.WebJQXSlider1 = pas["WEBLib.JQCtrls"].TJQXSlider.$create("Create$1",[this]);
       this.pnlLeft = pas["WEBLib.ExtCtrls"].TPanel.$create("Create$1",[this]);
       this.WebLabel1 = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
       this.WebLabel2 = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
@@ -43064,7 +43061,6 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.lblX.BeforeLoadDFMValues();
       this.lblY.BeforeLoadDFMValues();
       this.btnDraw.BeforeLoadDFMValues();
-      this.WebJQXSlider1.BeforeLoadDFMValues();
       this.pnlLeft.BeforeLoadDFMValues();
       this.WebLabel1.BeforeLoadDFMValues();
       this.WebLabel2.BeforeLoadDFMValues();
@@ -43130,14 +43126,6 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnDraw.SetCaption("Draw Sample Network");
         this.btnDraw.SetChildOrderEx(1);
         this.SetEvent(this.btnDraw,this,"OnClick","btnDrawClick");
-        this.WebJQXSlider1.SetParentComponent(this.WebPanel1);
-        this.WebJQXSlider1.SetName("WebJQXSlider1");
-        this.WebJQXSlider1.SetLeft(475);
-        this.WebJQXSlider1.SetTop(28);
-        this.WebJQXSlider1.SetWidth(200);
-        this.WebJQXSlider1.SetHeight(22);
-        this.WebJQXSlider1.SetMaximumValue(10.000000000000000000);
-        this.WebJQXSlider1.SetMaximum(10.000000000000000000);
         this.pnlLeft.SetParentComponent(this);
         this.pnlLeft.SetName("pnlLeft");
         this.pnlLeft.SetLeft(0);
@@ -43218,7 +43206,6 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.lblX.AfterLoadDFMValues();
         this.lblY.AfterLoadDFMValues();
         this.btnDraw.AfterLoadDFMValues();
-        this.WebJQXSlider1.AfterLoadDFMValues();
         this.pnlLeft.AfterLoadDFMValues();
         this.WebLabel1.AfterLoadDFMValues();
         this.WebLabel2.AfterLoadDFMValues();
@@ -43244,7 +43231,6 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
     $r.addField("btnNodeOutlineColor",pas["WEBLib.StdCtrls"].$rtti["TColorPicker"]);
     $r.addField("WebLabel1",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
     $r.addField("WebLabel2",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
-    $r.addField("WebJQXSlider1",pas["WEBLib.JQCtrls"].$rtti["TJQXSlider"]);
     $r.addMethod("btnAddNodeClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnAddReactionClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("WebFormCreate",0,[["Sender",pas.System.$rtti["TObject"]]]);
