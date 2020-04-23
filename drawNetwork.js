@@ -33995,7 +33995,6 @@ rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uTy
   rtl.createClass($mod,"TNode",pas.System.TObject,function () {
     this.$init = function () {
       pas.System.TObject.$init.call(this);
-      this.id = "";
       this.selected = false;
       this.x = 0;
       this.y = 0;
@@ -34049,7 +34048,6 @@ rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uTy
       this.selected = false;
     };
     this.create$1 = function (id) {
-      this.id = id;
       this.w = 60;
       this.h = 40;
       this.selected = false;
@@ -34061,7 +34059,6 @@ rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uTy
   rtl.createClass($mod,"TReaction",pas.System.TObject,function () {
     this.$init = function () {
       pas.System.TObject.$init.call(this);
-      this.id = "";
       this.selected = false;
       this.src = null;
       this.dest = null;
@@ -34075,7 +34072,6 @@ rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uTy
       this.selected = false;
     };
     this.create$1 = function (id, src, dest) {
-      this.id = id;
       this.src = src;
       this.dest = dest;
       this.selected = false;
@@ -34087,7 +34083,6 @@ rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uTy
   rtl.createClass($mod,"TNetwork",pas.System.TObject,function () {
     this.$init = function () {
       pas.System.TObject.$init.call(this);
-      this.id = "";
       this.nodes = [];
       this.reactions = [];
     };
@@ -34165,7 +34160,6 @@ rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uTy
       };
     };
     this.Create$1 = function (id) {
-      this.id = id;
       return this;
     };
   });
@@ -42793,7 +42787,6 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
     var Result = false;
     var i = 0;
     var outerSegs = rtl.arraySetLength(null,pas.uTypes.TLineSegment,4);
-    var scalingFactor = 0.0;
     outerSegs = pas.uTypes.TBoundingBoxSegments$clone(node.getNodeBoundingBox());
     for (i = 1; i <= 4; i++) {
       outerSegs[i - 1].p.$assign(outerSegs[i - 1].p);
@@ -42820,7 +42813,6 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
     var alpha = 0.0;
     var adX = 0.0;
     var adY = 0.0;
-    var centreOfLine = pas.Types.TPoint.$new();
     var srcPtIntersect = pas.Types.TPoint.$new();
     var destPtIntersect = pas.Types.TPoint.$new();
     $impl.computeLineIntersection(srcNode,srcPtIntersect,pas.uTypes.TLineSegment.$clone($impl.Line(pas.Types.TPoint.$clone(pSrc),pas.Types.TPoint.$clone(pDest))));
@@ -42842,28 +42834,22 @@ rtl.module("uDrawing",["System","WEBLib.Graphics","Types","uNetwork"],function (
   var $mod = this;
   this.drawNodes = function (canvas, network) {
     var i = 0;
-    var r = pas.Types.TRect.$new();
     for (var $l1 = 0, $end2 = rtl.length(network.nodes) - 1; $l1 <= $end2; $l1++) {
       i = $l1;
       if (network.nodes[i].selected) {
         canvas.FPen.SetColor(255)}
        else canvas.FPen.SetColor(network.nodes[i].outlineColor);
       canvas.FBrush.FColor = network.nodes[i].fillColor;
-      r.$assign(pas.Types.Rect(network.nodes[i].x,network.nodes[i].y,network.nodes[i].x + network.nodes[i].w,network.nodes[i].y + network.nodes[i].h));
       canvas.FPen.FWidth = 3;
       canvas.RoundRect(network.nodes[i].x,network.nodes[i].y,network.nodes[i].x + network.nodes[i].w,network.nodes[i].y + network.nodes[i].h,25,25);
     };
   };
   this.drawReactions = function (canvas, network) {
     var i = 0;
-    var pSrc = pas.Types.TPoint.$new();
-    var pDest = pas.Types.TPoint.$new();
     canvas.FPen.SetColor(0);
     canvas.FPen.FWidth = 2;
     for (var $l1 = 0, $end2 = rtl.length(network.reactions) - 1; $l1 <= $end2; $l1++) {
       i = $l1;
-      pSrc.$assign(network.reactions[i].src.getCenter());
-      pDest.$assign(network.reactions[i].dest.getCenter());
       if (network.reactions[i].selected) {
         canvas.FPen.SetColor(255)}
        else canvas.FPen.SetColor(0);
@@ -42894,6 +42880,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.btnNodeOutlineColor = null;
       this.WebLabel1 = null;
       this.WebLabel2 = null;
+      this.WebJQXSlider1 = null;
       this.srcNode = 0;
       this.destNode = 0;
       this.network = null;
@@ -42916,6 +42903,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.btnNodeOutlineColor = undefined;
       this.WebLabel1 = undefined;
       this.WebLabel2 = undefined;
+      this.WebJQXSlider1 = undefined;
       this.network = undefined;
       pas["WEBLib.Forms"].TForm.$final.call(this);
     };
@@ -42938,7 +42926,6 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       var n2 = null;
       var n3 = null;
       var n4 = null;
-      var i = 0;
       n1 = this.network.addNode$1("node1",60,200);
       n2 = this.network.addNode$1("node2",270,270);
       n3 = this.network.addNode$1("node3",540,80);
@@ -42973,7 +42960,6 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       };
     };
     this.paintBoxMouseDown = function (Sender, Button, Shift, X, Y) {
-      var i = 0;
       var index = 0;
       if (this.mStatus === $mod.TMouseStatus.sAddNode) {
         this.network.addNode$1("xyz",X,Y);
@@ -43037,7 +43023,6 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
     this.paintBoxMouseMove = function (Sender, Shift, X, Y) {
       var dx = 0;
       var dy = 0;
-      var index = 0;
       if (this.mStatus === $mod.TMouseStatus.sMouseDown) {
         dx = X - this.currentX;
         dy = Y - this.currentY;
@@ -43058,17 +43043,6 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       pas.uDrawing.drawReactions(this.paintBox.GetCanvas(),this.network);
       pas.uDrawing.drawNodes(this.paintBox.GetCanvas(),this.network);
     };
-    this.Delay = function (TickTime) {
-      var Past = 0;
-      var x = 0.0;
-      var y = 0.0;
-      Past = TickTime;
-      do {
-        Past = Past - 1;
-        x = Math.cos(y);
-        y = (x * y) + Math.sin(x);
-      } while (!(Past === 0));
-    };
     this.LoadDFMValues = function () {
       pas["WEBLib.Forms"].TCustomForm.LoadDFMValues.call(this);
       this.paintBox = pas["WEBLib.ExtCtrls"].TPaintBox.$create("Create$1",[this]);
@@ -43076,6 +43050,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.lblX = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
       this.lblY = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
       this.btnDraw = pas["WEBLib.StdCtrls"].TButton.$create("Create$1",[this]);
+      this.WebJQXSlider1 = pas["WEBLib.JQCtrls"].TJQXSlider.$create("Create$1",[this]);
       this.pnlLeft = pas["WEBLib.ExtCtrls"].TPanel.$create("Create$1",[this]);
       this.WebLabel1 = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
       this.WebLabel2 = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
@@ -43089,6 +43064,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.lblX.BeforeLoadDFMValues();
       this.lblY.BeforeLoadDFMValues();
       this.btnDraw.BeforeLoadDFMValues();
+      this.WebJQXSlider1.BeforeLoadDFMValues();
       this.pnlLeft.BeforeLoadDFMValues();
       this.WebLabel1.BeforeLoadDFMValues();
       this.WebLabel2.BeforeLoadDFMValues();
@@ -43102,7 +43078,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.SetLeft(0);
         this.SetTop(0);
         this.SetWidth(706);
-        this.SetHeight(588);
+        this.SetHeight(587);
         this.FFont.FCharset = 1;
         this.FFont.SetColor(65793);
         this.FFont.SetHeight(-11);
@@ -43115,7 +43091,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.paintBox.SetLeft(51);
         this.paintBox.SetTop(0);
         this.paintBox.SetWidth(655);
-        this.paintBox.SetHeight(505);
+        this.paintBox.SetHeight(504);
         this.paintBox.SetAlign(pas["WEBLib.Controls"].TAlign.alClient);
         this.SetEvent(this.paintBox,this,"OnPaint","paintBoxPaint");
         this.SetEvent(this.paintBox,this,"OnMouseDown","paintBoxMouseDown");
@@ -43124,7 +43100,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.WebPanel1.SetParentComponent(this);
         this.WebPanel1.SetName("WebPanel1");
         this.WebPanel1.SetLeft(0);
-        this.WebPanel1.SetTop(505);
+        this.WebPanel1.SetTop(504);
         this.WebPanel1.SetWidth(706);
         this.WebPanel1.SetHeight(83);
         this.WebPanel1.SetAlign(pas["WEBLib.Controls"].TAlign.alBottom);
@@ -43135,14 +43111,14 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.lblX.SetName("lblX");
         this.lblX.SetLeft(172);
         this.lblX.SetTop(18);
-        this.lblX.SetWidth(41);
+        this.lblX.SetWidth(13);
         this.lblX.SetHeight(14);
         this.lblX.SetCaption("X: ");
         this.lblY.SetParentComponent(this.WebPanel1);
         this.lblY.SetName("lblY");
         this.lblY.SetLeft(219);
         this.lblY.SetTop(18);
-        this.lblY.SetWidth(48);
+        this.lblY.SetWidth(10);
         this.lblY.SetHeight(14);
         this.lblY.SetCaption("Y:");
         this.btnDraw.SetParentComponent(this.WebPanel1);
@@ -43154,12 +43130,20 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnDraw.SetCaption("Draw Sample Network");
         this.btnDraw.SetChildOrderEx(1);
         this.SetEvent(this.btnDraw,this,"OnClick","btnDrawClick");
+        this.WebJQXSlider1.SetParentComponent(this.WebPanel1);
+        this.WebJQXSlider1.SetName("WebJQXSlider1");
+        this.WebJQXSlider1.SetLeft(475);
+        this.WebJQXSlider1.SetTop(28);
+        this.WebJQXSlider1.SetWidth(200);
+        this.WebJQXSlider1.SetHeight(22);
+        this.WebJQXSlider1.SetMaximumValue(10.000000000000000000);
+        this.WebJQXSlider1.SetMaximum(10.000000000000000000);
         this.pnlLeft.SetParentComponent(this);
         this.pnlLeft.SetName("pnlLeft");
         this.pnlLeft.SetLeft(0);
         this.pnlLeft.SetTop(0);
         this.pnlLeft.SetWidth(51);
-        this.pnlLeft.SetHeight(505);
+        this.pnlLeft.SetHeight(504);
         this.pnlLeft.SetAlign(pas["WEBLib.Controls"].TAlign.alLeft);
         this.pnlLeft.SetBorderColor(12632256);
         this.pnlLeft.SetBorderStyle(pas["WEBLib.Controls"].TBorderStyle.bsSingle);
@@ -43168,14 +43152,14 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.WebLabel1.SetName("WebLabel1");
         this.WebLabel1.SetLeft(10);
         this.WebLabel1.SetTop(136);
-        this.WebLabel1.SetWidth(40);
+        this.WebLabel1.SetWidth(33);
         this.WebLabel1.SetHeight(14);
         this.WebLabel1.SetCaption("Outline");
         this.WebLabel2.SetParentComponent(this.pnlLeft);
         this.WebLabel2.SetName("WebLabel2");
         this.WebLabel2.SetLeft(10);
         this.WebLabel2.SetTop(194);
-        this.WebLabel2.SetWidth(33);
+        this.WebLabel2.SetWidth(12);
         this.WebLabel2.SetHeight(14);
         this.WebLabel2.SetCaption("Fill");
         this.btnIdle.SetParentComponent(this.pnlLeft);
@@ -43234,6 +43218,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.lblX.AfterLoadDFMValues();
         this.lblY.AfterLoadDFMValues();
         this.btnDraw.AfterLoadDFMValues();
+        this.WebJQXSlider1.AfterLoadDFMValues();
         this.pnlLeft.AfterLoadDFMValues();
         this.WebLabel1.AfterLoadDFMValues();
         this.WebLabel2.AfterLoadDFMValues();
@@ -43259,6 +43244,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
     $r.addField("btnNodeOutlineColor",pas["WEBLib.StdCtrls"].$rtti["TColorPicker"]);
     $r.addField("WebLabel1",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
     $r.addField("WebLabel2",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
+    $r.addField("WebJQXSlider1",pas["WEBLib.JQCtrls"].$rtti["TJQXSlider"]);
     $r.addMethod("btnAddNodeClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnAddReactionClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("WebFormCreate",0,[["Sender",pas.System.$rtti["TObject"]]]);
