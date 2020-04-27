@@ -33946,7 +33946,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
     rtl.addIntf(this,pas.System.IUnknown);
   });
 },["WEBLib.Utils"]);
-rtl.module("uTypes",["System","Types"],function () {
+rtl.module("uDrawTypes",["System","Types"],function () {
   "use strict";
   var $mod = this;
   rtl.recNewT($mod,"TLineSegment",function () {
@@ -33974,8 +33974,24 @@ rtl.module("uTypes",["System","Types"],function () {
     return r;
   };
   $mod.$rtti.$StaticArray("TBoundingBoxSegments",{dims: [4], eltype: $mod.$rtti["TLineSegment"]});
+  rtl.recNewT($mod,"TPointF",function () {
+    this.x = 0.0;
+    this.y = 0.0;
+    this.$eq = function (b) {
+      return (this.x === b.x) && (this.y === b.y);
+    };
+    this.$assign = function (s) {
+      this.x = s.x;
+      this.y = s.y;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TPointF",{});
+    $r.addField("x",rtl.double);
+    $r.addField("y",rtl.double);
+  });
+  $mod.$rtti.$DynArray("TPointDynArray",{eltype: $mod.$rtti["TPointF"]});
 });
-rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uTypes"],function () {
+rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uDrawTypes"],function () {
   "use strict";
   var $mod = this;
   var $impl = $mod.$impl;
@@ -34017,7 +34033,7 @@ rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uTy
       return Result;
     };
     this.getNodeBoundingBox = function () {
-      var Result = rtl.arraySetLength(null,pas.uTypes.TLineSegment,4);
+      var Result = rtl.arraySetLength(null,pas.uDrawTypes.TLineSegment,4);
       var tx = 0;
       var ty = 0;
       var tw = 0;
@@ -42659,26 +42675,10 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
     pDest.$assign(rtl.as(destNode,pas.uNetwork.TNode).getCenter());
     $impl.drawLine(canvas,rtl.as(srcNode,pas.uNetwork.TNode),rtl.as(destNode,pas.uNetwork.TNode),pas.Types.TPoint.$clone(pSrc),pas.Types.TPoint.$clone(pDest));
   };
-},["uNetwork","uTypes"],function () {
+},["uNetwork","uDrawTypes"],function () {
   "use strict";
   var $mod = this;
   var $impl = $mod.$impl;
-  rtl.recNewT($impl,"TPointF",function () {
-    this.x = 0.0;
-    this.y = 0.0;
-    this.$eq = function (b) {
-      return (this.x === b.x) && (this.y === b.y);
-    };
-    this.$assign = function (s) {
-      this.x = s.x;
-      this.y = s.y;
-      return this;
-    };
-    var $r = $mod.$rtti.$Record("TPointF",{});
-    $r.addField("x",rtl.double);
-    $r.addField("y",rtl.double);
-  });
-  $mod.$rtti.$DynArray("TPointDynArray",{eltype: $mod.$rtti["TPointF"]});
   $impl.Angle = function (x, y) {
     var Result = 0.0;
     if (Math.abs(x) < 1e-5) {
@@ -42746,7 +42746,7 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
     var scale = 0.0;
     var fpt = [];
     var i = 0;
-    pg = rtl.arraySetLength(pg,$impl.TPointF,4);
+    pg = rtl.arraySetLength(pg,pas.uDrawTypes.TPointF,4);
     scale = 1;
     scalingFactor = 1;
     alpha = -$impl.Angle(dxdt,dydt);
@@ -42786,21 +42786,21 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
   $impl.computeLineIntersection = function (node, pt, line) {
     var Result = false;
     var i = 0;
-    var outerSegs = rtl.arraySetLength(null,pas.uTypes.TLineSegment,4);
-    outerSegs = pas.uTypes.TBoundingBoxSegments$clone(node.getNodeBoundingBox());
+    var outerSegs = rtl.arraySetLength(null,pas.uDrawTypes.TLineSegment,4);
+    outerSegs = pas.uDrawTypes.TBoundingBoxSegments$clone(node.getNodeBoundingBox());
     for (i = 1; i <= 4; i++) {
       outerSegs[i - 1].p.$assign(outerSegs[i - 1].p);
       outerSegs[i - 1].q.$assign(outerSegs[i - 1].q);
     };
     Result = false;
-    for (i = 1; i <= 4; i++) if ($impl.segmentIntersects(pas.uTypes.TLineSegment.$clone(outerSegs[i - 1]),pas.uTypes.TLineSegment.$clone(line),pt)) {
+    for (i = 1; i <= 4; i++) if ($impl.segmentIntersects(pas.uDrawTypes.TLineSegment.$clone(outerSegs[i - 1]),pas.uDrawTypes.TLineSegment.$clone(line),pt)) {
       Result = true;
       return Result;
     };
     return Result;
   };
   $impl.Line = function (pt1, pt2) {
-    var Result = pas.uTypes.TLineSegment.$new();
+    var Result = pas.uDrawTypes.TLineSegment.$new();
     Result.p.x = pt1.x;
     Result.p.y = pt1.y;
     Result.q.x = pt2.x;
@@ -42815,8 +42815,8 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
     var adY = 0.0;
     var srcPtIntersect = pas.Types.TPoint.$new();
     var destPtIntersect = pas.Types.TPoint.$new();
-    $impl.computeLineIntersection(srcNode,srcPtIntersect,pas.uTypes.TLineSegment.$clone($impl.Line(pas.Types.TPoint.$clone(pSrc),pas.Types.TPoint.$clone(pDest))));
-    $impl.computeLineIntersection(destNode,destPtIntersect,pas.uTypes.TLineSegment.$clone($impl.Line(pas.Types.TPoint.$clone(pSrc),pas.Types.TPoint.$clone(pDest))));
+    $impl.computeLineIntersection(srcNode,srcPtIntersect,pas.uDrawTypes.TLineSegment.$clone($impl.Line(pas.Types.TPoint.$clone(pSrc),pas.Types.TPoint.$clone(pDest))));
+    $impl.computeLineIntersection(destNode,destPtIntersect,pas.uDrawTypes.TLineSegment.$clone($impl.Line(pas.Types.TPoint.$clone(pSrc),pas.Types.TPoint.$clone(pDest))));
     startPt.$assign(srcPtIntersect);
     endPt.$assign(destPtIntersect);
     alpha = $impl.Angle(endPt.x - startPt.x,endPt.y - startPt.y);
@@ -42834,26 +42834,37 @@ rtl.module("uDrawing",["System","WEBLib.Graphics","Types","uNetwork"],function (
   var $mod = this;
   this.drawNodes = function (canvas, network) {
     var i = 0;
-    for (var $l1 = 0, $end2 = rtl.length(network.nodes) - 1; $l1 <= $end2; $l1++) {
-      i = $l1;
-      if (network.nodes[i].selected) {
-        canvas.FPen.SetColor(255)}
-       else canvas.FPen.SetColor(network.nodes[i].outlineColor);
-      canvas.FBrush.FColor = network.nodes[i].fillColor;
+    var oldWidth = 0;
+    var oldColor = 0;
+    oldWidth = canvas.FPen.FWidth;
+    oldColor = canvas.FPen.FColor;
+    try {
       canvas.FPen.FWidth = 3;
-      canvas.RoundRect(network.nodes[i].x,network.nodes[i].y,network.nodes[i].x + network.nodes[i].w,network.nodes[i].y + network.nodes[i].h,25,25);
+      for (var $l1 = 0, $end2 = rtl.length(network.nodes) - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        if (network.nodes[i].selected) {
+          canvas.FPen.SetColor(255)}
+         else canvas.FPen.SetColor(network.nodes[i].outlineColor);
+        canvas.FBrush.FColor = network.nodes[i].fillColor;
+        canvas.RoundRect(network.nodes[i].x,network.nodes[i].y,network.nodes[i].x + network.nodes[i].w,network.nodes[i].y + network.nodes[i].h,25,25);
+      };
+    } finally {
+      canvas.FPen.FWidth = oldWidth;
+      canvas.FPen.SetColor(oldColor);
     };
   };
   this.drawReactions = function (canvas, network) {
     var i = 0;
-    canvas.FPen.SetColor(0);
     canvas.FPen.FWidth = 2;
-    for (var $l1 = 0, $end2 = rtl.length(network.reactions) - 1; $l1 <= $end2; $l1++) {
-      i = $l1;
-      if (network.reactions[i].selected) {
-        canvas.FPen.SetColor(255)}
-       else canvas.FPen.SetColor(0);
-      pas.uGraphUtils.drawReaction(canvas,network.reactions[i].src,network.reactions[i].dest);
+    try {
+      for (var $l1 = 0, $end2 = rtl.length(network.reactions) - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        if (network.reactions[i].selected) {
+          canvas.FPen.SetColor(255)}
+         else canvas.FPen.SetColor(0);
+        pas.uGraphUtils.drawReaction(canvas,network.reactions[i].src,network.reactions[i].dest);
+      };
+    } finally {
       canvas.FPen.SetColor(0);
     };
   };
@@ -43084,9 +43095,9 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.SetEvent$1(this,"OnCreate","WebFormCreate");
         this.paintBox.SetParentComponent(this);
         this.paintBox.SetName("paintBox");
-        this.paintBox.SetLeft(51);
+        this.paintBox.SetLeft(82);
         this.paintBox.SetTop(0);
-        this.paintBox.SetWidth(655);
+        this.paintBox.SetWidth(624);
         this.paintBox.SetHeight(504);
         this.paintBox.SetAlign(pas["WEBLib.Controls"].TAlign.alClient);
         this.SetEvent(this.paintBox,this,"OnPaint","paintBoxPaint");
@@ -43130,7 +43141,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.pnlLeft.SetName("pnlLeft");
         this.pnlLeft.SetLeft(0);
         this.pnlLeft.SetTop(0);
-        this.pnlLeft.SetWidth(51);
+        this.pnlLeft.SetWidth(82);
         this.pnlLeft.SetHeight(504);
         this.pnlLeft.SetAlign(pas["WEBLib.Controls"].TAlign.alLeft);
         this.pnlLeft.SetBorderColor(12632256);
@@ -43139,23 +43150,23 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.WebLabel1.SetParentComponent(this.pnlLeft);
         this.WebLabel1.SetName("WebLabel1");
         this.WebLabel1.SetLeft(10);
-        this.WebLabel1.SetTop(136);
+        this.WebLabel1.SetTop(203);
         this.WebLabel1.SetWidth(33);
-        this.WebLabel1.SetHeight(14);
+        this.WebLabel1.SetHeight(40);
         this.WebLabel1.SetCaption("Outline");
         this.WebLabel2.SetParentComponent(this.pnlLeft);
         this.WebLabel2.SetName("WebLabel2");
         this.WebLabel2.SetLeft(10);
-        this.WebLabel2.SetTop(194);
+        this.WebLabel2.SetTop(261);
         this.WebLabel2.SetWidth(12);
-        this.WebLabel2.SetHeight(14);
+        this.WebLabel2.SetHeight(40);
         this.WebLabel2.SetCaption("Fill");
         this.btnIdle.SetParentComponent(this.pnlLeft);
         this.btnIdle.SetName("btnIdle");
         this.btnIdle.SetLeft(10);
         this.btnIdle.SetTop(13);
-        this.btnIdle.SetWidth(32);
-        this.btnIdle.SetHeight(32);
+        this.btnIdle.SetWidth(40);
+        this.btnIdle.SetHeight(40);
         this.btnIdle.SetHint("Select");
         this.btnIdle.SetMaterialGlyph("call_made");
         this.btnIdle.SetShowHint(true);
@@ -43163,9 +43174,9 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnAddNode.SetParentComponent(this.pnlLeft);
         this.btnAddNode.SetName("btnAddNode");
         this.btnAddNode.SetLeft(10);
-        this.btnAddNode.SetTop(51);
-        this.btnAddNode.SetWidth(32);
-        this.btnAddNode.SetHeight(32);
+        this.btnAddNode.SetTop(67);
+        this.btnAddNode.SetWidth(44);
+        this.btnAddNode.SetHeight(44);
         this.btnAddNode.SetHint("Add Node");
         this.btnAddNode.SetMaterialGlyph("brightness_1");
         this.btnAddNode.SetShowHint(true);
@@ -43173,9 +43184,9 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnAddReaction.SetParentComponent(this.pnlLeft);
         this.btnAddReaction.SetName("btnAddReaction");
         this.btnAddReaction.SetLeft(10);
-        this.btnAddReaction.SetTop(89);
-        this.btnAddReaction.SetWidth(32);
-        this.btnAddReaction.SetHeight(32);
+        this.btnAddReaction.SetTop(133);
+        this.btnAddReaction.SetWidth(52);
+        this.btnAddReaction.SetHeight(52);
         this.btnAddReaction.SetHint("Add Reaction");
         this.btnAddReaction.SetMaterialGlyph("trending_up");
         this.btnAddReaction.SetShowHint(true);
@@ -43183,9 +43194,9 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnNodeFillColor.SetParentComponent(this.pnlLeft);
         this.btnNodeFillColor.SetName("btnNodeFillColor");
         this.btnNodeFillColor.SetLeft(10);
-        this.btnNodeFillColor.SetTop(214);
+        this.btnNodeFillColor.SetTop(281);
         this.btnNodeFillColor.SetWidth(32);
-        this.btnNodeFillColor.SetHeight(32);
+        this.btnNodeFillColor.SetHeight(58);
         this.btnNodeFillColor.SetChildOrderEx(3);
         this.btnNodeFillColor.SetColor$1(0);
         this.btnNodeFillColor.SetRole("");
@@ -43193,9 +43204,9 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnNodeOutlineColor.SetParentComponent(this.pnlLeft);
         this.btnNodeOutlineColor.SetName("btnNodeOutlineColor");
         this.btnNodeOutlineColor.SetLeft(10);
-        this.btnNodeOutlineColor.SetTop(156);
+        this.btnNodeOutlineColor.SetTop(223);
         this.btnNodeOutlineColor.SetWidth(32);
-        this.btnNodeOutlineColor.SetHeight(32);
+        this.btnNodeOutlineColor.SetHeight(58);
         this.btnNodeOutlineColor.SetChildOrderEx(3);
         this.btnNodeOutlineColor.SetColor$1(0);
         this.btnNodeOutlineColor.SetRole("");
@@ -43245,7 +43256,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
   });
   this.Form1 = null;
 },["uGraphUtils","uDrawing"]);
-rtl.module("program",["System","WEBLib.Forms","ufMain","uNetwork","uGraphUtils","uTypes","uDrawing"],function () {
+rtl.module("program",["System","WEBLib.Forms","ufMain","uNetwork","uGraphUtils","uDrawTypes","uDrawing"],function () {
   "use strict";
   var $mod = this;
   $mod.$main = function () {
