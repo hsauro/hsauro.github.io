@@ -43095,9 +43095,9 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.SetEvent$1(this,"OnCreate","WebFormCreate");
         this.paintBox.SetParentComponent(this);
         this.paintBox.SetName("paintBox");
-        this.paintBox.SetLeft(82);
+        this.paintBox.SetLeft(76);
         this.paintBox.SetTop(0);
-        this.paintBox.SetWidth(624);
+        this.paintBox.SetWidth(630);
         this.paintBox.SetHeight(504);
         this.paintBox.SetAlign(pas["WEBLib.Controls"].TAlign.alClient);
         this.SetEvent(this.paintBox,this,"OnPaint","paintBoxPaint");
@@ -43141,7 +43141,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.pnlLeft.SetName("pnlLeft");
         this.pnlLeft.SetLeft(0);
         this.pnlLeft.SetTop(0);
-        this.pnlLeft.SetWidth(82);
+        this.pnlLeft.SetWidth(76);
         this.pnlLeft.SetHeight(504);
         this.pnlLeft.SetAlign(pas["WEBLib.Controls"].TAlign.alLeft);
         this.pnlLeft.SetBorderColor(12632256);
@@ -43150,7 +43150,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.WebLabel1.SetParentComponent(this.pnlLeft);
         this.WebLabel1.SetName("WebLabel1");
         this.WebLabel1.SetLeft(10);
-        this.WebLabel1.SetTop(203);
+        this.WebLabel1.SetTop(174);
         this.WebLabel1.SetWidth(33);
         this.WebLabel1.SetHeight(40);
         this.WebLabel1.SetCaption("Outline");
@@ -43165,8 +43165,8 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnIdle.SetName("btnIdle");
         this.btnIdle.SetLeft(10);
         this.btnIdle.SetTop(13);
-        this.btnIdle.SetWidth(40);
-        this.btnIdle.SetHeight(40);
+        this.btnIdle.SetWidth(52);
+        this.btnIdle.SetHeight(52);
         this.btnIdle.SetHint("Select");
         this.btnIdle.SetMaterialGlyph("call_made");
         this.btnIdle.SetShowHint(true);
@@ -43175,8 +43175,8 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnAddNode.SetName("btnAddNode");
         this.btnAddNode.SetLeft(10);
         this.btnAddNode.SetTop(67);
-        this.btnAddNode.SetWidth(44);
-        this.btnAddNode.SetHeight(44);
+        this.btnAddNode.SetWidth(52);
+        this.btnAddNode.SetHeight(52);
         this.btnAddNode.SetHint("Add Node");
         this.btnAddNode.SetMaterialGlyph("brightness_1");
         this.btnAddNode.SetShowHint(true);
@@ -43184,7 +43184,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnAddReaction.SetParentComponent(this.pnlLeft);
         this.btnAddReaction.SetName("btnAddReaction");
         this.btnAddReaction.SetLeft(10);
-        this.btnAddReaction.SetTop(133);
+        this.btnAddReaction.SetTop(121);
         this.btnAddReaction.SetWidth(52);
         this.btnAddReaction.SetHeight(52);
         this.btnAddReaction.SetHint("Add Reaction");
@@ -43204,7 +43204,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnNodeOutlineColor.SetParentComponent(this.pnlLeft);
         this.btnNodeOutlineColor.SetName("btnNodeOutlineColor");
         this.btnNodeOutlineColor.SetLeft(10);
-        this.btnNodeOutlineColor.SetTop(223);
+        this.btnNodeOutlineColor.SetTop(194);
         this.btnNodeOutlineColor.SetWidth(32);
         this.btnNodeOutlineColor.SetHeight(58);
         this.btnNodeOutlineColor.SetChildOrderEx(3);
