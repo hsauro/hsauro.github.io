@@ -30465,20 +30465,39 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
   rtl.createClass($mod,"TForm1",pas["WEBLib.Forms"].TForm,function () {
     this.$init = function () {
       pas["WEBLib.Forms"].TForm.$init.call(this);
-      this.WebMemo1 = null;
-      this.WebButton1 = null;
+      this.memo = null;
+      this.Simulate = null;
     };
     this.$final = function () {
-      this.WebMemo1 = undefined;
-      this.WebButton1 = undefined;
+      this.memo = undefined;
+      this.Simulate = undefined;
       pas["WEBLib.Forms"].TForm.$final.call(this);
+    };
+    this.SimulateClick = function (Sender) {
+      var xo = 0.0;
+      var dt = 0.0;
+      var dx = 0.0;
+      var x = 0.0;
+      var k1 = 0.0;
+      var time = 0.0;
+      var i = 0;
+      xo = 10.0;
+      dt = 0.05;
+      x = xo;
+      time = 0;
+      for (i = 1; i <= 10; i++) {
+        this.memo.FLines.Add(pas.SysUtils.FloatToStr(time) + ", " + pas.SysUtils.FloatToStr(x));
+        dx = -x * k1;
+        x = x + (dx * dt);
+        time = time + dt;
+      };
     };
     this.LoadDFMValues = function () {
       pas["WEBLib.Forms"].TCustomForm.LoadDFMValues.call(this);
-      this.WebMemo1 = pas["WEBLib.StdCtrls"].TMemo.$create("Create$1",[this]);
-      this.WebButton1 = pas["WEBLib.StdCtrls"].TButton.$create("Create$1",[this]);
-      this.WebMemo1.BeforeLoadDFMValues();
-      this.WebButton1.BeforeLoadDFMValues();
+      this.memo = pas["WEBLib.StdCtrls"].TMemo.$create("Create$1",[this]);
+      this.Simulate = pas["WEBLib.StdCtrls"].TButton.$create("Create$1",[this]);
+      this.memo.BeforeLoadDFMValues();
+      this.Simulate.BeforeLoadDFMValues();
       try {
         this.SetName("Form1");
         this.SetLeft(0);
@@ -30491,39 +30510,34 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.FFont.SetName("Arial");
         this.FFont.SetStyle({});
         this.SetTabOrder(1);
-        this.WebMemo1.SetParentComponent(this);
-        this.WebMemo1.SetName("WebMemo1");
-        this.WebMemo1.SetLeft(26);
-        this.WebMemo1.SetTop(50);
-        this.WebMemo1.SetWidth(205);
-        this.WebMemo1.SetHeight(316);
-        this.WebMemo1.SetAutoSize(false);
-        this.WebMemo1.FLines.BeginUpdate();
-        try {
-          this.WebMemo1.FLines.Clear();
-          this.WebMemo1.FLines.Add("WebMemo1");
-        } finally {
-          this.WebMemo1.FLines.EndUpdate();
-        };
-        this.WebMemo1.SetSelLength(0);
-        this.WebMemo1.SetSelStart(0);
-        this.WebButton1.SetParentComponent(this);
-        this.WebButton1.SetName("WebButton1");
-        this.WebButton1.SetLeft(251);
-        this.WebButton1.SetTop(49);
-        this.WebButton1.SetWidth(96);
-        this.WebButton1.SetHeight(25);
-        this.WebButton1.SetCaption("WebButton1");
-        this.WebButton1.SetChildOrderEx(1);
+        this.memo.SetParentComponent(this);
+        this.memo.SetName("memo");
+        this.memo.SetLeft(24);
+        this.memo.SetTop(50);
+        this.memo.SetWidth(205);
+        this.memo.SetHeight(316);
+        this.memo.SetAutoSize(false);
+        this.memo.SetSelLength(0);
+        this.memo.SetSelStart(0);
+        this.Simulate.SetParentComponent(this);
+        this.Simulate.SetName("Simulate");
+        this.Simulate.SetLeft(251);
+        this.Simulate.SetTop(49);
+        this.Simulate.SetWidth(96);
+        this.Simulate.SetHeight(25);
+        this.Simulate.SetCaption("Simulate");
+        this.Simulate.SetChildOrderEx(1);
+        this.SetEvent(this.Simulate,this,"OnClick","SimulateClick");
       } finally {
-        this.WebMemo1.AfterLoadDFMValues();
-        this.WebButton1.AfterLoadDFMValues();
+        this.memo.AfterLoadDFMValues();
+        this.Simulate.AfterLoadDFMValues();
       };
     };
     rtl.addIntf(this,pas.System.IUnknown);
     var $r = this.$rtti;
-    $r.addField("WebMemo1",pas["WEBLib.StdCtrls"].$rtti["TMemo"]);
-    $r.addField("WebButton1",pas["WEBLib.StdCtrls"].$rtti["TButton"]);
+    $r.addField("memo",pas["WEBLib.StdCtrls"].$rtti["TMemo"]);
+    $r.addField("Simulate",pas["WEBLib.StdCtrls"].$rtti["TButton"]);
+    $r.addMethod("SimulateClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
   });
   this.Form1 = null;
 });
