@@ -4622,7 +4622,7 @@ rtl.module("SysUtils",["System","RTLConsts","JS"],function () {
         };
         P += 1;
       };
-      Token = "Ã¿";
+      Token = "ÿ";
       lastformattoken = " ";
       prevlasttoken = "H";
       while (FormatCurrent <= FormatEnd) {
@@ -16553,6 +16553,7 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
       return Result;
     };
     this.AddRequiredScript = function (link) {
+      var id = "";
       var script = null;
       script = document.createElement("script");
       script.src = link;
@@ -20397,7 +20398,7 @@ rtl.module("WEBLib.Utils",["System","Types","Web","SysUtils","Math","Classes","J
         };
         lTemp += 1;
       };
-      lToken = "Ã¿";
+      lToken = "ÿ";
       lLastFormatToken = " ";
       lPrevLastToken = "H";
       while (lFormatCurrent <= lFormatEnd) {
@@ -21736,6 +21737,7 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
       return Result;
     };
     this.UpdateElement = function () {
+      var map = null;
       var id = "";
       var srcurl = "";
       var scriptsrc = "";
@@ -22065,6 +22067,7 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
     };
     this.AddKML = function (Url, ZoomToBounds) {
       var map = null;
+      var clr = "";
       var ptr = null;
       ptr = rtl.createCallback(this,"HandleKMLClick");
       map = this.GetMap();
@@ -22222,6 +22225,8 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
     this.AddMarker$2 = function (Lat, Lon, Color, PinLetter, Title) {
       var map = null;
       var clr = "";
+      var url = "";
+      var ch = "";
       var ptr = null;
       ptr = rtl.createCallback(this,"HandleMarkerClick");
       clr = pas["WEBLib.Graphics"].ColorToHTML(Color);
@@ -26595,6 +26600,7 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
       $Self.FLastReq = new XMLHttpRequest();
       $Self.FLastReq.addEventListener("load",DoStatusCreate);
       $Self.FLastReq.open("GET",lFileName);
+      $Self.FLastReq.setRequestHeader("Cache-Control","no-cache");
       $Self.FLastReq.send();
     };
     this.ActivateChildScripts = function (AElement) {
@@ -26688,7 +26694,7 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
       this.FThemeTextColor = 16777215;
       window.addEventListener("error",rtl.createCallback(this,"DoHandleError"));
       this.FErrorType = $mod.TApplicationErrorType.aeSilent;
-      alert('TMS WEB Core \u00A9 2018 - 2020 tmssoftware.com - Trial Version');
+      this.FErrorType = $mod.TApplicationErrorType.aeFooter;
       return this;
     };
     this.Destroy = function () {
@@ -26766,6 +26772,7 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
       $Self.FLastReq = new XMLHttpRequest();
       $Self.FLastReq.addEventListener("load",DoStatusCreate);
       $Self.FLastReq.open("GET",LFileName);
+      $Self.FLastReq.setRequestHeader("Cache-Control","no-cache");
       $Self.FLastReq.send();
     };
     this.CreateForm$3 = function (AInstanceClass, AReference) {
@@ -26998,6 +27005,7 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
   this.Log$1 = function (arr) {
     var i = 0;
     var s = "";
+    var su = "";
     s = "[";
     for (var $l1 = 0, $end2 = rtl.length(arr) - 1; $l1 <= $end2; $l1++) {
       i = $l1;
@@ -32736,6 +32744,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
     };
     this.UpdateElement = function () {
       var $Self = this;
+      var el = null;
       var vid = null;
       function booltoattr(b) {
         var Result = "";
@@ -43195,7 +43204,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnNodeFillColor.SetName("btnNodeFillColor");
         this.btnNodeFillColor.SetLeft(10);
         this.btnNodeFillColor.SetTop(281);
-        this.btnNodeFillColor.SetWidth(32);
+        this.btnNodeFillColor.SetWidth(52);
         this.btnNodeFillColor.SetHeight(58);
         this.btnNodeFillColor.SetChildOrderEx(3);
         this.btnNodeFillColor.SetColor$1(0);
@@ -43205,7 +43214,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnNodeOutlineColor.SetName("btnNodeOutlineColor");
         this.btnNodeOutlineColor.SetLeft(10);
         this.btnNodeOutlineColor.SetTop(194);
-        this.btnNodeOutlineColor.SetWidth(32);
+        this.btnNodeOutlineColor.SetWidth(52);
         this.btnNodeOutlineColor.SetHeight(58);
         this.btnNodeOutlineColor.SetChildOrderEx(3);
         this.btnNodeOutlineColor.SetColor$1(0);
