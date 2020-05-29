@@ -33958,6 +33958,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
 rtl.module("uDrawTypes",["System","Types"],function () {
   "use strict";
   var $mod = this;
+  this.MaxControlPoints = 4;
   rtl.recNewT($mod,"TLineSegment",function () {
     this.$new = function () {
       var r = Object.create(this);
@@ -33999,8 +34000,14 @@ rtl.module("uDrawTypes",["System","Types"],function () {
     $r.addField("y",rtl.double);
   });
   $mod.$rtti.$DynArray("TPointDynArray",{eltype: $mod.$rtti["TPointF"]});
+  this.TRectArray$clone = function (a) {
+    var r = [];
+    for (var i = 0; i < 4; i++) r.push(pas.Types.TRect.$clone(a[i]));
+    return r;
+  };
+  $mod.$rtti.$StaticArray("TRectArray",{dims: [4], eltype: pas.Types.$rtti["TRect"]});
 });
-rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uDrawTypes"],function () {
+rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","Math","uDrawTypes","WEBLib.Utils"],function () {
   "use strict";
   var $mod = this;
   var $impl = $mod.$impl;
@@ -34017,10 +34024,48 @@ rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uDr
     var $r = $mod.$rtti.$Record("TARGB",{});
     $r.addField("color",rtl.longint);
   });
+  rtl.recNewT($mod,"TNodeSavedState",function () {
+    this.id = "";
+    this.selected = false;
+    this.reactionSelected = false;
+    this.x = 0;
+    this.y = 0;
+    this.w = 0;
+    this.h = 0;
+    this.fillColor = 0;
+    this.outlineColor = 0;
+    this.$eq = function (b) {
+      return (this.id === b.id) && (this.selected === b.selected) && (this.reactionSelected === b.reactionSelected) && (this.x === b.x) && (this.y === b.y) && (this.w === b.w) && (this.h === b.h) && (this.fillColor === b.fillColor) && (this.outlineColor === b.outlineColor);
+    };
+    this.$assign = function (s) {
+      this.id = s.id;
+      this.selected = s.selected;
+      this.reactionSelected = s.reactionSelected;
+      this.x = s.x;
+      this.y = s.y;
+      this.w = s.w;
+      this.h = s.h;
+      this.fillColor = s.fillColor;
+      this.outlineColor = s.outlineColor;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TNodeSavedState",{});
+    $r.addField("id",rtl.string);
+    $r.addField("selected",rtl.boolean);
+    $r.addField("reactionSelected",rtl.boolean);
+    $r.addField("x",rtl.longint);
+    $r.addField("y",rtl.longint);
+    $r.addField("w",rtl.longint);
+    $r.addField("h",rtl.longint);
+    $r.addField("fillColor",pas["WEBLib.Graphics"].$rtti["TColor"]);
+    $r.addField("outlineColor",pas["WEBLib.Graphics"].$rtti["TColor"]);
+  });
   rtl.createClass($mod,"TNode",pas.System.TObject,function () {
     this.$init = function () {
       pas.System.TObject.$init.call(this);
+      this.id = "";
       this.selected = false;
+      this.reactionSelected = false;
       this.x = 0;
       this.y = 0;
       this.w = 0;
@@ -34072,21 +34117,73 @@ rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uDr
     this.unSelect = function () {
       this.selected = false;
     };
+    this.getCurrentState = function () {
+      var Result = $mod.TNodeSavedState.$new();
+      Result.id = this.id;
+      Result.selected = this.selected;
+      Result.reactionSelected = this.reactionSelected;
+      Result.x = this.x;
+      Result.y = this.y;
+      Result.w = this.w;
+      Result.h = this.h;
+      Result.fillColor = this.fillColor;
+      Result.outlineColor = this.outlineColor;
+      return Result;
+    };
+    this.loadState = function (node) {
+      this.id = node.id;
+      this.selected = node.selected;
+      this.reactionSelected = node.reactionSelected;
+      this.x = node.x;
+      this.y = node.y;
+      this.w = node.w;
+      this.h = node.h;
+      this.fillColor = node.fillColor;
+      this.outlineColor = node.outlineColor;
+    };
     this.create$1 = function (id) {
+      this.id = id;
       this.w = 60;
       this.h = 40;
       this.selected = false;
-      this.fillColor = 12180223;
-      this.outlineColor = 0;
+      this.reactionSelected = false;
+      this.fillColor = pas["WEBLib.Graphics"].RGB(255,204,153);
+      this.outlineColor = pas["WEBLib.Graphics"].RGB(255,102,0);
       return this;
     };
+  });
+  $mod.$rtti.$DynArray("TListOfNodes",{eltype: $mod.$rtti["TNode"]});
+  $mod.$rtti.$DynArray("TListOfNodeStates",{eltype: $mod.$rtti["TNodeSavedState"]});
+  rtl.recNewT($mod,"TReactionSaveState",function () {
+    this.id = "";
+    this.selected = false;
+    this.src = "";
+    this.dest = "";
+    this.$eq = function (b) {
+      return (this.id === b.id) && (this.selected === b.selected) && (this.src === b.src) && (this.dest === b.dest);
+    };
+    this.$assign = function (s) {
+      this.id = s.id;
+      this.selected = s.selected;
+      this.src = s.src;
+      this.dest = s.dest;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TReactionSaveState",{});
+    $r.addField("id",rtl.string);
+    $r.addField("selected",rtl.boolean);
+    $r.addField("src",rtl.string);
+    $r.addField("dest",rtl.string);
   });
   rtl.createClass($mod,"TReaction",pas.System.TObject,function () {
     this.$init = function () {
       pas.System.TObject.$init.call(this);
+      this.id = "";
       this.selected = false;
       this.src = null;
       this.dest = null;
+      this.fillColor = 0;
+      this.thickness = 0;
     };
     this.$final = function () {
       this.src = undefined;
@@ -34096,25 +34193,185 @@ rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uDr
     this.unSelect = function () {
       this.selected = false;
     };
+    this.getCurrentState = function () {
+      var Result = $mod.TReactionSaveState.$new();
+      Result.id = this.id;
+      Result.selected = this.selected;
+      Result.src = this.src.id;
+      Result.dest = this.dest.id;
+      return Result;
+    };
+    this.loadState = function (nodes, reactionState) {
+      var i = 0;
+      var n = 0;
+      this.id = reactionState.id;
+      n = rtl.length(nodes);
+      for (var $l1 = 0, $end2 = n - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        if (nodes[i].id === reactionState.src) this.src = nodes[i];
+        if (nodes[i].id === reactionState.dest) this.dest = nodes[i];
+      };
+    };
     this.create$1 = function (id, src, dest) {
+      this.id = id;
       this.src = src;
       this.dest = dest;
       this.selected = false;
+      this.fillColor = 14599344;
+      this.thickness = 3;
       return this;
     };
   });
-  $mod.$rtti.$DynArray("TListOfNodes",{eltype: $mod.$rtti["TNode"]});
   $mod.$rtti.$DynArray("TListOfReactions",{eltype: $mod.$rtti["TReaction"]});
+  $mod.$rtti.$DynArray("TListOfReactionStates",{eltype: $mod.$rtti["TReactionSaveState"]});
+  rtl.recNewT($mod,"TNetworkSavedState",function () {
+    this.Id = "";
+    this.savedReactions = [];
+    this.savedNodes = [];
+    this.$eq = function (b) {
+      return (this.Id === b.Id) && (this.savedReactions === b.savedReactions) && (this.savedNodes === b.savedNodes);
+    };
+    this.$assign = function (s) {
+      this.Id = s.Id;
+      this.savedReactions = s.savedReactions;
+      this.savedNodes = s.savedNodes;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TNetworkSavedState",{});
+    $r.addField("Id",rtl.string);
+    $r.addField("savedReactions",$mod.$rtti["TListOfReactionStates"]);
+    $r.addField("savedNodes",$mod.$rtti["TListOfNodeStates"]);
+  });
   rtl.createClass($mod,"TNetwork",pas.System.TObject,function () {
     this.$init = function () {
       pas.System.TObject.$init.call(this);
+      this.id = "";
       this.nodes = [];
       this.reactions = [];
+      this.scalingFactor = 0.0;
+      this.savedState = $mod.TNetworkSavedState.$new();
     };
     this.$final = function () {
       this.nodes = undefined;
       this.reactions = undefined;
+      this.savedState = undefined;
       pas.System.TObject.$final.call(this);
+    };
+    this.unScale = function (x) {
+      var Result = 0;
+      Result = pas.System.Trunc(x / this.scalingFactor);
+      return Result;
+    };
+    this.loadModel = function (modelStr) {
+      var JObj = null;
+      var JSONRoot = null;
+      var JSONValue1 = null;
+      var JSONNodeArray = null;
+      var JSONreactionArray = null;
+      var node = null;
+      var ar = null;
+      var nj = null;
+      var id = "";
+      var i = 0;
+      var j = 0;
+      var x = 0;
+      var y = 0;
+      var h = 0;
+      var w = 0;
+      var index = 0;
+      var src = null;
+      var dest = null;
+      var srcStr = "";
+      var destStr = "";
+      this.clear();
+      JSONRoot = pas["WEBLib.JSON"].TJSONObject.ParseJSONValue(modelStr);
+      JSONValue1 = rtl.as(JSONRoot,pas["WEBLib.JSON"].TJSONObject).Get("id").fjv;
+      id = rtl.as(JSONValue1,pas["WEBLib.JSON"].TJSONString).GetStrValue();
+      if (rtl.as(JSONRoot,pas["WEBLib.JSON"].TJSONObject).Get("nodes") !== null) {
+        JSONNodeArray = rtl.as(JSONRoot,pas["WEBLib.JSON"].TJSONObject).Get("nodes").fjv;
+        ar = rtl.as(JSONNodeArray,pas["WEBLib.JSON"].TJSONArray);
+        for (var $l1 = 0, $end2 = ar.GetCount$1() - 1; $l1 <= $end2; $l1++) {
+          i = $l1;
+          nj = rtl.as(ar.GetItem$1(i),pas["WEBLib.JSON"].TJSONObject);
+          id = nj.GetJSONValue("id");
+          x = pas.SysUtils.StrToInt(nj.GetJSONValue("x"));
+          y = pas.SysUtils.StrToInt(nj.GetJSONValue("y"));
+          h = pas.SysUtils.StrToInt(nj.GetJSONValue("h"));
+          w = pas.SysUtils.StrToInt(nj.GetJSONValue("w"));
+          node = this.addNode$2(id,x,y,w,h);
+          node.fillColor = pas.SysUtils.StrToInt(nj.GetJSONValue("fillColor"));
+        };
+      };
+      if (rtl.as(JSONRoot,pas["WEBLib.JSON"].TJSONObject).Get("reactions") !== null) {
+        JSONreactionArray = rtl.as(JSONRoot,pas["WEBLib.JSON"].TJSONObject).Get("reactions").fjv;
+        ar = rtl.as(JSONreactionArray,pas["WEBLib.JSON"].TJSONArray);
+        for (var $l3 = 0, $end4 = ar.GetCount$1() - 1; $l3 <= $end4; $l3++) {
+          i = $l3;
+          nj = rtl.as(ar.GetItem$1(i),pas["WEBLib.JSON"].TJSONObject);
+          id = nj.GetJSONValue("id");
+          srcStr = nj.GetJSONValue("srcId");
+          destStr = nj.GetJSONValue("destId");
+          for (var $l5 = 0, $end6 = rtl.length(this.nodes) - 1; $l5 <= $end6; $l5++) {
+            j = $l5;
+            if (this.nodes[j].id === srcStr) {
+              src = this.nodes[j];
+              break;
+            };
+          };
+          for (var $l7 = 0, $end8 = rtl.length(this.nodes) - 1; $l7 <= $end8; $l7++) {
+            j = $l7;
+            if (this.nodes[j].id === destStr) {
+              dest = this.nodes[j];
+              break;
+            };
+          };
+          index = this.addReaction(id,src,dest);
+          this.reactions[index].fillColor = pas.SysUtils.StrToInt(nj.GetJSONValue("fillColor"));
+        };
+      };
+    };
+    this.convertToJSON = function () {
+      var Result = "";
+      var JSONRoot = null;
+      var modelId = null;
+      var nodeObject = null;
+      var reactionObject = null;
+      var jsonArray = null;
+      var i = 0;
+      var jsonvalue = null;
+      JSONRoot = pas["WEBLib.JSON"].TJSONObject.$create("Create$2");
+      modelId = pas["WEBLib.JSON"].TJSONObject.$create("Create$2");
+      JSONRoot.AddPair$2("id",this.id);
+      jsonArray = pas["WEBLib.JSON"].TJSONArray.$create("Create$2");
+      for (var $l1 = 0, $end2 = rtl.length(this.nodes) - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        nodeObject = pas["WEBLib.JSON"].TJSONObject.$create("Create$2");
+        nodeObject.AddPair$2("id",this.nodes[i].id);
+        nodeObject.AddPair$1("x",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.nodes[i].x]));
+        nodeObject.AddPair$1("y",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.nodes[i].y]));
+        nodeObject.AddPair$1("w",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.nodes[i].w]));
+        nodeObject.AddPair$1("h",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.nodes[i].h]));
+        nodeObject.AddPair$1("fillColor",pas["WEBLib.JSON"].TJSONNumber.$create("Create$1",[this.nodes[i].fillColor]));
+        nodeObject.AddPair$1("outlineColor",pas["WEBLib.JSON"].TJSONNumber.$create("Create$1",[this.nodes[i].outlineColor]));
+        jsonArray.Add$4(nodeObject);
+      };
+      if (rtl.length(this.nodes) > 0) {
+        JSONRoot.AddPair$1("nodes",jsonArray);
+        jsonArray = pas["WEBLib.JSON"].TJSONArray.$create("Create$2");
+        for (var $l3 = 0, $end4 = rtl.length(this.reactions) - 1; $l3 <= $end4; $l3++) {
+          i = $l3;
+          reactionObject = pas["WEBLib.JSON"].TJSONObject.$create("Create$2");
+          reactionObject.AddPair$2("id",this.reactions[i].id);
+          reactionObject.AddPair$2("srcId",this.reactions[i].src.id);
+          reactionObject.AddPair$2("destId",this.reactions[i].dest.id);
+          reactionObject.AddPair$1("fillColor",pas["WEBLib.JSON"].TJSONNumber.$create("Create$1",[this.reactions[i].fillColor]));
+          reactionObject.AddPair$1("thickness",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.reactions[i].thickness]));
+          jsonArray.Add$4(reactionObject);
+        };
+        if (rtl.length(this.reactions) > 0) JSONRoot.AddPair$1("reactions",jsonArray);
+      };
+      Result = JSONRoot.ToJSON();
+      return Result;
     };
     this.overNode = function (x, y, index) {
       var Result = null;
@@ -34163,6 +34420,19 @@ rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uDr
       Result = this.nodes[rtl.length(this.nodes) - 1];
       Result.x = x;
       Result.y = y;
+      Result.id = id;
+      return Result;
+    };
+    this.addNode$2 = function (id, x, y, w, h) {
+      var Result = null;
+      this.nodes = rtl.arraySetLength(this.nodes,null,rtl.length(this.nodes) + 1);
+      this.nodes[rtl.length(this.nodes) - 1] = $mod.TNode.$create("create$1",[id]);
+      Result = this.nodes[rtl.length(this.nodes) - 1];
+      Result.x = x;
+      Result.y = y;
+      Result.h = h;
+      Result.w = w;
+      Result.id = id;
       return Result;
     };
     this.addReaction = function (id, src, dest) {
@@ -34178,17 +34448,89 @@ rtl.module("uNetwork",["System","SysUtils","Types","WEBLib.Graphics","Math","uDr
       for (var $in1 = this.nodes, $l2 = 0, $end3 = rtl.length($in1) - 1; $l2 <= $end3; $l2++) {
         node = $in1[$l2];
         node.selected = false;
+        node.reactionSelected = false;
       };
       for (var $in4 = this.reactions, $l5 = 0, $end6 = rtl.length($in4) - 1; $l5 <= $end6; $l5++) {
         reaction = $in4[$l5];
         reaction.selected = false;
       };
     };
+    this.unReactionSelect = function () {
+      var node = null;
+      for (var $in1 = this.nodes, $l2 = 0, $end3 = rtl.length($in1) - 1; $l2 <= $end3; $l2++) {
+        node = $in1[$l2];
+        node.reactionSelected = false;
+      };
+    };
+    this.clear = function () {
+      var i = 0;
+      for (var $l1 = 0, $end2 = rtl.length(this.reactions) - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        rtl.free(this.reactions,i);
+      };
+      this.reactions = rtl.arraySetLength(this.reactions,null,0);
+      for (var $l3 = 0, $end4 = rtl.length(this.nodes) - 1; $l3 <= $end4; $l3++) {
+        i = $l3;
+        rtl.free(this.nodes,i);
+      };
+      this.nodes = rtl.arraySetLength(this.nodes,null,0);
+    };
+    this.hasReactions = function (node) {
+      var Result = false;
+      var i = 0;
+      Result = false;
+      for (var $l1 = 0, $end2 = rtl.length(this.reactions) - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        if ((this.reactions[i].src === node) || (this.reactions[i].dest === node)) return true;
+      };
+      return Result;
+    };
+    this.getCurrentState = function () {
+      var Result = $mod.TNetworkSavedState.$new();
+      var i = 0;
+      var ln = 0;
+      Result.Id = this.id;
+      ln = rtl.length(this.nodes);
+      Result.savedNodes = rtl.arraySetLength(Result.savedNodes,$mod.TNodeSavedState,ln);
+      for (var $l1 = 0, $end2 = ln - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        Result.savedNodes[i].$assign(this.nodes[i].getCurrentState());
+      };
+      ln = rtl.length(this.reactions);
+      Result.savedReactions = rtl.arraySetLength(Result.savedReactions,$mod.TReactionSaveState,ln);
+      for (var $l3 = 0, $end4 = ln - 1; $l3 <= $end4; $l3++) {
+        i = $l3;
+        Result.savedReactions[i].$assign(this.reactions[i].getCurrentState());
+      };
+      return Result;
+    };
+    this.loadState = function (networkState) {
+      var i = 0;
+      var ln = 0;
+      var b = 0;
+      this.clear();
+      this.id = networkState.Id;
+      ln = rtl.length(networkState.savedNodes);
+      this.nodes = rtl.arraySetLength(this.nodes,null,rtl.length(networkState.savedNodes));
+      for (var $l1 = 0, $end2 = rtl.length(networkState.savedNodes) - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        this.nodes[i] = $mod.TNode.$create("Create");
+        this.nodes[i].loadState($mod.TNodeSavedState.$clone(networkState.savedNodes[i]));
+      };
+      ln = rtl.length(networkState.savedReactions);
+      this.reactions = rtl.arraySetLength(this.reactions,null,ln);
+      for (var $l3 = 0, $end4 = ln - 1; $l3 <= $end4; $l3++) {
+        i = $l3;
+        this.reactions[i] = $mod.TReaction.$create("Create");
+        this.reactions[i].loadState(this.nodes,$mod.TReactionSaveState.$clone(networkState.savedReactions[i]));
+      };
+    };
     this.Create$1 = function (id) {
+      this.id = id;
       return this;
     };
   });
-},["WEBLib.Dialogs"],function () {
+},["WEBLib.Dialogs","WEBLib.JSON"],function () {
   "use strict";
   var $mod = this;
   var $impl = $mod.$impl;
@@ -42673,22 +43015,234 @@ rtl.module("WEBLib.JQCtrls",["System","Classes","WEBLib.Graphics","SysUtils","We
     return Result;
   };
 });
-rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],function () {
+rtl.module("UITypes",["System"],function () {
   "use strict";
   var $mod = this;
-  var $impl = $mod.$impl;
-  this.drawReaction = function (canvas, srcNode, destNode) {
-    var pSrc = pas.Types.TPoint.$new();
-    var pDest = pas.Types.TPoint.$new();
-    pSrc.$assign(rtl.as(srcNode,pas.uNetwork.TNode).getCenter());
-    pDest.$assign(rtl.as(destNode,pas.uNetwork.TNode).getCenter());
-    $impl.drawLine(canvas,rtl.as(srcNode,pas.uNetwork.TNode),rtl.as(destNode,pas.uNetwork.TNode),pas.Types.TPoint.$clone(pSrc),pas.Types.TPoint.$clone(pDest));
+});
+rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","contnrs","WEBLib.ExtCtrls","WEBLib.Utils","WEBLib.Buttons","WEBLib.Graphics","WEBLib.Controls","WEBLib.StdCtrls","WEBLib.Dialogs"],function () {
+  "use strict";
+  var $mod = this;
+  this.NOT_SELECTED = -1;
+  $mod.$rtti.$DynArray("TStackOfSavedStates",{eltype: pas.uNetwork.$rtti["TNetworkSavedState"]});
+  this.TMouseStatus = {"0": "sIdle", sIdle: 0, "1": "sAddNode", sAddNode: 1, "2": "sAddEdge", sAddEdge: 2, "3": "sMouseDown", sMouseDown: 3};
+  $mod.$rtti.$Enum("TMouseStatus",{minvalue: 0, maxvalue: 3, ordtype: 1, enumtype: this.TMouseStatus});
+  rtl.createClass($mod,"TNetworkStack",pas.System.TObject,function () {
+    this.$init = function () {
+      pas.System.TObject.$init.call(this);
+      this.networkStack = [];
+      this.stackCounter = 0;
+    };
+    this.$final = function () {
+      this.networkStack = undefined;
+      pas.System.TObject.$final.call(this);
+    };
+    this.push = function (n) {
+      this.stackCounter += 1;
+      this.networkStack = rtl.arraySetLength(this.networkStack,pas.uNetwork.TNetworkSavedState,rtl.length(this.networkStack) + 1);
+      this.networkStack[this.stackCounter].$assign(n);
+    };
+    this.pop = function () {
+      var Result = pas.uNetwork.TNetworkSavedState.$new();
+      if (rtl.length(this.networkStack) > 0) {
+        Result.$assign(this.networkStack[this.stackCounter]);
+        this.stackCounter -= 1;
+      };
+      return Result;
+    };
+    this.Create$1 = function () {
+      this.stackCounter = -1;
+      return this;
+    };
+  });
+  rtl.createClass($mod,"TController",pas.System.TObject,function () {
+    this.$init = function () {
+      pas.System.TObject.$init.call(this);
+      this.mStatus = 0;
+      this.srcNode = 0;
+      this.destNode = 0;
+      this.selectedNode = 0;
+      this.currentX = 0;
+      this.currentY = 0;
+      this.network = null;
+      this.undoStack = null;
+    };
+    this.$final = function () {
+      this.network = undefined;
+      this.undoStack = undefined;
+      pas.System.TObject.$final.call(this);
+    };
+    this.loadModel = function (modelStr) {
+      this.network.loadModel(modelStr);
+    };
+    this.setAddNodeStatus = function () {
+      this.mStatus = $mod.TMouseStatus.sAddNode;
+    };
+    this.setAddReactionStatus = function () {
+      this.mStatus = $mod.TMouseStatus.sAddEdge;
+      this.srcNode = -1;
+      this.destNode = -1;
+    };
+    this.setIdleStatus = function () {
+      this.mStatus = $mod.TMouseStatus.sIdle;
+    };
+    this.addNode = function (Id, x, y) {
+      var Result = null;
+      this.prepareUndo();
+      Result = this.network.addNode$1(Id,x,y);
+      return Result;
+    };
+    this.addNode$1 = function (x, y) {
+      this.prepareUndo();
+      this.network.addNode$1("node" + pas.SysUtils.IntToStr(rtl.length(this.network.nodes) + 1),x,y);
+    };
+    this.addReaction = function (Id, src, dest) {
+      var Result = 0;
+      this.prepareUndo();
+      Result = this.network.addReaction(Id,src,dest);
+      return Result;
+    };
+    this.prepareUndo = function () {
+      this.undoStack.push(pas.uNetwork.TNetworkSavedState.$clone(this.network.getCurrentState()));
+    };
+    this.undo = function () {
+      this.network.loadState(pas.uNetwork.TNetworkSavedState.$clone(this.undoStack.pop()));
+    };
+    this.deleteSelectedItems = function () {
+      var i = 0;
+      var j = 0;
+      var alength = 0;
+      for (var $l1 = 0, $end2 = rtl.length(this.network.nodes) - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        if (this.network.nodes[i].selected) {
+          if (!this.network.hasReactions(this.network.nodes[i])) {
+            alength = rtl.length(this.network.nodes);
+            for (var $l3 = i + 1, $end4 = alength - 1; $l3 <= $end4; $l3++) {
+              j = $l3;
+              this.network.nodes[j - 1] = this.network.nodes[j];
+            };
+            this.network.nodes = rtl.arraySetLength(this.network.nodes,null,alength - 1);
+            return;
+          } else pas["WEBLib.Dialogs"].ShowMessage("Delete connecting reactions first");
+        };
+      };
+      for (var $l5 = 0, $end6 = rtl.length(this.network.reactions) - 1; $l5 <= $end6; $l5++) {
+        i = $l5;
+        if (this.network.reactions[i].selected) {
+          alength = rtl.length(this.network.reactions);
+          for (var $l7 = i + 1, $end8 = alength - 1; $l7 <= $end8; $l7++) {
+            j = $l7;
+            this.network.reactions[j - 1] = this.network.reactions[j];
+          };
+          this.network.reactions = rtl.arraySetLength(this.network.reactions,null,alength - 1);
+          return;
+        };
+      };
+    };
+    this.OnMouseDown = function (Button, Shift, X, Y) {
+      var index = 0;
+      try {
+        if (this.mStatus === $mod.TMouseStatus.sAddNode) {
+          this.addNode$1(X,Y);
+          return;
+        };
+        if (this.mStatus === $mod.TMouseStatus.sAddEdge) {
+          if (this.srcNode === -1) {
+            if (this.network.overNode(X,Y,{get: function () {
+                return index;
+              }, set: function (v) {
+                index = v;
+              }}) !== null) {
+              this.srcNode = index;
+              this.network.nodes[index].reactionSelected = true;
+            } else this.mStatus = $mod.TMouseStatus.sIdle;
+          } else if (this.srcNode > -1) {
+            if (this.network.overNode(X,Y,{get: function () {
+                return index;
+              }, set: function (v) {
+                index = v;
+              }}) !== null) {
+              this.destNode = index;
+              this.prepareUndo();
+              this.network.addReaction("xx",this.network.nodes[this.srcNode],this.network.nodes[this.destNode]);
+              this.network.nodes[this.srcNode].reactionSelected = false;
+              this.srcNode = -1;
+              this.destNode = -1;
+            } else this.mStatus = $mod.TMouseStatus.sIdle;
+          };
+          return;
+        };
+        if (this.network.overNode(X,Y,{get: function () {
+            return index;
+          }, set: function (v) {
+            index = v;
+          }}) !== null) {
+          this.mStatus = $mod.TMouseStatus.sMouseDown;
+          this.network.unSelectAll();
+          this.selectedNode = index;
+          this.network.nodes[index].selected = true;
+          this.currentX = X;
+          this.currentY = Y;
+          return;
+        };
+        if (this.network.overEdge(X,Y,{get: function () {
+            return index;
+          }, set: function (v) {
+            index = v;
+          }}) !== null) {
+          this.network.unSelectAll();
+          this.network.reactions[index].selected = true;
+          return;
+        };
+        this.mStatus = $mod.TMouseStatus.sIdle;
+        this.network.unSelectAll();
+      } finally {
+      };
+    };
+    this.OnMouseMove = function (Sender, Shift, X, Y) {
+      var dx = 0;
+      var dy = 0;
+      var index = 0;
+      if (this.mStatus === $mod.TMouseStatus.sMouseDown) {
+        dx = X - this.currentX;
+        dy = Y - this.currentY;
+        this.network.nodes[this.selectedNode].x = this.network.nodes[this.selectedNode].x + dx;
+        this.network.nodes[this.selectedNode].y = this.network.nodes[this.selectedNode].y + dy;
+        this.currentX = X;
+        this.currentY = Y;
+      };
+      if ((this.mStatus === $mod.TMouseStatus.sAddEdge) && (this.network.overNode(X,Y,{get: function () {
+          return index;
+        }, set: function (v) {
+          index = v;
+        }}) !== null)) {
+        this.network.nodes[index].reactionSelected = true;
+      } else this.network.unReactionSelect();
+    };
+    this.OnMouseUp = function (Sender, Button, Shift, X, Y) {
+      if (this.mStatus === $mod.TMouseStatus.sMouseDown) this.mStatus = $mod.TMouseStatus.sIdle;
+    };
+    this.Create$1 = function (network) {
+      this.undoStack = $mod.TNetworkStack.$create("Create$1");
+      this.network = network;
+      this.mStatus = $mod.TMouseStatus.sIdle;
+      this.srcNode = -1;
+      this.destNode = -1;
+      return this;
+    };
+  });
+},["JS","Web","WEBLib.JSON"]);
+rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types","uDrawTypes"],function () {
+  "use strict";
+  var $mod = this;
+  this.Line = function (pt1, pt2) {
+    var Result = pas.uDrawTypes.TLineSegment.$new();
+    Result.p.x = pt1.x;
+    Result.p.y = pt1.y;
+    Result.q.x = pt2.x;
+    Result.q.y = pt2.y;
+    return Result;
   };
-},["uNetwork","uDrawTypes"],function () {
-  "use strict";
-  var $mod = this;
-  var $impl = $mod.$impl;
-  $impl.Angle = function (x, y) {
+  this.Angle = function (x, y) {
     var Result = 0.0;
     if (Math.abs(x) < 1e-5) {
       if (Math.abs(y) < 1e-5) {
@@ -42707,6 +43261,30 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
     } else Result = Math.atan(y / x);
     return Result;
   };
+  this.ScalePt = function (p1, s) {
+    var Result = pas.Types.TPoint.$new();
+    Result.x = pas.System.Trunc(p1.x * s);
+    Result.y = pas.System.Trunc(p1.y * s);
+    return Result;
+  };
+  this.MinusPt = function (p1, p2) {
+    var Result = pas.Types.TPoint.$new();
+    Result.x = p1.x - p2.x;
+    Result.y = p1.y - p2.y;
+    return Result;
+  };
+},["uNetwork"]);
+rtl.module("uDrawReaction",["System","SysUtils","WEBLib.Graphics","Types","uNetwork"],function () {
+  "use strict";
+  var $mod = this;
+  var $impl = $mod.$impl;
+  this.drawReaction = function (canvas, scaleFactor, reaction) {
+    $impl.drawLine(canvas,scaleFactor,reaction);
+  };
+},["uDrawTypes","uGraphUtils"],function () {
+  "use strict";
+  var $mod = this;
+  var $impl = $mod.$impl;
   $impl.segmentIntersects = function (v1, v2, v) {
     var Result = false;
     var xlk = 0;
@@ -42742,7 +43320,23 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
     };
     return Result;
   };
-  $impl.drawArrow = function (canvas, tip, dxdt, dydt) {
+  $impl.computeLineIntersection = function (node, scalingFactor, pt, line) {
+    var Result = false;
+    var i = 0;
+    var OuterSegs = rtl.arraySetLength(null,pas.uDrawTypes.TLineSegment,4);
+    OuterSegs = pas.uDrawTypes.TBoundingBoxSegments$clone(node.getNodeBoundingBox());
+    for (i = 1; i <= 4; i++) {
+      OuterSegs[i - 1].p.$assign(pas.uGraphUtils.ScalePt(OuterSegs[i - 1].p,scalingFactor));
+      OuterSegs[i - 1].q.$assign(pas.uGraphUtils.ScalePt(OuterSegs[i - 1].q,scalingFactor));
+    };
+    Result = false;
+    for (i = 1; i <= 4; i++) if ($impl.segmentIntersects(pas.uDrawTypes.TLineSegment.$clone(OuterSegs[i - 1]),pas.uDrawTypes.TLineSegment.$clone(line),pt)) {
+      Result = true;
+      return Result;
+    };
+    return Result;
+  };
+  $impl.drawArrow = function (canvas, reaction, tip, dxdt, dydt) {
     var dx = 0;
     var dy = 0;
     var alpha = 0.0;
@@ -42758,21 +43352,21 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
     pg = rtl.arraySetLength(pg,pas.uDrawTypes.TPointF,4);
     scale = 1;
     scalingFactor = 1;
-    alpha = -$impl.Angle(dxdt,dydt);
+    alpha = -pas.uGraphUtils.Angle(dxdt,dydt);
     cosine = Math.cos(alpha);
     sine = Math.sin(alpha);
-    adX = pas.System.Trunc(6 * scalingFactor) * Math.cos(-alpha);
-    adY = pas.System.Trunc(6 * scalingFactor) * Math.sin(-alpha);
+    adX = pas.System.Trunc(1 * scalingFactor) * Math.cos(-alpha);
+    adY = pas.System.Trunc(1 * scalingFactor) * Math.sin(-alpha);
     tip.x = tip.x + pas.System.Trunc(adX);
     tip.y = tip.y + pas.System.Trunc(adY);
     pg[0].x = pas.System.Trunc((0 * scale * cosine) + (14 * scale * sine));
     pg[0].y = pas.System.Trunc((-0 * scale * sine) + (14 * scale * cosine));
-    pg[1].x = pas.System.Trunc((7 * scale * cosine) + (7 * scale * sine));
-    pg[1].y = pas.System.Trunc((-7 * scale * sine) + (7 * scale * cosine));
+    pg[1].x = pas.System.Trunc((3 * scale * cosine) + (7 * scale * sine));
+    pg[1].y = pas.System.Trunc((-3 * scale * sine) + (7 * scale * cosine));
     pg[2].x = pas.System.Trunc((0 * scale * cosine) + (0 * scale * sine));
     pg[2].y = pas.System.Trunc((-0 * scale * sine) + (0 * scale * cosine));
-    pg[3].x = pas.System.Trunc((14 * scale * cosine) + (7 * scale * sine));
-    pg[3].y = pas.System.Trunc((-14 * scale * sine) + (7 * scale * cosine));
+    pg[3].x = pas.System.Trunc((9 * scale * cosine) + (7 * scale * sine));
+    pg[3].y = pas.System.Trunc((-9 * scale * sine) + (7 * scale * cosine));
     dx = pas.System.Trunc(tip.x - pg[3].x) & 0xFFFFFFFF;
     dy = pas.System.Trunc(tip.y - pg[3].y) & 0xFFFFFFFF;
     pg[0].x = pg[0].x + dx;
@@ -42788,35 +43382,11 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
       fpt[i].x = pas.System.Trunc(pg[i].x);
       fpt[i].y = pas.System.Trunc(pg[i].y);
     };
-    canvas.FPen.SetColor(0);
-    canvas.FBrush.FColor = 0;
+    canvas.FPen.SetColor(reaction.fillColor);
+    canvas.FBrush.FColor = reaction.fillColor;
     canvas.Polygon(fpt);
   };
-  $impl.computeLineIntersection = function (node, pt, line) {
-    var Result = false;
-    var i = 0;
-    var outerSegs = rtl.arraySetLength(null,pas.uDrawTypes.TLineSegment,4);
-    outerSegs = pas.uDrawTypes.TBoundingBoxSegments$clone(node.getNodeBoundingBox());
-    for (i = 1; i <= 4; i++) {
-      outerSegs[i - 1].p.$assign(outerSegs[i - 1].p);
-      outerSegs[i - 1].q.$assign(outerSegs[i - 1].q);
-    };
-    Result = false;
-    for (i = 1; i <= 4; i++) if ($impl.segmentIntersects(pas.uDrawTypes.TLineSegment.$clone(outerSegs[i - 1]),pas.uDrawTypes.TLineSegment.$clone(line),pt)) {
-      Result = true;
-      return Result;
-    };
-    return Result;
-  };
-  $impl.Line = function (pt1, pt2) {
-    var Result = pas.uDrawTypes.TLineSegment.$new();
-    Result.p.x = pt1.x;
-    Result.p.y = pt1.y;
-    Result.q.x = pt2.x;
-    Result.q.y = pt2.y;
-    return Result;
-  };
-  $impl.drawLine = function (canvas, srcNode, destNode, pSrc, pDest) {
+  $impl.drawLine = function (canvas, scalingFactor, reaction) {
     var startPt = pas.Types.TPoint.$new();
     var endPt = pas.Types.TPoint.$new();
     var alpha = 0.0;
@@ -42824,138 +43394,252 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types"],functio
     var adY = 0.0;
     var srcPtIntersect = pas.Types.TPoint.$new();
     var destPtIntersect = pas.Types.TPoint.$new();
-    $impl.computeLineIntersection(srcNode,srcPtIntersect,pas.uDrawTypes.TLineSegment.$clone($impl.Line(pas.Types.TPoint.$clone(pSrc),pas.Types.TPoint.$clone(pDest))));
-    $impl.computeLineIntersection(destNode,destPtIntersect,pas.uDrawTypes.TLineSegment.$clone($impl.Line(pas.Types.TPoint.$clone(pSrc),pas.Types.TPoint.$clone(pDest))));
+    var pSrc = pas.Types.TPoint.$new();
+    var pDest = pas.Types.TPoint.$new();
+    pSrc.$assign(pas.uGraphUtils.ScalePt(reaction.src.getCenter(),scalingFactor));
+    pDest.$assign(pas.uGraphUtils.ScalePt(reaction.dest.getCenter(),scalingFactor));
+    $impl.computeLineIntersection(reaction.src,scalingFactor,srcPtIntersect,pas.uDrawTypes.TLineSegment.$clone(pas.uGraphUtils.Line(pas.Types.TPoint.$clone(pSrc),pas.Types.TPoint.$clone(pDest))));
+    $impl.computeLineIntersection(reaction.dest,scalingFactor,destPtIntersect,pas.uDrawTypes.TLineSegment.$clone(pas.uGraphUtils.Line(pas.Types.TPoint.$clone(pSrc),pas.Types.TPoint.$clone(pDest))));
     startPt.$assign(srcPtIntersect);
     endPt.$assign(destPtIntersect);
-    alpha = $impl.Angle(endPt.x - startPt.x,endPt.y - startPt.y);
-    adX = pas.System.Trunc(8) * Math.cos(alpha);
-    adY = pas.System.Trunc(8) * Math.sin(alpha);
+    startPt.$assign(srcPtIntersect);
+    endPt.$assign(destPtIntersect);
+    alpha = pas.uGraphUtils.Angle(endPt.x - startPt.x,endPt.y - startPt.y);
+    adX = pas.System.Trunc(8 * scalingFactor) * Math.cos(alpha);
+    adY = pas.System.Trunc(8 * scalingFactor) * Math.sin(alpha);
     adX = endPt.x - pas.System.Trunc(adX);
     adY = endPt.y - pas.System.Trunc(adY);
+    canvas.FPen.SetColor(reaction.fillColor);
+    canvas.FPen.FWidth = reaction.thickness;
     canvas.MoveTo(startPt.x,startPt.y);
     canvas.LineTo$1(adX,adY);
-    $impl.drawArrow(canvas,pas.Types.TPoint.$clone(endPt),pDest.x - pSrc.x,pDest.y - pSrc.y);
+    $impl.drawArrow(canvas,reaction,pas.Types.TPoint.$clone(endPt),pDest.x - pSrc.x,pDest.y - pSrc.y);
   };
 });
-rtl.module("uDrawing",["System","WEBLib.Graphics","Types","uNetwork"],function () {
+rtl.module("uNetworkCanvas",["System","WEBLib.Graphics","Types","WEBLib.Dialogs","uNetwork","uDrawTypes"],function () {
   "use strict";
   var $mod = this;
-  this.drawNodes = function (canvas, network) {
-    var i = 0;
-    var oldWidth = 0;
-    var oldColor = 0;
-    oldWidth = canvas.FPen.FWidth;
-    oldColor = canvas.FPen.FColor;
-    try {
-      canvas.FPen.FWidth = 3;
-      for (var $l1 = 0, $end2 = rtl.length(network.nodes) - 1; $l1 <= $end2; $l1++) {
-        i = $l1;
-        if (network.nodes[i].selected) {
-          canvas.FPen.SetColor(255)}
-         else canvas.FPen.SetColor(network.nodes[i].outlineColor);
-        canvas.FBrush.FColor = network.nodes[i].fillColor;
-        canvas.RoundRect(network.nodes[i].x,network.nodes[i].y,network.nodes[i].x + network.nodes[i].w,network.nodes[i].y + network.nodes[i].h,25,25);
-      };
-    } finally {
-      canvas.FPen.FWidth = oldWidth;
-      canvas.FPen.SetColor(oldColor);
+  rtl.createClass($mod,"TNetworkCanvas",pas.System.TObject,function () {
+    this.$init = function () {
+      pas.System.TObject.$init.call(this);
+      this.network = null;
+      this.canvas = null;
     };
-  };
-  this.drawReactions = function (canvas, network) {
-    var i = 0;
-    canvas.FPen.FWidth = 2;
-    try {
-      for (var $l1 = 0, $end2 = rtl.length(network.reactions) - 1; $l1 <= $end2; $l1++) {
-        i = $l1;
-        if (network.reactions[i].selected) {
-          canvas.FPen.SetColor(255)}
-         else canvas.FPen.SetColor(0);
-        pas.uGraphUtils.drawReaction(canvas,network.reactions[i].src,network.reactions[i].dest);
-      };
-    } finally {
-      canvas.FPen.SetColor(0);
+    this.$final = function () {
+      this.network = undefined;
+      this.canvas = undefined;
+      pas.System.TObject.$final.call(this);
     };
-  };
-},["uGraphUtils"]);
-rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics","WEBLib.Controls","Types","WEBLib.Forms","WEBLib.Dialogs","WEBLib.ExtCtrls","WEBLib.StdCtrls","uNetwork","WEBLib.Buttons","WEBLib.JQCtrls"],function () {
+    this.getControlRects = function (x, y, w, h) {
+      var Result = rtl.arraySetLength(null,pas.Types.TRect,4);
+      var grabW = 0;
+      var grabH = 0;
+      var grabW2 = 0;
+      var grabH2 = 0;
+      grabW = pas.System.Trunc(6);
+      grabH = pas.System.Trunc(6);
+      grabW2 = Math.floor(grabW / 2);
+      grabH2 = Math.floor(grabH / 2);
+      Result[0].$assign(pas.Types.Rect(x - grabW2,y - grabW2,x + grabW2,y + grabH2));
+      Result[1].$assign(pas.Types.Rect((x + w) - grabW2,y - grabH2,x + w + grabW2,y + grabH2));
+      Result[2].$assign(pas.Types.Rect(x - grabW2,(y + h) - grabH2,x + grabW2,y + h + grabH2));
+      Result[3].$assign(pas.Types.Rect((x + w) - grabW2,(y + h) - grabH2,x + w + grabW2,y + h + grabH2));
+      return Result;
+    };
+    this.drawMouseGrabPoints = function (x, y, w, h) {
+      var scalingFactor = 0.0;
+      var rectList = rtl.arraySetLength(null,pas.Types.TRect,4);
+      rectList = pas.uDrawTypes.TRectArray$clone(this.getControlRects(x,y,w,h));
+      this.canvas.FBrush.FColor = 255;
+      this.canvas.FBrush.FStyle = pas["WEBLib.Graphics"].TBrushStyle.bsSolid;
+      this.canvas.FillRect(rectList[0]);
+      this.canvas.FillRect(rectList[1]);
+      this.canvas.FillRect(rectList[2]);
+      this.canvas.FillRect(rectList[3]);
+    };
+    this.paint = function (scaleFactor) {
+      this.drawNodes(scaleFactor);
+      this.drawReactions(scaleFactor);
+    };
+    this.drawReactions = function (scalingFactor) {
+      var i = 0;
+      var scaledLineThickness = 0;
+      this.canvas.FPen.FWidth = 2;
+      try {
+        for (var $l1 = 0, $end2 = rtl.length(this.network.reactions) - 1; $l1 <= $end2; $l1++) {
+          i = $l1;
+          if (this.network.reactions[i].selected) {
+            this.canvas.FPen.SetColor(255);
+          } else {
+            this.canvas.FPen.FWidth = pas.System.Trunc(2 * scalingFactor);
+            this.canvas.FPen.SetColor(0);
+          };
+          pas.uDrawReaction.drawReaction(this.canvas,scalingFactor,this.network.reactions[i]);
+        };
+      } finally {
+        this.canvas.FPen.SetColor(0);
+      };
+    };
+    this.drawNodes = function (scalingFactor) {
+      var i = 0;
+      var oldWidth = 0;
+      var oldColor = 0;
+      var f = 0;
+      var sX = 0;
+      var sY = 0;
+      var scaledX = 0;
+      var scaledY = 0;
+      var scaledW = 0;
+      var scaledH = 0;
+      oldWidth = this.canvas.FPen.FWidth;
+      oldColor = this.canvas.FPen.FColor;
+      try {
+        for (var $l1 = 0, $end2 = rtl.length(this.network.nodes) - 1; $l1 <= $end2; $l1++) {
+          i = $l1;
+          scaledX = pas.System.Trunc(this.network.nodes[i].x * scalingFactor);
+          scaledY = pas.System.Trunc(this.network.nodes[i].y * scalingFactor);
+          scaledW = pas.System.Trunc(this.network.nodes[i].w * scalingFactor);
+          scaledH = pas.System.Trunc(this.network.nodes[i].h * scalingFactor);
+          if (this.network.nodes[i].selected) {
+            this.canvas.FPen.SetColor(255);
+            this.canvas.FPen.FWidth = 1;
+            this.canvas.FBrush.FStyle = pas["WEBLib.Graphics"].TBrushStyle.bsClear;
+            f = pas.System.Trunc(4 * scalingFactor);
+            sX = pas.System.Trunc(this.network.nodes[i].x * scalingFactor) - f;
+            sY = pas.System.Trunc(this.network.nodes[i].y * scalingFactor) - f;
+            this.canvas.Rectangle$1(sX,sY,sX + scaledW + (2 * f),sY + scaledH + (2 * f));
+            this.drawMouseGrabPoints(sX,sY,scaledW + (2 * f),scaledH + (2 * f));
+          };
+          if (this.network.nodes[i].reactionSelected) {
+            this.canvas.FPen.SetColor(255);
+            this.canvas.FBrush.FStyle = pas["WEBLib.Graphics"].TBrushStyle.bsClear;
+            this.canvas.FPen.FWidth = 1;
+            this.canvas.FPen.FStyle = pas["WEBLib.Graphics"].TPenStyle.psDash;
+            this.canvas.RoundRect$1((this.network.nodes[i].x - 7) * scalingFactor,(this.network.nodes[i].y - 7) * scalingFactor,(this.network.nodes[i].x * scalingFactor) + ((this.network.nodes[i].w + 7) * scalingFactor),(this.network.nodes[i].y * scalingFactor) + ((this.network.nodes[i].h + 7) * scalingFactor),25,25);
+            this.canvas.FPen.FStyle = pas["WEBLib.Graphics"].TPenStyle.psSolid;
+            this.canvas.FPen.SetColor(this.network.nodes[i].outlineColor);
+          };
+          this.canvas.FPen.SetColor(this.network.nodes[i].outlineColor);
+          this.canvas.FPen.FWidth = 3;
+          this.canvas.FBrush.FColor = this.network.nodes[i].fillColor;
+          this.canvas.FBrush.FStyle = pas["WEBLib.Graphics"].TBrushStyle.bsSolid;
+          this.canvas.RoundRect$1(this.network.nodes[i].x * scalingFactor,this.network.nodes[i].y * scalingFactor,(this.network.nodes[i].x * scalingFactor) + (this.network.nodes[i].w * scalingFactor),(this.network.nodes[i].y * scalingFactor) + (this.network.nodes[i].h * scalingFactor),25,25);
+        };
+      } finally {
+        this.canvas.FPen.FWidth = oldWidth;
+        this.canvas.FPen.SetColor(oldColor);
+        this.canvas.FPen.FStyle = pas["WEBLib.Graphics"].TPenStyle.psSolid;
+      };
+    };
+    this.Create$1 = function (network, Canvas) {
+      this.canvas = Canvas;
+      this.network = network;
+      return this;
+    };
+  });
+},["uDrawReaction"]);
+rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics","WEBLib.Controls","Types","WEBLib.Forms","WEBLib.Dialogs","WEBLib.ExtCtrls","WEBLib.StdCtrls","uNetwork","WEBLib.Buttons","WEBLib.JQCtrls","uController","uNetworkCanvas","WEBLib.Menus","WEBLib.WebCtrls"],function () {
   "use strict";
   var $mod = this;
   this.TMouseStatus = {"0": "sIdle", sIdle: 0, "1": "sAddNode", sAddNode: 1, "2": "sAddEdge", sAddEdge: 2, "3": "sMouseDown", sMouseDown: 3};
   $mod.$rtti.$Enum("TMouseStatus",{minvalue: 0, maxvalue: 3, ordtype: 1, enumtype: this.TMouseStatus});
   $mod.$rtti.$DynArray("TListOfNodes",{eltype: pas.uNetwork.$rtti["TNode"]});
-  rtl.createClass($mod,"TForm1",pas["WEBLib.Forms"].TForm,function () {
+  rtl.createClass($mod,"TfrmMain",pas["WEBLib.Forms"].TForm,function () {
     this.$init = function () {
       pas["WEBLib.Forms"].TForm.$init.call(this);
-      this.paintBox = null;
-      this.WebPanel1 = null;
+      this.pnlBottom = null;
       this.btnDraw = null;
       this.lblX = null;
+      this.lblY = null;
+      this.lblZoomFactor1 = null;
+      this.lblZoomFactor = null;
+      this.centralPanel = null;
       this.pnlLeft = null;
+      this.WebLabel1 = null;
+      this.WebLabel2 = null;
       this.btnIdle = null;
       this.btnAddNode = null;
       this.btnAddReaction = null;
-      this.lblY = null;
       this.btnNodeFillColor = null;
       this.btnNodeOutlineColor = null;
-      this.WebLabel1 = null;
-      this.WebLabel2 = null;
-      this.srcNode = 0;
-      this.destNode = 0;
+      this.trackBarZoom = null;
+      this.paintBox = null;
+      this.filePicker = null;
+      this.btnNew = null;
+      this.btnSave = null;
       this.network = null;
-      this.mStatus = 0;
       this.selectedNode = 0;
       this.currentX = 0;
       this.currentY = 0;
+      this.controller = null;
+      this.networkCanvas = null;
+      this.FScale = 0.0;
     };
     this.$final = function () {
-      this.paintBox = undefined;
-      this.WebPanel1 = undefined;
+      this.pnlBottom = undefined;
       this.btnDraw = undefined;
       this.lblX = undefined;
+      this.lblY = undefined;
+      this.lblZoomFactor1 = undefined;
+      this.lblZoomFactor = undefined;
+      this.centralPanel = undefined;
       this.pnlLeft = undefined;
+      this.WebLabel1 = undefined;
+      this.WebLabel2 = undefined;
       this.btnIdle = undefined;
       this.btnAddNode = undefined;
       this.btnAddReaction = undefined;
-      this.lblY = undefined;
       this.btnNodeFillColor = undefined;
       this.btnNodeOutlineColor = undefined;
-      this.WebLabel1 = undefined;
-      this.WebLabel2 = undefined;
+      this.trackBarZoom = undefined;
+      this.paintBox = undefined;
+      this.filePicker = undefined;
+      this.btnNew = undefined;
+      this.btnSave = undefined;
       this.network = undefined;
+      this.controller = undefined;
+      this.networkCanvas = undefined;
       pas["WEBLib.Forms"].TForm.$final.call(this);
     };
+    this.mnuHelpClick = function (Sender) {
+      pas["WEBLib.Dialogs"].ShowMessage("Version 0.1");
+    };
     this.btnAddNodeClick = function (Sender) {
-      this.mStatus = $mod.TMouseStatus.sAddNode;
+      this.controller.setAddNodeStatus();
     };
     this.btnAddReactionClick = function (Sender) {
-      this.mStatus = $mod.TMouseStatus.sAddEdge;
-      this.srcNode = -1;
-      this.destNode = -1;
+      this.controller.setAddReactionStatus();
+    };
+    this.btnClearClick = function (Sender) {
+      this.network.clear();
+      this.paintBox.Invalidate();
     };
     this.WebFormCreate = function (Sender) {
-      this.mStatus = $mod.TMouseStatus.sIdle;
+      this.FScale = 1.0;
+      this.trackBarZoom.SetLeft(20);
+      this.trackBarZoom.SetPosition(10);
       this.network = pas.uNetwork.TNetwork.$create("Create$1",["test"]);
-      this.srcNode = -1;
-      this.destNode = -1;
+      this.controller = pas.uController.TController.$create("Create$1",[this.network]);
+      this.networkCanvas = pas.uNetworkCanvas.TNetworkCanvas.$create("Create$1",[this.network,this.paintBox.GetCanvas()]);
+      this.pnlLeft.SetColor(16775408);
     };
     this.btnDrawClick = function (Sender) {
       var n1 = null;
       var n2 = null;
       var n3 = null;
       var n4 = null;
-      n1 = this.network.addNode$1("node1",60,200);
-      n2 = this.network.addNode$1("node2",270,270);
-      n3 = this.network.addNode$1("node3",540,80);
-      n4 = this.network.addNode$1("node4",400,500);
-      this.network.addReaction("r1",n1,n2);
-      this.network.addReaction("r2",n2,n3);
-      this.network.addReaction("r3",n3,n4);
-      this.network.addReaction("r4",n4,n2);
+      n1 = this.controller.addNode("node1",60,200);
+      n2 = this.controller.addNode("node2",270,270);
+      n3 = this.controller.addNode("node3",540,80);
+      n4 = this.controller.addNode("node4",400,500);
+      this.controller.addReaction("r1",n1,n2);
+      this.controller.addReaction("r2",n2,n3);
+      this.controller.addReaction("r3",n3,n4);
+      this.controller.addReaction("r4",n4,n2);
       this.paintBox.Invalidate();
     };
     this.btnIdleClick = function (Sender) {
-      this.mStatus = $mod.TMouseStatus.sIdle;
+      this.controller.setIdleStatus();
     };
     this.btnNodeFillColorSelect = function (Sender) {
       var i = 0;
@@ -42977,97 +43661,87 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         };
       };
     };
-    this.paintBoxMouseDown = function (Sender, Button, Shift, X, Y) {
-      var index = 0;
-      if (this.mStatus === $mod.TMouseStatus.sAddNode) {
-        this.network.addNode$1("xyz",X,Y);
+    this.filePickerChange = function (Sender) {
+      this.LoadFile();
+    };
+    this.filePickerGetFileAsText = function (Sender, AFileIndex, AText) {
+      this.controller.loadModel(AText);
+      this.paintBox.Invalidate();
+    };
+    this.mnuOpenClick = function (Sender) {
+      pas["WEBLib.Dialogs"].ShowMessage("Use the choose file button to load a model");
+    };
+    this.mnuSaveClick = function (Sender) {
+      var jstr = "";
+      var fileName = "";
+      fileName = pas["WEBLib.Dialogs"].InputBox("Save model to the downloads directory","Enter File Name:","jstr.jon");
+      if (fileName !== "") {
+        jstr = this.controller.network.convertToJSON();
+        pas["WEBLib.Forms"].Application.DownloadTextFile(jstr,fileName);
+      } else pas["WEBLib.Dialogs"].ShowMessage("Save cancelled");
+    };
+    this.mnuUndoClick = function (Sender) {
+      this.controller.undo();
+      this.paintBox.Invalidate();
+    };
+    this.paintBoxKeyDown = function (Sender, Key, Shift) {
+      if (Key.get() === 46) {
+        this.controller.prepareUndo();
+        this.controller.deleteSelectedItems();
         this.paintBox.Invalidate();
         return;
       };
-      if (this.mStatus === $mod.TMouseStatus.sAddEdge) {
-        if (this.srcNode === -1) {
-          if (this.network.overNode(X,Y,{get: function () {
-              return index;
-            }, set: function (v) {
-              index = v;
-            }}) !== null) {
-            this.srcNode = index;
-            this.network.nodes[index].selected = true;
-            this.paintBox.Invalidate();
-          } else this.mStatus = $mod.TMouseStatus.sIdle;
-        } else if (this.srcNode > -1) {
-          if (this.network.overNode(X,Y,{get: function () {
-              return index;
-            }, set: function (v) {
-              index = v;
-            }}) !== null) {
-            this.destNode = index;
-            this.network.addReaction("xx",this.network.nodes[this.srcNode],this.network.nodes[this.destNode]);
-            this.network.nodes[this.srcNode].selected = false;
-            this.srcNode = -1;
-            this.destNode = -1;
-            this.paintBox.Invalidate();
-          } else this.mStatus = $mod.TMouseStatus.sIdle;
-        };
-        return;
-      };
-      if (this.network.overNode(X,Y,{get: function () {
-          return index;
-        }, set: function (v) {
-          index = v;
-        }}) !== null) {
-        this.mStatus = $mod.TMouseStatus.sMouseDown;
-        this.selectedNode = index;
-        this.network.nodes[index].selected = true;
-        this.currentX = X;
-        this.currentY = Y;
-        this.paintBox.Invalidate();
-        return;
-      };
-      if (this.network.overEdge(X,Y,{get: function () {
-          return index;
-        }, set: function (v) {
-          index = v;
-        }}) !== null) {
-        this.network.unSelectAll();
-        this.network.reactions[index].selected = true;
-        this.paintBox.Invalidate();
-      } else {
-        this.mStatus = $mod.TMouseStatus.sIdle;
-        this.network.unSelectAll();
+      if (rtl.eqSet(Shift,rtl.createSet(pas["WEBLib.Controls"].TShiftState$a.ssCtrl)) && (pas.System.upcase(String.fromCharCode(Key.get())) === "Z")) {
+        this.controller.undo();
         this.paintBox.Invalidate();
       };
     };
+    this.paintBoxMouseDown = function (Sender, Button, Shift, X, Y) {
+      X = this.ScreenToWorld(X);
+      Y = this.ScreenToWorld(Y);
+      this.controller.OnMouseDown(Button,rtl.refSet(Shift),X,Y);
+      this.paintBox.Invalidate();
+    };
     this.paintBoxMouseMove = function (Sender, Shift, X, Y) {
-      var dx = 0;
-      var dy = 0;
-      if (this.mStatus === $mod.TMouseStatus.sMouseDown) {
-        dx = X - this.currentX;
-        dy = Y - this.currentY;
-        this.network.nodes[this.selectedNode].x = this.network.nodes[this.selectedNode].x + dx;
-        this.network.nodes[this.selectedNode].y = this.network.nodes[this.selectedNode].y + dy;
-        this.currentX = X;
-        this.currentY = Y;
-        this.paintBox.Invalidate();
-      };
+      X = this.ScreenToWorld(X);
+      Y = this.ScreenToWorld(Y);
+      this.controller.OnMouseMove(Sender,rtl.refSet(Shift),X,Y);
+      this.paintBox.Invalidate();
       this.lblX.SetCaption("X: " + pas.SysUtils.IntToStr(X));
       this.lblY.SetCaption("Y: " + pas.SysUtils.IntToStr(Y));
     };
     this.paintBoxMouseUp = function (Sender, Button, Shift, X, Y) {
-      if (this.mStatus === $mod.TMouseStatus.sMouseDown) this.mStatus = $mod.TMouseStatus.sIdle;
-      this.paintBox.Invalidate();
+      X = this.ScreenToWorld(X);
+      Y = this.ScreenToWorld(Y);
+      this.controller.OnMouseUp(Sender,Button,rtl.refSet(Shift),X,Y);
     };
     this.paintBoxPaint = function (Sender) {
-      pas.uDrawing.drawReactions(this.paintBox.GetCanvas(),this.network);
-      pas.uDrawing.drawNodes(this.paintBox.GetCanvas(),this.network);
+      var dest = pas.Types.TRect.$new();
+      this.networkCanvas.paint(this.FScale);
+    };
+    this.trackBarZoomChange = function (Sender) {
+      this.FScale = this.trackBarZoom.GetPosition() / 10;
+      this.paintBox.Invalidate();
+      this.lblZoomFactor.SetCaption(pas.SysUtils.FloatToStr(this.trackBarZoom.GetPosition() / 10));
+    };
+    this.WebFormResize = function (Sender) {
+    };
+    this.LoadFile = function () {
+      var FFileName = "";
+      if (this.filePicker.FFiles.GetItem$1(0) != null) {
+        this.filePicker.FFiles.GetItem$1(0).GetFileAsText();
+        FFileName = this.filePicker.FFiles.GetItem$1(0).FName;
+      };
     };
     this.LoadDFMValues = function () {
       pas["WEBLib.Forms"].TCustomForm.LoadDFMValues.call(this);
-      this.paintBox = pas["WEBLib.ExtCtrls"].TPaintBox.$create("Create$1",[this]);
-      this.WebPanel1 = pas["WEBLib.ExtCtrls"].TPanel.$create("Create$1",[this]);
+      this.pnlBottom = pas["WEBLib.ExtCtrls"].TPanel.$create("Create$1",[this]);
       this.lblX = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
       this.lblY = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
+      this.lblZoomFactor1 = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
+      this.lblZoomFactor = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
       this.btnDraw = pas["WEBLib.StdCtrls"].TButton.$create("Create$1",[this]);
+      this.centralPanel = pas["WEBLib.ExtCtrls"].TPanel.$create("Create$1",[this]);
       this.pnlLeft = pas["WEBLib.ExtCtrls"].TPanel.$create("Create$1",[this]);
       this.WebLabel1 = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
       this.WebLabel2 = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
@@ -43076,11 +43750,18 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.btnAddReaction = pas["WEBLib.Buttons"].TSpeedButton.$create("Create$1",[this]);
       this.btnNodeFillColor = pas["WEBLib.StdCtrls"].TColorPicker.$create("Create$1",[this]);
       this.btnNodeOutlineColor = pas["WEBLib.StdCtrls"].TColorPicker.$create("Create$1",[this]);
-      this.paintBox.BeforeLoadDFMValues();
-      this.WebPanel1.BeforeLoadDFMValues();
+      this.trackBarZoom = pas["WEBLib.ExtCtrls"].TTrackBar.$create("Create$1",[this]);
+      this.filePicker = pas["WEBLib.WebCtrls"].TFilePicker.$create("Create$1",[this]);
+      this.btnNew = pas["WEBLib.StdCtrls"].TButton.$create("Create$1",[this]);
+      this.btnSave = pas["WEBLib.StdCtrls"].TButton.$create("Create$1",[this]);
+      this.paintBox = pas["WEBLib.ExtCtrls"].TPaintBox.$create("Create$1",[this]);
+      this.pnlBottom.BeforeLoadDFMValues();
       this.lblX.BeforeLoadDFMValues();
       this.lblY.BeforeLoadDFMValues();
+      this.lblZoomFactor1.BeforeLoadDFMValues();
+      this.lblZoomFactor.BeforeLoadDFMValues();
       this.btnDraw.BeforeLoadDFMValues();
+      this.centralPanel.BeforeLoadDFMValues();
       this.pnlLeft.BeforeLoadDFMValues();
       this.WebLabel1.BeforeLoadDFMValues();
       this.WebLabel2.BeforeLoadDFMValues();
@@ -43089,12 +43770,17 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.btnAddReaction.BeforeLoadDFMValues();
       this.btnNodeFillColor.BeforeLoadDFMValues();
       this.btnNodeOutlineColor.BeforeLoadDFMValues();
+      this.trackBarZoom.BeforeLoadDFMValues();
+      this.filePicker.BeforeLoadDFMValues();
+      this.btnNew.BeforeLoadDFMValues();
+      this.btnSave.BeforeLoadDFMValues();
+      this.paintBox.BeforeLoadDFMValues();
       try {
-        this.SetName("Form1");
+        this.SetName("frmMain");
         this.SetLeft(0);
         this.SetTop(0);
-        this.SetWidth(706);
-        this.SetHeight(587);
+        this.SetWidth(843);
+        this.SetHeight(815);
         this.FFont.FCharset = 1;
         this.FFont.SetColor(65793);
         this.FFont.SetHeight(-11);
@@ -43102,42 +43788,45 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.FFont.SetStyle({});
         this.SetTabOrder(1);
         this.SetEvent$1(this,"OnCreate","WebFormCreate");
-        this.paintBox.SetParentComponent(this);
-        this.paintBox.SetName("paintBox");
-        this.paintBox.SetLeft(76);
-        this.paintBox.SetTop(0);
-        this.paintBox.SetWidth(630);
-        this.paintBox.SetHeight(504);
-        this.paintBox.SetAlign(pas["WEBLib.Controls"].TAlign.alClient);
-        this.SetEvent(this.paintBox,this,"OnPaint","paintBoxPaint");
-        this.SetEvent(this.paintBox,this,"OnMouseDown","paintBoxMouseDown");
-        this.SetEvent(this.paintBox,this,"OnMouseMove","paintBoxMouseMove");
-        this.SetEvent(this.paintBox,this,"OnMouseUp","paintBoxMouseUp");
-        this.WebPanel1.SetParentComponent(this);
-        this.WebPanel1.SetName("WebPanel1");
-        this.WebPanel1.SetLeft(0);
-        this.WebPanel1.SetTop(504);
-        this.WebPanel1.SetWidth(706);
-        this.WebPanel1.SetHeight(83);
-        this.WebPanel1.SetAlign(pas["WEBLib.Controls"].TAlign.alBottom);
-        this.WebPanel1.SetBorderColor(12632256);
-        this.WebPanel1.SetBorderStyle(pas["WEBLib.Controls"].TBorderStyle.bsSingle);
-        this.WebPanel1.SetChildOrderEx(3);
-        this.lblX.SetParentComponent(this.WebPanel1);
+        this.pnlBottom.SetParentComponent(this);
+        this.pnlBottom.SetName("pnlBottom");
+        this.pnlBottom.SetLeft(0);
+        this.pnlBottom.SetTop(732);
+        this.pnlBottom.SetWidth(843);
+        this.pnlBottom.SetHeight(83);
+        this.pnlBottom.SetAlign(pas["WEBLib.Controls"].TAlign.alBottom);
+        this.pnlBottom.SetBorderColor(12632256);
+        this.pnlBottom.SetBorderStyle(pas["WEBLib.Controls"].TBorderStyle.bsNone);
+        this.pnlBottom.SetChildOrderEx(3);
+        this.lblX.SetParentComponent(this.pnlBottom);
         this.lblX.SetName("lblX");
         this.lblX.SetLeft(172);
         this.lblX.SetTop(18);
         this.lblX.SetWidth(13);
         this.lblX.SetHeight(14);
         this.lblX.SetCaption("X: ");
-        this.lblY.SetParentComponent(this.WebPanel1);
+        this.lblY.SetParentComponent(this.pnlBottom);
         this.lblY.SetName("lblY");
         this.lblY.SetLeft(219);
         this.lblY.SetTop(18);
         this.lblY.SetWidth(10);
         this.lblY.SetHeight(14);
         this.lblY.SetCaption("Y:");
-        this.btnDraw.SetParentComponent(this.WebPanel1);
+        this.lblZoomFactor1.SetParentComponent(this.pnlBottom);
+        this.lblZoomFactor1.SetName("lblZoomFactor1");
+        this.lblZoomFactor1.SetLeft(21);
+        this.lblZoomFactor1.SetTop(48);
+        this.lblZoomFactor1.SetWidth(64);
+        this.lblZoomFactor1.SetHeight(14);
+        this.lblZoomFactor1.SetCaption("Zoom Factor ");
+        this.lblZoomFactor.SetParentComponent(this.pnlBottom);
+        this.lblZoomFactor.SetName("lblZoomFactor");
+        this.lblZoomFactor.SetLeft(90);
+        this.lblZoomFactor.SetTop(48);
+        this.lblZoomFactor.SetWidth(15);
+        this.lblZoomFactor.SetHeight(14);
+        this.lblZoomFactor.SetCaption("1.0");
+        this.btnDraw.SetParentComponent(this.pnlBottom);
         this.btnDraw.SetName("btnDraw");
         this.btnDraw.SetLeft(20);
         this.btnDraw.SetTop(17);
@@ -43146,86 +43835,152 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnDraw.SetCaption("Draw Sample Network");
         this.btnDraw.SetChildOrderEx(1);
         this.SetEvent(this.btnDraw,this,"OnClick","btnDrawClick");
-        this.pnlLeft.SetParentComponent(this);
+        this.centralPanel.SetParentComponent(this);
+        this.centralPanel.SetName("centralPanel");
+        this.centralPanel.SetLeft(0);
+        this.centralPanel.SetTop(0);
+        this.centralPanel.SetWidth(843);
+        this.centralPanel.SetHeight(732);
+        this.centralPanel.SetAlign(pas["WEBLib.Controls"].TAlign.alClient);
+        this.centralPanel.SetBorderColor(12632256);
+        this.centralPanel.SetBorderStyle(pas["WEBLib.Controls"].TBorderStyle.bsNone);
+        this.centralPanel.SetChildOrderEx(4);
+        this.centralPanel.SetColor(16711422);
+        this.pnlLeft.SetParentComponent(this.centralPanel);
         this.pnlLeft.SetName("pnlLeft");
         this.pnlLeft.SetLeft(0);
         this.pnlLeft.SetTop(0);
-        this.pnlLeft.SetWidth(76);
-        this.pnlLeft.SetHeight(504);
+        this.pnlLeft.SetWidth(135);
+        this.pnlLeft.SetHeight(732);
         this.pnlLeft.SetAlign(pas["WEBLib.Controls"].TAlign.alLeft);
         this.pnlLeft.SetBorderColor(12632256);
         this.pnlLeft.SetBorderStyle(pas["WEBLib.Controls"].TBorderStyle.bsSingle);
         this.pnlLeft.SetChildOrderEx(2);
         this.WebLabel1.SetParentComponent(this.pnlLeft);
         this.WebLabel1.SetName("WebLabel1");
-        this.WebLabel1.SetLeft(10);
-        this.WebLabel1.SetTop(174);
+        this.WebLabel1.SetLeft(13);
+        this.WebLabel1.SetTop(232);
         this.WebLabel1.SetWidth(33);
-        this.WebLabel1.SetHeight(40);
+        this.WebLabel1.SetHeight(14);
         this.WebLabel1.SetCaption("Outline");
         this.WebLabel2.SetParentComponent(this.pnlLeft);
         this.WebLabel2.SetName("WebLabel2");
-        this.WebLabel2.SetLeft(10);
-        this.WebLabel2.SetTop(261);
+        this.WebLabel2.SetLeft(13);
+        this.WebLabel2.SetTop(285);
         this.WebLabel2.SetWidth(12);
-        this.WebLabel2.SetHeight(40);
+        this.WebLabel2.SetHeight(14);
         this.WebLabel2.SetCaption("Fill");
         this.btnIdle.SetParentComponent(this.pnlLeft);
         this.btnIdle.SetName("btnIdle");
-        this.btnIdle.SetLeft(10);
-        this.btnIdle.SetTop(13);
+        this.btnIdle.SetLeft(12);
+        this.btnIdle.SetTop(107);
         this.btnIdle.SetWidth(52);
-        this.btnIdle.SetHeight(52);
+        this.btnIdle.SetHeight(54);
         this.btnIdle.SetHint("Select");
         this.btnIdle.SetMaterialGlyph("call_made");
         this.btnIdle.SetShowHint(true);
         this.SetEvent(this.btnIdle,this,"OnClick","btnIdleClick");
         this.btnAddNode.SetParentComponent(this.pnlLeft);
         this.btnAddNode.SetName("btnAddNode");
-        this.btnAddNode.SetLeft(10);
-        this.btnAddNode.SetTop(67);
+        this.btnAddNode.SetLeft(12);
+        this.btnAddNode.SetTop(170);
         this.btnAddNode.SetWidth(52);
-        this.btnAddNode.SetHeight(52);
+        this.btnAddNode.SetHeight(54);
         this.btnAddNode.SetHint("Add Node");
         this.btnAddNode.SetMaterialGlyph("brightness_1");
         this.btnAddNode.SetShowHint(true);
         this.SetEvent(this.btnAddNode,this,"OnClick","btnAddNodeClick");
         this.btnAddReaction.SetParentComponent(this.pnlLeft);
         this.btnAddReaction.SetName("btnAddReaction");
-        this.btnAddReaction.SetLeft(10);
-        this.btnAddReaction.SetTop(121);
+        this.btnAddReaction.SetLeft(73);
+        this.btnAddReaction.SetTop(170);
         this.btnAddReaction.SetWidth(52);
-        this.btnAddReaction.SetHeight(52);
+        this.btnAddReaction.SetHeight(54);
         this.btnAddReaction.SetHint("Add Reaction");
         this.btnAddReaction.SetMaterialGlyph("trending_up");
         this.btnAddReaction.SetShowHint(true);
         this.SetEvent(this.btnAddReaction,this,"OnClick","btnAddReactionClick");
         this.btnNodeFillColor.SetParentComponent(this.pnlLeft);
         this.btnNodeFillColor.SetName("btnNodeFillColor");
-        this.btnNodeFillColor.SetLeft(10);
-        this.btnNodeFillColor.SetTop(281);
+        this.btnNodeFillColor.SetLeft(13);
+        this.btnNodeFillColor.SetTop(305);
         this.btnNodeFillColor.SetWidth(52);
-        this.btnNodeFillColor.SetHeight(58);
+        this.btnNodeFillColor.SetHeight(29);
         this.btnNodeFillColor.SetChildOrderEx(3);
         this.btnNodeFillColor.SetColor$1(0);
         this.btnNodeFillColor.SetRole("");
         this.SetEvent(this.btnNodeFillColor,this,"OnSelect","btnNodeFillColorSelect");
         this.btnNodeOutlineColor.SetParentComponent(this.pnlLeft);
         this.btnNodeOutlineColor.SetName("btnNodeOutlineColor");
-        this.btnNodeOutlineColor.SetLeft(10);
-        this.btnNodeOutlineColor.SetTop(194);
+        this.btnNodeOutlineColor.SetLeft(12);
+        this.btnNodeOutlineColor.SetTop(252);
         this.btnNodeOutlineColor.SetWidth(52);
-        this.btnNodeOutlineColor.SetHeight(58);
+        this.btnNodeOutlineColor.SetHeight(28);
         this.btnNodeOutlineColor.SetChildOrderEx(3);
         this.btnNodeOutlineColor.SetColor$1(0);
         this.btnNodeOutlineColor.SetRole("");
         this.SetEvent(this.btnNodeOutlineColor,this,"OnSelect","btnNodeOutlineColorClick");
+        this.trackBarZoom.SetParentComponent(this.pnlLeft);
+        this.trackBarZoom.SetName("trackBarZoom");
+        this.trackBarZoom.SetLeft(23);
+        this.trackBarZoom.SetTop(405);
+        this.trackBarZoom.SetWidth(20);
+        this.trackBarZoom.SetHeight(134);
+        this.trackBarZoom.SetChildOrderEx(6);
+        this.trackBarZoom.SetMax(100);
+        this.trackBarZoom.SetMin(0);
+        this.trackBarZoom.SetOrientation(pas["WEBLib.ExtCtrls"].TTrackBarOrientation.trVertical);
+        this.trackBarZoom.SetPosition(0);
+        this.trackBarZoom.SetRole("");
+        this.SetEvent(this.trackBarZoom,this,"OnChange","trackBarZoomChange");
+        this.filePicker.SetParentComponent(this.pnlLeft);
+        this.filePicker.SetName("filePicker");
+        this.filePicker.SetLeft(8);
+        this.filePicker.SetTop(63);
+        this.filePicker.SetWidth(121);
+        this.filePicker.SetHeight(19);
+        this.filePicker.SetChildOrderEx(5);
+        this.SetEvent(this.filePicker,this,"OnChange","filePickerChange");
+        this.SetEvent(this.filePicker,this,"OnGetFileAsText","filePickerGetFileAsText");
+        this.btnNew.SetParentComponent(this.pnlLeft);
+        this.btnNew.SetName("btnNew");
+        this.btnNew.SetLeft(13);
+        this.btnNew.SetTop(11);
+        this.btnNew.SetWidth(40);
+        this.btnNew.SetHeight(40);
+        this.btnNew.SetCaption("New");
+        this.btnNew.SetChildOrderEx(9);
+        this.SetEvent(this.btnNew,this,"OnClick","btnClearClick");
+        this.btnSave.SetParentComponent(this.pnlLeft);
+        this.btnSave.SetName("btnSave");
+        this.btnSave.SetLeft(64);
+        this.btnSave.SetTop(11);
+        this.btnSave.SetWidth(40);
+        this.btnSave.SetHeight(40);
+        this.btnSave.SetCaption("Save");
+        this.btnSave.SetChildOrderEx(9);
+        this.SetEvent(this.btnSave,this,"OnClick","mnuSaveClick");
+        this.paintBox.SetParentComponent(this.centralPanel);
+        this.paintBox.SetName("paintBox");
+        this.paintBox.SetLeft(135);
+        this.paintBox.SetTop(0);
+        this.paintBox.SetWidth(708);
+        this.paintBox.SetHeight(732);
+        this.paintBox.SetAlign(pas["WEBLib.Controls"].TAlign.alClient);
+        this.paintBox.SetChildOrderEx(2);
+        this.SetEvent(this.paintBox,this,"OnPaint","paintBoxPaint");
+        this.SetEvent(this.paintBox,this,"OnKeyDown","paintBoxKeyDown");
+        this.SetEvent(this.paintBox,this,"OnMouseDown","paintBoxMouseDown");
+        this.SetEvent(this.paintBox,this,"OnMouseMove","paintBoxMouseMove");
+        this.SetEvent(this.paintBox,this,"OnMouseUp","paintBoxMouseUp");
       } finally {
-        this.paintBox.AfterLoadDFMValues();
-        this.WebPanel1.AfterLoadDFMValues();
+        this.pnlBottom.AfterLoadDFMValues();
         this.lblX.AfterLoadDFMValues();
         this.lblY.AfterLoadDFMValues();
+        this.lblZoomFactor1.AfterLoadDFMValues();
+        this.lblZoomFactor.AfterLoadDFMValues();
         this.btnDraw.AfterLoadDFMValues();
+        this.centralPanel.AfterLoadDFMValues();
         this.pnlLeft.AfterLoadDFMValues();
         this.WebLabel1.AfterLoadDFMValues();
         this.WebLabel2.AfterLoadDFMValues();
@@ -43234,47 +43989,79 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnAddReaction.AfterLoadDFMValues();
         this.btnNodeFillColor.AfterLoadDFMValues();
         this.btnNodeOutlineColor.AfterLoadDFMValues();
+        this.trackBarZoom.AfterLoadDFMValues();
+        this.filePicker.AfterLoadDFMValues();
+        this.btnNew.AfterLoadDFMValues();
+        this.btnSave.AfterLoadDFMValues();
+        this.paintBox.AfterLoadDFMValues();
       };
+    };
+    this.ScreenToWorld = function (x) {
+      var Result = 0;
+      Result = pas.System.Trunc(x / this.FScale);
+      return Result;
+    };
+    this.WorldToScreen = function (wx) {
+      var Result = 0;
+      Result = pas.System.Trunc(wx * this.FScale);
+      return Result;
     };
     rtl.addIntf(this,pas.System.IUnknown);
     var $r = this.$rtti;
-    $r.addField("paintBox",pas["WEBLib.ExtCtrls"].$rtti["TPaintBox"]);
-    $r.addField("WebPanel1",pas["WEBLib.ExtCtrls"].$rtti["TPanel"]);
+    $r.addField("pnlBottom",pas["WEBLib.ExtCtrls"].$rtti["TPanel"]);
     $r.addField("btnDraw",pas["WEBLib.StdCtrls"].$rtti["TButton"]);
     $r.addField("lblX",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
+    $r.addField("lblY",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
+    $r.addField("lblZoomFactor1",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
+    $r.addField("lblZoomFactor",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
+    $r.addField("centralPanel",pas["WEBLib.ExtCtrls"].$rtti["TPanel"]);
     $r.addField("pnlLeft",pas["WEBLib.ExtCtrls"].$rtti["TPanel"]);
+    $r.addField("WebLabel1",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
+    $r.addField("WebLabel2",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
     $r.addField("btnIdle",pas["WEBLib.Buttons"].$rtti["TSpeedButton"]);
     $r.addField("btnAddNode",pas["WEBLib.Buttons"].$rtti["TSpeedButton"]);
     $r.addField("btnAddReaction",pas["WEBLib.Buttons"].$rtti["TSpeedButton"]);
-    $r.addField("lblY",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
     $r.addField("btnNodeFillColor",pas["WEBLib.StdCtrls"].$rtti["TColorPicker"]);
     $r.addField("btnNodeOutlineColor",pas["WEBLib.StdCtrls"].$rtti["TColorPicker"]);
-    $r.addField("WebLabel1",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
-    $r.addField("WebLabel2",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
+    $r.addField("trackBarZoom",pas["WEBLib.ExtCtrls"].$rtti["TTrackBar"]);
+    $r.addField("paintBox",pas["WEBLib.ExtCtrls"].$rtti["TPaintBox"]);
+    $r.addField("filePicker",pas["WEBLib.WebCtrls"].$rtti["TFilePicker"]);
+    $r.addField("btnNew",pas["WEBLib.StdCtrls"].$rtti["TButton"]);
+    $r.addField("btnSave",pas["WEBLib.StdCtrls"].$rtti["TButton"]);
+    $r.addMethod("mnuHelpClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnAddNodeClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnAddReactionClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
+    $r.addMethod("btnClearClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("WebFormCreate",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnDrawClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnIdleClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnNodeFillColorSelect",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnNodeOutlineColorClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
+    $r.addMethod("filePickerChange",0,[["Sender",pas.System.$rtti["TObject"]]]);
+    $r.addMethod("filePickerGetFileAsText",0,[["Sender",pas.System.$rtti["TObject"]],["AFileIndex",rtl.longint],["AText",rtl.string]]);
+    $r.addMethod("mnuOpenClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
+    $r.addMethod("mnuSaveClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
+    $r.addMethod("mnuUndoClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
+    $r.addMethod("paintBoxKeyDown",0,[["Sender",pas.System.$rtti["TObject"]],["Key",rtl.word,1],["Shift",pas["WEBLib.Controls"].$rtti["TShiftState"]]]);
     $r.addMethod("paintBoxMouseDown",0,[["Sender",pas.System.$rtti["TObject"]],["Button",pas["WEBLib.Controls"].$rtti["TMouseButton"]],["Shift",pas["WEBLib.Controls"].$rtti["TShiftState"]],["X",rtl.longint],["Y",rtl.longint]]);
     $r.addMethod("paintBoxMouseMove",0,[["Sender",pas.System.$rtti["TObject"]],["Shift",pas["WEBLib.Controls"].$rtti["TShiftState"]],["X",rtl.longint],["Y",rtl.longint]]);
     $r.addMethod("paintBoxMouseUp",0,[["Sender",pas.System.$rtti["TObject"]],["Button",pas["WEBLib.Controls"].$rtti["TMouseButton"]],["Shift",pas["WEBLib.Controls"].$rtti["TShiftState"]],["X",rtl.longint],["Y",rtl.longint]]);
     $r.addMethod("paintBoxPaint",0,[["Sender",pas.System.$rtti["TObject"]]]);
+    $r.addMethod("trackBarZoomChange",0,[["Sender",pas.System.$rtti["TObject"]]]);
+    $r.addMethod("WebFormResize",0,[["Sender",pas.System.$rtti["TObject"]]]);
   });
-  this.Form1 = null;
-},["uGraphUtils","uDrawing"]);
-rtl.module("program",["System","WEBLib.Forms","ufMain","uNetwork","uGraphUtils","uDrawTypes","uDrawing"],function () {
+  this.frmMain = null;
+},["uGraphUtils"]);
+rtl.module("program",["System","WEBLib.Forms","ufMain","uNetwork","uGraphUtils","uDrawTypes","uNetworkCanvas","uController","uDrawReaction"],function () {
   "use strict";
   var $mod = this;
   $mod.$main = function () {
     pas["WEBLib.Forms"].Application.Initialize();
     pas["WEBLib.Forms"].Application.FMainFormOnTaskBar = true;
-    pas["WEBLib.Forms"].Application.CreateForm(pas.ufMain.TForm1,{p: pas.ufMain, get: function () {
-        return this.p.Form1;
+    pas["WEBLib.Forms"].Application.CreateForm(pas.ufMain.TfrmMain,{p: pas.ufMain, get: function () {
+        return this.p.frmMain;
       }, set: function (v) {
-        this.p.Form1 = v;
+        this.p.frmMain = v;
       }});
     pas["WEBLib.Forms"].Application.Run();
   };
