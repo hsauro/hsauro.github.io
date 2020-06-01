@@ -33959,31 +33959,6 @@ rtl.module("uDrawTypes",["System","Types"],function () {
   "use strict";
   var $mod = this;
   this.MaxControlPoints = 4;
-  rtl.recNewT($mod,"TLineSegment",function () {
-    this.$new = function () {
-      var r = Object.create(this);
-      r.p = pas.Types.TPoint.$new();
-      r.q = pas.Types.TPoint.$new();
-      return r;
-    };
-    this.$eq = function (b) {
-      return this.p.$eq(b.p) && this.q.$eq(b.q);
-    };
-    this.$assign = function (s) {
-      this.p.$assign(s.p);
-      this.q.$assign(s.q);
-      return this;
-    };
-    var $r = $mod.$rtti.$Record("TLineSegment",{});
-    $r.addField("p",pas.Types.$rtti["TPoint"]);
-    $r.addField("q",pas.Types.$rtti["TPoint"]);
-  });
-  this.TBoundingBoxSegments$clone = function (a) {
-    var r = [];
-    for (var i = 0; i < 4; i++) r.push($mod.TLineSegment.$clone(a[i]));
-    return r;
-  };
-  $mod.$rtti.$StaticArray("TBoundingBoxSegments",{dims: [4], eltype: $mod.$rtti["TLineSegment"]});
   rtl.recNewT($mod,"TPointF",function () {
     this.x = 0.0;
     this.y = 0.0;
@@ -33995,10 +33970,16 @@ rtl.module("uDrawTypes",["System","Types"],function () {
       this.y = s.y;
       return this;
     };
+    this.create = function (x, y) {
+      this.x = x;
+      this.y = y;
+      return this;
+    };
     var $r = $mod.$rtti.$Record("TPointF",{});
     $r.addField("x",rtl.double);
     $r.addField("y",rtl.double);
-  });
+    $r.addMethod("create",2,[["x",rtl.double],["y",rtl.double]]);
+  },true);
   $mod.$rtti.$DynArray("TPointDynArray",{eltype: $mod.$rtti["TPointF"]});
   this.TRectArray$clone = function (a) {
     var r = [];
@@ -34006,12 +33987,391 @@ rtl.module("uDrawTypes",["System","Types"],function () {
     return r;
   };
   $mod.$rtti.$StaticArray("TRectArray",{dims: [4], eltype: pas.Types.$rtti["TRect"]});
+  rtl.recNewT($mod,"TLineSegment",function () {
+    this.$new = function () {
+      var r = Object.create(this);
+      r.p = $mod.TPointF.$new();
+      r.q = $mod.TPointF.$new();
+      return r;
+    };
+    this.$eq = function (b) {
+      return this.p.$eq(b.p) && this.q.$eq(b.q);
+    };
+    this.$assign = function (s) {
+      this.p.$assign(s.p);
+      this.q.$assign(s.q);
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TLineSegment",{});
+    $r.addField("p",$mod.$rtti["TPointF"]);
+    $r.addField("q",$mod.$rtti["TPointF"]);
+  });
+  this.TBoundingBoxSegments$clone = function (a) {
+    var r = [];
+    for (var i = 0; i < 4; i++) r.push($mod.TLineSegment.$clone(a[i]));
+    return r;
+  };
+  $mod.$rtti.$StaticArray("TBoundingBoxSegments",{dims: [4], eltype: $mod.$rtti["TLineSegment"]});
 });
-rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","Math","uDrawTypes","WEBLib.Utils"],function () {
+rtl.module("uNetworkTypes",["System","Classes","SysUtils"],function () {
+  "use strict";
+  var $mod = this;
+  this.TReactionType = {"0": "eUniUni", eUniUni: 0, "1": "eUniBi", eUniBi: 1, "2": "eAnyToAny", eAnyToAny: 2};
+  $mod.$rtti.$Enum("TReactionType",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TReactionType});
+  this.getReactionTypeString = function (atype) {
+    var Result = "";
+    var $tmp1 = atype;
+    if ($tmp1 === $mod.TReactionType.eUniUni) {
+      Result = "eUniUni"}
+     else if ($tmp1 === $mod.TReactionType.eUniBi) {
+      Result = "eUniBi"}
+     else if ($tmp1 === $mod.TReactionType.eAnyToAny) Result = "eAnyToAny";
+    return Result;
+  };
+  this.getReactionType = function (atype) {
+    var Result = 0;
+    if (atype === "eUniUni") {
+      Result = $mod.TReactionType.eUniUni}
+     else if (atype === "eUniUni") {
+      Result = $mod.TReactionType.eUniBi}
+     else if (atype === "eAnyToAny") {
+      Result = $mod.TReactionType.eAnyToAny}
+     else throw pas.SysUtils.Exception.$create("Create$1",["Unable to recognized raction type"]);
+    return Result;
+  };
+});
+rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types","uDrawTypes","uNetwork"],function () {
+  "use strict";
+  var $mod = this;
+  var $impl = $mod.$impl;
+  this.Line = function (pt1, pt2) {
+    var Result = pas.uDrawTypes.TLineSegment.$new();
+    Result.p.x = pt1.x;
+    Result.p.y = pt1.y;
+    Result.q.x = pt2.x;
+    Result.q.y = pt2.y;
+    return Result;
+  };
+  this.Angle = function (x, y) {
+    var Result = 0.0;
+    if (Math.abs(x) < 1e-5) {
+      if (Math.abs(y) < 1e-5) {
+        Result = 0.0;
+        return Result;
+      } else if (y > 0.0) {
+        Result = 3.1415 * 0.5;
+        return Result;
+      } else {
+        Result = 3.1415 * 1.5;
+        return Result;
+      }}
+     else if (x < 0.0) {
+      Result = Math.atan(y / x) + 3.1415;
+      return Result;
+    } else Result = Math.atan(y / x);
+    return Result;
+  };
+  this.ScalePt = function (p1, s) {
+    var Result = pas.uDrawTypes.TPointF.$new();
+    Result.x = pas.System.Trunc(p1.x * s);
+    Result.y = pas.System.Trunc(p1.y * s);
+    return Result;
+  };
+  this.MinusPt = function (p1, p2) {
+    var Result = pas.uDrawTypes.TPointF.$new();
+    Result.x = p1.x - p2.x;
+    Result.y = p1.y - p2.y;
+    return Result;
+  };
+  this.pointWithinCircle = function (x, y, pt) {
+    var Result = false;
+    return Result;
+  };
+  this.computeCentroid = function (reaction) {
+    var Result = pas.uDrawTypes.TPointF.$new();
+    var nSrcNodes = 0;
+    var nDestNodes = 0;
+    var TotalNodes = 0;
+    var i = 0;
+    var pt = pas.uDrawTypes.TPointF.$new();
+    var arcCentre = pas.uDrawTypes.TPointF.$new();
+    nSrcNodes = reaction.state.nReactants;
+    nDestNodes = reaction.state.nProducts;
+    arcCentre.x = 0.0;
+    arcCentre.y = 0.0;
+    for (var $l1 = 0, $end2 = nSrcNodes - 1; $l1 <= $end2; $l1++) {
+      i = $l1;
+      pt.$assign(reaction.state.srcPtr[i].getCenter());
+      arcCentre.x = arcCentre.x + pt.x;
+      arcCentre.y = arcCentre.y + pt.y;
+    };
+    for (var $l3 = 0, $end4 = nDestNodes - 1; $l3 <= $end4; $l3++) {
+      i = $l3;
+      pt.$assign(reaction.state.destPtr[i].getCenter());
+      arcCentre.x = arcCentre.x + pt.x;
+      arcCentre.y = arcCentre.y + pt.y;
+    };
+    TotalNodes = nSrcNodes + nDestNodes;
+    Result.x = arcCentre.x / TotalNodes;
+    Result.y = arcCentre.y / TotalNodes;
+    return Result;
+  };
+  this.segmentIntersects = function (v1, v2, v) {
+    var Result = false;
+    var xlk = 0.0;
+    var ylk = 0.0;
+    var xnm = 0.0;
+    var ynm = 0.0;
+    var xmk = 0.0;
+    var ymk = 0.0;
+    var det = 0.0;
+    var detinv = 0.0;
+    var s = 0.0;
+    var t = 0.0;
+    xlk = v2.q.x - v2.p.x;
+    ylk = v2.q.y - v2.p.y;
+    xnm = v1.p.x - v1.q.x;
+    ynm = v1.p.y - v1.q.y;
+    xmk = v1.q.x - v2.p.x;
+    ymk = v1.q.y - v2.p.y;
+    det = (xnm * ylk) - (ynm * xlk);
+    if (Math.abs(det) < 1e-6) {
+      Result = false}
+     else {
+      detinv = 1.0 / det;
+      s = ((xnm * ymk) - (ynm * xmk)) * detinv;
+      t = ((xlk * ymk) - (ylk * xmk)) * detinv;
+      if ((s < 0.0) || (s > 1.0) || (t < 0.0) || (t > 1.0)) {
+        Result = false}
+       else {
+        v.x = v2.p.x + pas.System.Trunc(xlk * s);
+        v.y = v2.p.y + pas.System.Trunc(ylk * s);
+        Result = true;
+      };
+    };
+    return Result;
+  };
+  this.computeLineIntersection = function (node, scalingFactor, pt, line) {
+    var Result = false;
+    var i = 0;
+    var OuterSegs = rtl.arraySetLength(null,pas.uDrawTypes.TLineSegment,4);
+    OuterSegs = pas.uDrawTypes.TBoundingBoxSegments$clone(node.getNodeBoundingBox());
+    for (i = 1; i <= 4; i++) {
+      OuterSegs[i - 1].p.$assign($mod.ScalePt(OuterSegs[i - 1].p,scalingFactor));
+      OuterSegs[i - 1].q.$assign($mod.ScalePt(OuterSegs[i - 1].q,scalingFactor));
+    };
+    Result = false;
+    for (i = 1; i <= 4; i++) if ($mod.segmentIntersects(pas.uDrawTypes.TLineSegment.$clone(OuterSegs[i - 1]),pas.uDrawTypes.TLineSegment.$clone(line),pt)) {
+      Result = true;
+      return Result;
+    };
+    return Result;
+  };
+},null,function () {
+  "use strict";
+  var $mod = this;
+  var $impl = $mod.$impl;
+  $impl.HANDLE_RADIUS = 5.0;
+});
+rtl.module("uDrawReaction",["System","SysUtils","Classes","WEBLib.Graphics","Types","uNetwork","WEBLib.Dialogs","uDrawTypes"],function () {
+  "use strict";
+  var $mod = this;
+  var $impl = $mod.$impl;
+  rtl.createClass($mod,"TReactionRender",pas.System.TObject,function () {
+    this.$init = function () {
+      pas.System.TObject.$init.call(this);
+      this.canvas = null;
+    };
+    this.$final = function () {
+      this.canvas = undefined;
+      pas.System.TObject.$final.call(this);
+    };
+    this.drawArrow = function (tip, dxdt, dydt) {
+      var dx = 0;
+      var dy = 0;
+      var alpha = 0.0;
+      var cosine = 0.0;
+      var sine = 0.0;
+      var pg = [];
+      var adX = 0.0;
+      var adY = 0.0;
+      var scalingFactor = 0.0;
+      var scale = 0.0;
+      var fpt = [];
+      var i = 0;
+      pg = rtl.arraySetLength(pg,pas.uDrawTypes.TPointF,4);
+      scale = 1;
+      scalingFactor = 1;
+      alpha = -pas.uGraphUtils.Angle(dxdt,dydt);
+      cosine = Math.cos(alpha);
+      sine = Math.sin(alpha);
+      adX = pas.System.Trunc(1 * scalingFactor) * Math.cos(-alpha);
+      adY = pas.System.Trunc(1 * scalingFactor) * Math.sin(-alpha);
+      tip.x = tip.x + pas.System.Trunc(adX);
+      tip.y = tip.y + pas.System.Trunc(adY);
+      pg[0].x = pas.System.Trunc((0 * scale * cosine) + (14 * scale * sine));
+      pg[0].y = pas.System.Trunc((-0 * scale * sine) + (14 * scale * cosine));
+      pg[1].x = pas.System.Trunc((3 * scale * cosine) + (7 * scale * sine));
+      pg[1].y = pas.System.Trunc((-3 * scale * sine) + (7 * scale * cosine));
+      pg[2].x = pas.System.Trunc((0 * scale * cosine) + (0 * scale * sine));
+      pg[2].y = pas.System.Trunc((-0 * scale * sine) + (0 * scale * cosine));
+      pg[3].x = pas.System.Trunc((9 * scale * cosine) + (7 * scale * sine));
+      pg[3].y = pas.System.Trunc((-9 * scale * sine) + (7 * scale * cosine));
+      dx = pas.System.Trunc(tip.x - pg[3].x) & 0xFFFFFFFF;
+      dy = pas.System.Trunc(tip.y - pg[3].y) & 0xFFFFFFFF;
+      pg[0].x = pg[0].x + dx;
+      pg[0].y = pg[0].y + dy;
+      pg[1].x = pg[1].x + dx;
+      pg[1].y = pg[1].y + dy;
+      pg[2].x = pg[2].x + dx;
+      pg[2].y = pg[2].y + dy;
+      pg[3].x = tip.x;
+      pg[3].y = tip.y;
+      fpt = rtl.arraySetLength(fpt,pas.Types.TPoint,4);
+      for (i = 0; i <= 3; i++) {
+        fpt[i].x = pas.System.Trunc(pg[i].x);
+        fpt[i].y = pas.System.Trunc(pg[i].y);
+      };
+      this.canvas.Polygon(fpt);
+    };
+    this.drawStraightLineToCentroid = function (ArcId, reaction, adjustedArcCentre, scalingFactor) {
+      var pSrc = pas.uDrawTypes.TPointF.$new();
+      var pDest = pas.uDrawTypes.TPointF.$new();
+      var pt = pas.uDrawTypes.TPointF.$new();
+      var startPt = pas.uDrawTypes.TPointF.$new();
+      var node = null;
+      node = reaction.state.srcPtr[ArcId];
+      pSrc.$assign(pas.uGraphUtils.ScalePt(node.getCenter(),scalingFactor));
+      pDest.$assign(adjustedArcCentre);
+      if (pas.uGraphUtils.computeLineIntersection(node,scalingFactor,pt,pas.uDrawTypes.TLineSegment.$clone(pas.uGraphUtils.Line(pas.uDrawTypes.TPointF.$clone(pSrc),pas.uDrawTypes.TPointF.$clone(pDest))))) {
+        if (reaction.selected) {
+          this.canvas.FPen.SetColor(255)}
+         else this.canvas.FPen.SetColor(reaction.state.fillColor);
+        this.canvas.FPen.FWidth = pas.System.Trunc(reaction.state.thickness * scalingFactor);
+        this.canvas.FBrush.FColor = reaction.state.fillColor;
+        startPt.$assign(pt);
+        this.canvas.MoveTo$1(startPt.x,startPt.y);
+        this.canvas.LineTo$1(pDest.x,pDest.y);
+      };
+    };
+    this.drawStraightLineFromCentroid = function (arcId, reaction, adjustedArcCentre, scalingFactor) {
+      var pSrc = pas.uDrawTypes.TPointF.$new();
+      var pDest = pas.uDrawTypes.TPointF.$new();
+      var pt = pas.uDrawTypes.TPointF.$new();
+      var startPt = pas.uDrawTypes.TPointF.$new();
+      var endPt = pas.uDrawTypes.TPointF.$new();
+      var alpha = 0.0;
+      var adX = 0.0;
+      var adY = 0.0;
+      var node = null;
+      node = reaction.state.destPtr[arcId - reaction.state.nReactants];
+      pSrc.$assign(adjustedArcCentre);
+      pDest.$assign(pas.uGraphUtils.ScalePt(node.getCenter(),scalingFactor));
+      if (pas.uGraphUtils.computeLineIntersection(node,scalingFactor,pt,pas.uDrawTypes.TLineSegment.$clone(pas.uGraphUtils.Line(pas.uDrawTypes.TPointF.$clone(pSrc),pas.uDrawTypes.TPointF.$clone(pDest))))) {
+        if (reaction.selected) {
+          this.canvas.FPen.SetColor(255)}
+         else this.canvas.FPen.SetColor(reaction.state.fillColor);
+        this.canvas.FPen.FWidth = pas.System.Trunc(reaction.state.thickness * scalingFactor);
+        this.canvas.FBrush.FColor = reaction.state.fillColor;
+        endPt.$assign(pt);
+        startPt.$assign(pSrc);
+        this.canvas.MoveTo$1(startPt.x,startPt.y);
+        this.canvas.LineTo$1(endPt.x,endPt.y);
+        alpha = pas.uGraphUtils.Angle(pDest.x - pSrc.x,pDest.y - pSrc.y);
+        adX = pas.System.Trunc(8 * scalingFactor) * Math.cos(alpha);
+        adY = pas.System.Trunc(8 * scalingFactor) * Math.sin(alpha);
+        adX = pDest.x - pas.System.Trunc(adX);
+        adY = pDest.y - pas.System.Trunc(adY);
+        this.drawArrow(pas.uDrawTypes.TPointF.$clone(endPt),pDest.x - pSrc.x,pDest.y - pSrc.y);
+      };
+    };
+    this.drawCentroidPoint = function (adjustedArcCenter, color) {
+      this.canvas.FPen.SetColor(color);
+      this.canvas.FBrush.FColor = color;
+      this.canvas.Ellipse$1(adjustedArcCenter.x - 3,adjustedArcCenter.y - 3,adjustedArcCenter.x + 3,adjustedArcCenter.y + 3);
+    };
+    this.drawUniUniLine = function (scalingFactor, reaction) {
+      var startPt = pas.uDrawTypes.TPointF.$new();
+      var endPt = pas.uDrawTypes.TPointF.$new();
+      var alpha = 0.0;
+      var adX = 0.0;
+      var adY = 0.0;
+      var srcPtIntersect = pas.uDrawTypes.TPointF.$new();
+      var destPtIntersect = pas.uDrawTypes.TPointF.$new();
+      var pSrc = pas.uDrawTypes.TPointF.$new();
+      var pDest = pas.uDrawTypes.TPointF.$new();
+      pSrc.$assign(pas.uGraphUtils.ScalePt(reaction.state.srcPtr[0].getCenter(),scalingFactor));
+      pDest.$assign(pas.uGraphUtils.ScalePt(reaction.state.destPtr[0].getCenter(),scalingFactor));
+      pas.uGraphUtils.computeLineIntersection(reaction.state.srcPtr[0],scalingFactor,srcPtIntersect,pas.uDrawTypes.TLineSegment.$clone(pas.uGraphUtils.Line(pas.uDrawTypes.TPointF.$clone(pSrc),pas.uDrawTypes.TPointF.$clone(pDest))));
+      pas.uGraphUtils.computeLineIntersection(reaction.state.destPtr[0],scalingFactor,destPtIntersect,pas.uDrawTypes.TLineSegment.$clone(pas.uGraphUtils.Line(pas.uDrawTypes.TPointF.$clone(pSrc),pas.uDrawTypes.TPointF.$clone(pDest))));
+      startPt.$assign(srcPtIntersect);
+      endPt.$assign(destPtIntersect);
+      startPt.$assign(srcPtIntersect);
+      endPt.$assign(destPtIntersect);
+      alpha = pas.uGraphUtils.Angle(endPt.x - startPt.x,endPt.y - startPt.y);
+      adX = pas.System.Trunc(8 * scalingFactor) * Math.cos(alpha);
+      adY = pas.System.Trunc(8 * scalingFactor) * Math.sin(alpha);
+      adX = endPt.x - pas.System.Trunc(adX);
+      adY = endPt.y - pas.System.Trunc(adY);
+      if (reaction.selected) {
+        this.canvas.FPen.SetColor(255)}
+       else this.canvas.FPen.SetColor(reaction.state.fillColor);
+      this.canvas.FPen.FWidth = pas.System.Trunc(reaction.state.thickness * scalingFactor);
+      this.canvas.FBrush.FColor = reaction.state.fillColor;
+      this.canvas.MoveTo$1(startPt.x,startPt.y);
+      this.canvas.LineTo$1(adX,adY);
+      this.drawArrow(pas.uDrawTypes.TPointF.$clone(endPt),pDest.x - pSrc.x,pDest.y - pSrc.y);
+    };
+    this.drawAnyToAny = function (scalingFactor, reaction) {
+      var i = 0;
+      var AdjustedArcCentre = pas.uDrawTypes.TPointF.$new();
+      var oldSize = 0;
+      AdjustedArcCentre.$assign(pas.uGraphUtils.ScalePt(pas.uGraphUtils.computeCentroid(reaction),scalingFactor));
+      try {
+        for (var $l1 = 0, $end2 = reaction.state.nReactants - 1; $l1 <= $end2; $l1++) {
+          i = $l1;
+          this.drawStraightLineToCentroid(i,reaction,pas.uDrawTypes.TPointF.$clone(AdjustedArcCentre),scalingFactor);
+        };
+        for (var $l3 = 0, $end4 = reaction.state.nProducts - 1; $l3 <= $end4; $l3++) {
+          i = $l3;
+          this.drawStraightLineFromCentroid(reaction.state.nReactants + i,reaction,pas.uDrawTypes.TPointF.$clone(AdjustedArcCentre),scalingFactor);
+        };
+        if (reaction.selected) this.drawCentroidPoint(pas.uDrawTypes.TPointF.$clone(AdjustedArcCentre),255);
+      } finally {
+        this.canvas.FFont.SetSize(oldSize);
+      };
+    };
+    this.draw = function (scalingFactor, reaction) {
+      var $tmp1 = reaction.state.reactionType;
+      if ($tmp1 === pas.uNetworkTypes.TReactionType.eUniUni) {
+        this.drawUniUniLine(scalingFactor,reaction)}
+       else if ($tmp1 === pas.uNetworkTypes.TReactionType.eAnyToAny) this.drawAnyToAny(scalingFactor,reaction);
+    };
+    this.Create$1 = function (canvas) {
+      this.canvas = canvas;
+      return this;
+    };
+  });
+},["uGraphUtils","uNetworkTypes"],function () {
+  "use strict";
+  var $mod = this;
+  var $impl = $mod.$impl;
+  $impl.CENTROID_RADIUS = 3;
+  $impl.isMouseOnArcCentre = function (reaction, x, y) {
+    var Result = false;
+    if (pas.uGraphUtils.pointWithinCircle(x,y,pas.uDrawTypes.TPointF.$clone(pas.uGraphUtils.computeCentroid(reaction)))) {
+      Result = true}
+     else Result = false;
+    return Result;
+  };
+});
+rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","Math","uDrawTypes","WEBLib.Utils","WEBLib.JSON","uNetworkTypes"],function () {
   "use strict";
   var $mod = this;
   var $impl = $mod.$impl;
   this.NODE_ARC_DEADSPACE = 8;
+  this.DEFAULT_REACTION_THICKNESS = 3;
+  this.MAGIC_IDENTIFER = "NM01";
   rtl.recNewT($mod,"TARGB",function () {
     this.color = 0;
     this.$eq = function (b) {
@@ -34024,66 +34384,83 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
     var $r = $mod.$rtti.$Record("TARGB",{});
     $r.addField("color",rtl.longint);
   });
-  rtl.recNewT($mod,"TNodeSavedState",function () {
+  rtl.recNewT($mod,"TNodeState",function () {
     this.id = "";
-    this.selected = false;
-    this.reactionSelected = false;
     this.x = 0;
     this.y = 0;
     this.w = 0;
     this.h = 0;
     this.fillColor = 0;
     this.outlineColor = 0;
+    this.outlineThickness = 0;
     this.$eq = function (b) {
-      return (this.id === b.id) && (this.selected === b.selected) && (this.reactionSelected === b.reactionSelected) && (this.x === b.x) && (this.y === b.y) && (this.w === b.w) && (this.h === b.h) && (this.fillColor === b.fillColor) && (this.outlineColor === b.outlineColor);
+      return (this.id === b.id) && (this.x === b.x) && (this.y === b.y) && (this.w === b.w) && (this.h === b.h) && (this.fillColor === b.fillColor) && (this.outlineColor === b.outlineColor) && (this.outlineThickness === b.outlineThickness);
     };
     this.$assign = function (s) {
       this.id = s.id;
-      this.selected = s.selected;
-      this.reactionSelected = s.reactionSelected;
       this.x = s.x;
       this.y = s.y;
       this.w = s.w;
       this.h = s.h;
       this.fillColor = s.fillColor;
       this.outlineColor = s.outlineColor;
+      this.outlineThickness = s.outlineThickness;
       return this;
     };
-    var $r = $mod.$rtti.$Record("TNodeSavedState",{});
+    this.saveAsJSON = function (nodeObject) {
+      nodeObject.AddPair$2("id",this.id);
+      nodeObject.AddPair$1("x",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.x]));
+      nodeObject.AddPair$1("y",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.y]));
+      nodeObject.AddPair$1("w",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.w]));
+      nodeObject.AddPair$1("h",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.h]));
+      nodeObject.AddPair$1("fillColor",pas["WEBLib.JSON"].TJSONNumber.$create("Create$1",[this.fillColor]));
+      nodeObject.AddPair$1("outlineColor",pas["WEBLib.JSON"].TJSONNumber.$create("Create$1",[this.outlineColor]));
+      nodeObject.AddPair$1("outlineThickness",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.outlineThickness]));
+    };
+    this.loadFromJSON = function (obj) {
+      this.id = obj.GetJSONValue("id");
+      this.x = pas.SysUtils.StrToInt(obj.GetJSONValue("x"));
+      this.y = pas.SysUtils.StrToInt(obj.GetJSONValue("y"));
+      this.h = pas.SysUtils.StrToInt(obj.GetJSONValue("h"));
+      this.w = pas.SysUtils.StrToInt(obj.GetJSONValue("w"));
+      this.fillColor = pas.SysUtils.StrToInt(obj.GetJSONValue("fillColor"));
+      this.outlineColor = pas.SysUtils.StrToInt(obj.GetJSONValue("outlineColor"));
+      this.outlineThickness = pas.SysUtils.StrToInt(obj.GetJSONValue("outlineThickness"));
+    };
+    var $r = $mod.$rtti.$Record("TNodeState",{});
     $r.addField("id",rtl.string);
-    $r.addField("selected",rtl.boolean);
-    $r.addField("reactionSelected",rtl.boolean);
     $r.addField("x",rtl.longint);
     $r.addField("y",rtl.longint);
     $r.addField("w",rtl.longint);
     $r.addField("h",rtl.longint);
     $r.addField("fillColor",pas["WEBLib.Graphics"].$rtti["TColor"]);
     $r.addField("outlineColor",pas["WEBLib.Graphics"].$rtti["TColor"]);
+    $r.addField("outlineThickness",rtl.longint);
+    $r.addMethod("saveAsJSON",0,[["nodeObject",pas["WEBLib.JSON"].$rtti["TJSONObject"]]]);
+    $r.addMethod("loadFromJSON",0,[["obj",pas["WEBLib.JSON"].$rtti["TJSONObject"]]]);
   });
   rtl.createClass($mod,"TNode",pas.System.TObject,function () {
     this.$init = function () {
       pas.System.TObject.$init.call(this);
-      this.id = "";
+      this.state = $mod.TNodeState.$new();
       this.selected = false;
       this.reactionSelected = false;
-      this.x = 0;
-      this.y = 0;
-      this.w = 0;
-      this.h = 0;
-      this.fillColor = 0;
-      this.outlineColor = 0;
+    };
+    this.$final = function () {
+      this.state = undefined;
+      pas.System.TObject.$final.call(this);
     };
     this.overNode = function (x, y) {
       var Result = false;
-      if ((x > this.x) && (y > this.y) && (x < (this.x + this.w)) && (y < (this.y + this.h))) {
+      if ((x > this.state.x) && (y > this.state.y) && (x < (this.state.x + this.state.w)) && (y < (this.state.y + this.state.h))) {
         Result = true}
        else Result = false;
       return Result;
     };
     this.getCenter = function () {
-      var Result = pas.Types.TPoint.$new();
-      Result.x = this.x + Math.floor(this.w / 2);
-      Result.y = this.y + Math.floor(this.h / 2);
+      var Result = pas.uDrawTypes.TPointF.$new();
+      Result.x = this.state.x + (this.state.w / 2);
+      Result.y = this.state.y + (this.state.h / 2);
       return Result;
     };
     this.getNodeBoundingBox = function () {
@@ -34092,10 +34469,10 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       var ty = 0;
       var tw = 0;
       var th = 0;
-      tx = this.x;
-      ty = this.y;
-      tw = this.w;
-      th = this.h;
+      tx = this.state.x;
+      ty = this.state.y;
+      tw = this.state.w;
+      th = this.state.h;
       Result[0].p.x = tx - 8;
       Result[0].p.y = ty - 8;
       Result[0].q.x = tx + tw + 8;
@@ -34118,112 +34495,219 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       this.selected = false;
     };
     this.getCurrentState = function () {
-      var Result = $mod.TNodeSavedState.$new();
-      Result.id = this.id;
-      Result.selected = this.selected;
-      Result.reactionSelected = this.reactionSelected;
-      Result.x = this.x;
-      Result.y = this.y;
-      Result.w = this.w;
-      Result.h = this.h;
-      Result.fillColor = this.fillColor;
-      Result.outlineColor = this.outlineColor;
+      var Result = $mod.TNodeState.$new();
+      Result.$assign(this.state);
       return Result;
     };
     this.loadState = function (node) {
-      this.id = node.id;
-      this.selected = node.selected;
-      this.reactionSelected = node.reactionSelected;
-      this.x = node.x;
-      this.y = node.y;
-      this.w = node.w;
-      this.h = node.h;
-      this.fillColor = node.fillColor;
-      this.outlineColor = node.outlineColor;
+      this.state.$assign(node);
     };
     this.create$1 = function (id) {
-      this.id = id;
-      this.w = 60;
-      this.h = 40;
+      this.state.id = id;
+      this.state.w = 60;
+      this.state.h = 40;
       this.selected = false;
       this.reactionSelected = false;
-      this.fillColor = pas["WEBLib.Graphics"].RGB(255,204,153);
-      this.outlineColor = pas["WEBLib.Graphics"].RGB(255,102,0);
+      this.state.fillColor = pas["WEBLib.Graphics"].RGB(255,204,153);
+      this.state.outlineColor = pas["WEBLib.Graphics"].RGB(255,102,0);
       return this;
     };
   });
   $mod.$rtti.$DynArray("TListOfNodes",{eltype: $mod.$rtti["TNode"]});
-  $mod.$rtti.$DynArray("TListOfNodeStates",{eltype: $mod.$rtti["TNodeSavedState"]});
-  rtl.recNewT($mod,"TReactionSaveState",function () {
+  $mod.$rtti.$DynArray("TListOfNodeStates",{eltype: $mod.$rtti["TNodeState"]});
+  rtl.recNewT($mod,"TReactionState",function () {
     this.id = "";
+    this.reactionType = 0;
     this.selected = false;
-    this.src = "";
-    this.dest = "";
+    this.nReactants = 0;
+    this.nProducts = 0;
+    this.fillColor = 0;
+    this.thickness = 0;
+    this.$new = function () {
+      var r = Object.create(this);
+      r.arcCenter = pas.uDrawTypes.TPointF.$new();
+      r.srcId = rtl.arraySetLength(null,"",6);
+      r.destId = rtl.arraySetLength(null,"",6);
+      r.srcPtr = rtl.arraySetLength(null,null,6);
+      r.destPtr = rtl.arraySetLength(null,null,6);
+      return r;
+    };
     this.$eq = function (b) {
-      return (this.id === b.id) && (this.selected === b.selected) && (this.src === b.src) && (this.dest === b.dest);
+      return (this.id === b.id) && (this.reactionType === b.reactionType) && this.arcCenter.$eq(b.arcCenter) && (this.selected === b.selected) && (this.nReactants === b.nReactants) && (this.nProducts === b.nProducts) && rtl.arrayEq(this.srcId,b.srcId) && rtl.arrayEq(this.destId,b.destId) && rtl.arrayEq(this.srcPtr,b.srcPtr) && rtl.arrayEq(this.destPtr,b.destPtr) && (this.fillColor === b.fillColor) && (this.thickness === b.thickness);
     };
     this.$assign = function (s) {
       this.id = s.id;
+      this.reactionType = s.reactionType;
+      this.arcCenter.$assign(s.arcCenter);
       this.selected = s.selected;
-      this.src = s.src;
-      this.dest = s.dest;
+      this.nReactants = s.nReactants;
+      this.nProducts = s.nProducts;
+      this.srcId = s.srcId.slice(0);
+      this.destId = s.destId.slice(0);
+      this.srcPtr = s.srcPtr.slice(0);
+      this.destPtr = s.destPtr.slice(0);
+      this.fillColor = s.fillColor;
+      this.thickness = s.thickness;
       return this;
     };
-    var $r = $mod.$rtti.$Record("TReactionSaveState",{});
+    this.saveAsJSON = function (reactionObject) {
+      var speciesArray = null;
+      var reactantArray = null;
+      var i = 0;
+      var jso = null;
+      reactionObject.AddPair$2("id",this.id);
+      reactionObject.AddPair$2("reactionType",pas.uNetworkTypes.getReactionTypeString(this.reactionType));
+      reactionObject.AddPair$2("arcCenterX",pas.SysUtils.FloatToStr(this.arcCenter.x));
+      reactionObject.AddPair$2("arcCenterY",pas.SysUtils.FloatToStr(this.arcCenter.y));
+      speciesArray = pas["WEBLib.JSON"].TJSONArray.$create("Create$2");
+      reactionObject.AddPair$1("species",speciesArray);
+      jso = pas["WEBLib.JSON"].TJSONObject.$create("Create$2");
+      for (var $l1 = 0, $end2 = this.nReactants - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        jso.AddPair(pas["WEBLib.JSON"].TJSONPair.$create("Create$3",[this.srcPtr[i].state.id,"-1"]));
+      };
+      speciesArray.Add$4(jso);
+      jso = pas["WEBLib.JSON"].TJSONObject.$create("Create$2");
+      for (var $l3 = 0, $end4 = this.nProducts - 1; $l3 <= $end4; $l3++) {
+        i = $l3;
+        jso.AddPair(pas["WEBLib.JSON"].TJSONPair.$create("Create$3",[this.destPtr[i].state.id,"-1"]));
+      };
+      speciesArray.Add$4(jso);
+      reactionObject.AddPair$1("fillColor",pas["WEBLib.JSON"].TJSONNumber.$create("Create$1",[this.fillColor]));
+      reactionObject.AddPair$1("thickness",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.thickness]));
+    };
+    this.loadFromJSON = function (obj) {
+      var speciesObject = null;
+      var speciesArray = null;
+      var reactantObject = null;
+      var pa = null;
+      var stoich = 0;
+      var speciesName = "";
+      var i = 0;
+      this.id = obj.GetJSONValue("id");
+      this.reactionType = pas.uNetworkTypes.getReactionType(obj.GetJSONValue("reactionType"));
+      if (obj.Get("species") !== null) {
+        speciesArray = rtl.as(obj.Get("species").fjv,pas["WEBLib.JSON"].TJSONArray);
+        var $tmp1 = this.reactionType;
+        if ($tmp1 === pas.uNetworkTypes.TReactionType.eUniUni) {
+          reactantObject = rtl.as(speciesArray.GetItem$1(0),pas["WEBLib.JSON"].TJSONObject);
+          this.nReactants = 1;
+          this.nProducts = 1;
+          pa = reactantObject.Get$1(0);
+          this.srcId[0] = pa.fjs.GetStrValue();
+          stoich = pas.SysUtils.StrToInt(pa.fjv.GetStrValue());
+          reactantObject = rtl.as(speciesArray.GetItem$1(1),pas["WEBLib.JSON"].TJSONObject);
+          pa = reactantObject.Get$1(0);
+          this.destId[0] = pa.fjs.GetStrValue();
+          stoich = pas.SysUtils.StrToInt(pa.fjv.GetStrValue());
+        } else if ($tmp1 === pas.uNetworkTypes.TReactionType.eAnyToAny) {
+          reactantObject = rtl.as(speciesArray.GetItem$1(0),pas["WEBLib.JSON"].TJSONObject);
+          this.nReactants = reactantObject.GetCount();
+          for (var $l2 = 0, $end3 = this.nReactants - 1; $l2 <= $end3; $l2++) {
+            i = $l2;
+            pa = reactantObject.Get$1(i);
+            this.srcId[i] = pa.fjs.GetStrValue();
+            stoich = pas.SysUtils.StrToInt(pa.fjv.GetStrValue());
+          };
+          reactantObject = rtl.as(speciesArray.GetItem$1(1),pas["WEBLib.JSON"].TJSONObject);
+          this.nProducts = reactantObject.GetCount();
+          for (var $l4 = 0, $end5 = this.nProducts - 1; $l4 <= $end5; $l4++) {
+            i = $l4;
+            pa = reactantObject.Get$1(i);
+            this.destId[i] = pa.fjs.GetStrValue();
+            stoich = pas.SysUtils.StrToInt(pa.fjv.GetStrValue());
+          };
+        };
+      } else throw pas.SysUtils.Exception.$create("Create$1",["No species in reaction"]);
+      this.fillColor = pas.SysUtils.StrToInt(obj.GetJSONValue("fillColor"));
+      this.thickness = pas.SysUtils.StrToInt(obj.GetJSONValue("thickness"));
+    };
+    var $r = $mod.$rtti.$Record("TReactionState",{});
     $r.addField("id",rtl.string);
+    $r.addField("reactionType",pas.uNetworkTypes.$rtti["TReactionType"]);
+    $r.addField("arcCenter",pas.uDrawTypes.$rtti["TPointF"]);
     $r.addField("selected",rtl.boolean);
-    $r.addField("src",rtl.string);
-    $r.addField("dest",rtl.string);
+    $r.addField("nReactants",rtl.longint);
+    $r.addField("nProducts",rtl.longint);
+    $mod.$rtti.$StaticArray("TReactionState.srcId$a",{dims: [6], eltype: rtl.string});
+    $r.addField("srcId",$mod.$rtti["TReactionState.srcId$a"]);
+    $mod.$rtti.$StaticArray("TReactionState.destId$a",{dims: [6], eltype: rtl.string});
+    $r.addField("destId",$mod.$rtti["TReactionState.destId$a"]);
+    $mod.$rtti.$StaticArray("TReactionState.srcPtr$a",{dims: [6], eltype: $mod.$rtti["TNode"]});
+    $r.addField("srcPtr",$mod.$rtti["TReactionState.srcPtr$a"]);
+    $mod.$rtti.$StaticArray("TReactionState.destPtr$a",{dims: [6], eltype: $mod.$rtti["TNode"]});
+    $r.addField("destPtr",$mod.$rtti["TReactionState.destPtr$a"]);
+    $r.addField("fillColor",pas["WEBLib.Graphics"].$rtti["TColor"]);
+    $r.addField("thickness",rtl.longint);
+    $r.addMethod("saveAsJSON",0,[["reactionObject",pas["WEBLib.JSON"].$rtti["TJSONObject"]]]);
+    $r.addMethod("loadFromJSON",0,[["obj",pas["WEBLib.JSON"].$rtti["TJSONObject"]]]);
   });
   rtl.createClass($mod,"TReaction",pas.System.TObject,function () {
     this.$init = function () {
       pas.System.TObject.$init.call(this);
-      this.id = "";
+      this.state = $mod.TReactionState.$new();
       this.selected = false;
-      this.src = null;
-      this.dest = null;
-      this.fillColor = 0;
-      this.thickness = 0;
     };
     this.$final = function () {
-      this.src = undefined;
-      this.dest = undefined;
+      this.state = undefined;
       pas.System.TObject.$final.call(this);
     };
     this.unSelect = function () {
       this.selected = false;
     };
     this.getCurrentState = function () {
-      var Result = $mod.TReactionSaveState.$new();
-      Result.id = this.id;
-      Result.selected = this.selected;
-      Result.src = this.src.id;
-      Result.dest = this.dest.id;
+      var Result = $mod.TReactionState.$new();
+      Result.$assign(this.state);
       return Result;
     };
     this.loadState = function (nodes, reactionState) {
       var i = 0;
+      var j = 0;
+      var k = 0;
       var n = 0;
-      this.id = reactionState.id;
+      this.state.$assign(reactionState);
       n = rtl.length(nodes);
-      for (var $l1 = 0, $end2 = n - 1; $l1 <= $end2; $l1++) {
-        i = $l1;
-        if (nodes[i].id === reactionState.src) this.src = nodes[i];
-        if (nodes[i].id === reactionState.dest) this.dest = nodes[i];
+      for (var $l1 = 0, $end2 = this.state.nReactants - 1; $l1 <= $end2; $l1++) {
+        j = $l1;
+        for (var $l3 = 0, $end4 = n - 1; $l3 <= $end4; $l3++) {
+          k = $l3;
+          if (nodes[k].state.id === this.state.srcId[j]) {
+            this.state.srcPtr[j] = nodes[k];
+            break;
+          };
+        };
+      };
+      for (var $l5 = 0, $end6 = this.state.nProducts - 1; $l5 <= $end6; $l5++) {
+        j = $l5;
+        for (var $l7 = 0, $end8 = n - 1; $l7 <= $end8; $l7++) {
+          k = $l7;
+          if (nodes[k].state.id === this.state.destId[j]) {
+            this.state.destPtr[j] = nodes[k];
+            break;
+          };
+        };
       };
     };
-    this.create$1 = function (id, src, dest) {
-      this.id = id;
-      this.src = src;
-      this.dest = dest;
+    this.create$1 = function () {
+      this.state.fillColor = 14599344;
+      this.state.thickness = 3;
       this.selected = false;
-      this.fillColor = 14599344;
-      this.thickness = 3;
+      return this;
+    };
+    this.create$2 = function (id, src, dest) {
+      this.create$1();
+      this.state.nReactants = 1;
+      this.state.nProducts = 1;
+      this.state.id = id;
+      this.state.srcPtr[0] = src;
+      this.state.destPtr[0] = dest;
+      this.state.srcId[0] = src.state.id;
+      this.state.destId[0] = dest.state.id;
       return this;
     };
   });
   $mod.$rtti.$DynArray("TListOfReactions",{eltype: $mod.$rtti["TReaction"]});
-  $mod.$rtti.$DynArray("TListOfReactionStates",{eltype: $mod.$rtti["TReactionSaveState"]});
+  $mod.$rtti.$DynArray("TListOfReactionStates",{eltype: $mod.$rtti["TReactionState"]});
   rtl.recNewT($mod,"TNetworkSavedState",function () {
     this.Id = "";
     this.savedReactions = [];
@@ -34269,37 +34753,31 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       var JSONNodeArray = null;
       var JSONreactionArray = null;
       var node = null;
+      var reaction = null;
+      var nodeState = $mod.TNodeState.$new();
+      var reactionState = $mod.TReactionState.$new();
       var ar = null;
       var nj = null;
-      var id = "";
       var i = 0;
       var j = 0;
-      var x = 0;
-      var y = 0;
-      var h = 0;
-      var w = 0;
+      var k = 0;
       var index = 0;
-      var src = null;
-      var dest = null;
-      var srcStr = "";
-      var destStr = "";
+      var pair = null;
       this.clear();
       JSONRoot = pas["WEBLib.JSON"].TJSONObject.ParseJSONValue(modelStr);
+      pair = rtl.as(JSONRoot,pas["WEBLib.JSON"].TJSONObject).Get("magicIdentifier");
+      if (pair === null) throw pas.SysUtils.Exception.$create("Create$1",["JSON file not a valid network model"]);
+      if (rtl.as(pair.fjv,pas["WEBLib.JSON"].TJSONString).GetStrValue() !== $mod.MAGIC_IDENTIFER) throw pas.SysUtils.Exception.$create("Create$1",["JSON file a value network model, but verison: " + $mod.MAGIC_IDENTIFER + " not supported"]);
       JSONValue1 = rtl.as(JSONRoot,pas["WEBLib.JSON"].TJSONObject).Get("id").fjv;
-      id = rtl.as(JSONValue1,pas["WEBLib.JSON"].TJSONString).GetStrValue();
+      this.id = rtl.as(JSONValue1,pas["WEBLib.JSON"].TJSONString).GetStrValue();
       if (rtl.as(JSONRoot,pas["WEBLib.JSON"].TJSONObject).Get("nodes") !== null) {
         JSONNodeArray = rtl.as(JSONRoot,pas["WEBLib.JSON"].TJSONObject).Get("nodes").fjv;
         ar = rtl.as(JSONNodeArray,pas["WEBLib.JSON"].TJSONArray);
         for (var $l1 = 0, $end2 = ar.GetCount$1() - 1; $l1 <= $end2; $l1++) {
           i = $l1;
           nj = rtl.as(ar.GetItem$1(i),pas["WEBLib.JSON"].TJSONObject);
-          id = nj.GetJSONValue("id");
-          x = pas.SysUtils.StrToInt(nj.GetJSONValue("x"));
-          y = pas.SysUtils.StrToInt(nj.GetJSONValue("y"));
-          h = pas.SysUtils.StrToInt(nj.GetJSONValue("h"));
-          w = pas.SysUtils.StrToInt(nj.GetJSONValue("w"));
-          node = this.addNode$2(id,x,y,w,h);
-          node.fillColor = pas.SysUtils.StrToInt(nj.GetJSONValue("fillColor"));
+          nodeState.loadFromJSON(nj);
+          this.addNode$3($mod.TNodeState.$clone(nodeState));
         };
       };
       if (rtl.as(JSONRoot,pas["WEBLib.JSON"].TJSONObject).Get("reactions") !== null) {
@@ -34308,31 +34786,35 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
         for (var $l3 = 0, $end4 = ar.GetCount$1() - 1; $l3 <= $end4; $l3++) {
           i = $l3;
           nj = rtl.as(ar.GetItem$1(i),pas["WEBLib.JSON"].TJSONObject);
-          id = nj.GetJSONValue("id");
-          srcStr = nj.GetJSONValue("srcId");
-          destStr = nj.GetJSONValue("destId");
-          for (var $l5 = 0, $end6 = rtl.length(this.nodes) - 1; $l5 <= $end6; $l5++) {
+          reactionState.loadFromJSON(nj);
+          reaction = this.addReaction($mod.TReactionState.$clone(reactionState));
+          for (var $l5 = 0, $end6 = reaction.state.nReactants - 1; $l5 <= $end6; $l5++) {
             j = $l5;
-            if (this.nodes[j].id === srcStr) {
-              src = this.nodes[j];
-              break;
+            for (var $l7 = 0, $end8 = rtl.length(this.nodes) - 1; $l7 <= $end8; $l7++) {
+              k = $l7;
+              if (this.nodes[k].state.id === reaction.state.srcId[j]) {
+                reaction.state.srcPtr[j] = this.nodes[k];
+                break;
+              };
             };
           };
-          for (var $l7 = 0, $end8 = rtl.length(this.nodes) - 1; $l7 <= $end8; $l7++) {
-            j = $l7;
-            if (this.nodes[j].id === destStr) {
-              dest = this.nodes[j];
-              break;
+          for (var $l9 = 0, $end10 = reaction.state.nProducts - 1; $l9 <= $end10; $l9++) {
+            j = $l9;
+            for (var $l11 = 0, $end12 = rtl.length(this.nodes) - 1; $l11 <= $end12; $l11++) {
+              k = $l11;
+              if (this.nodes[k].state.id === reaction.state.destId[j]) {
+                reaction.state.destPtr[j] = this.nodes[k];
+                break;
+              };
             };
           };
-          index = this.addReaction(id,src,dest);
-          this.reactions[index].fillColor = pas.SysUtils.StrToInt(nj.GetJSONValue("fillColor"));
         };
       };
     };
     this.convertToJSON = function () {
       var Result = "";
       var JSONRoot = null;
+      var headerObj = null;
       var modelId = null;
       var nodeObject = null;
       var reactionObject = null;
@@ -34340,19 +34822,16 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       var i = 0;
       var jsonvalue = null;
       JSONRoot = pas["WEBLib.JSON"].TJSONObject.$create("Create$2");
+      headerObj = pas["WEBLib.JSON"].TJSONObject.$create("Create$2");
+      JSONRoot.AddPair$2("magicIdentifier",$mod.MAGIC_IDENTIFER);
+      JSONRoot.AddPair$1("header",headerObj);
       modelId = pas["WEBLib.JSON"].TJSONObject.$create("Create$2");
       JSONRoot.AddPair$2("id",this.id);
       jsonArray = pas["WEBLib.JSON"].TJSONArray.$create("Create$2");
       for (var $l1 = 0, $end2 = rtl.length(this.nodes) - 1; $l1 <= $end2; $l1++) {
         i = $l1;
         nodeObject = pas["WEBLib.JSON"].TJSONObject.$create("Create$2");
-        nodeObject.AddPair$2("id",this.nodes[i].id);
-        nodeObject.AddPair$1("x",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.nodes[i].x]));
-        nodeObject.AddPair$1("y",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.nodes[i].y]));
-        nodeObject.AddPair$1("w",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.nodes[i].w]));
-        nodeObject.AddPair$1("h",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.nodes[i].h]));
-        nodeObject.AddPair$1("fillColor",pas["WEBLib.JSON"].TJSONNumber.$create("Create$1",[this.nodes[i].fillColor]));
-        nodeObject.AddPair$1("outlineColor",pas["WEBLib.JSON"].TJSONNumber.$create("Create$1",[this.nodes[i].outlineColor]));
+        this.nodes[i].state.saveAsJSON(nodeObject);
         jsonArray.Add$4(nodeObject);
       };
       if (rtl.length(this.nodes) > 0) {
@@ -34361,11 +34840,7 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
         for (var $l3 = 0, $end4 = rtl.length(this.reactions) - 1; $l3 <= $end4; $l3++) {
           i = $l3;
           reactionObject = pas["WEBLib.JSON"].TJSONObject.$create("Create$2");
-          reactionObject.AddPair$2("id",this.reactions[i].id);
-          reactionObject.AddPair$2("srcId",this.reactions[i].src.id);
-          reactionObject.AddPair$2("destId",this.reactions[i].dest.id);
-          reactionObject.AddPair$1("fillColor",pas["WEBLib.JSON"].TJSONNumber.$create("Create$1",[this.reactions[i].fillColor]));
-          reactionObject.AddPair$1("thickness",pas["WEBLib.JSON"].TJSONNumber.$create("Create$3",[this.reactions[i].thickness]));
+          this.reactions[i].state.saveAsJSON(reactionObject);
           jsonArray.Add$4(reactionObject);
         };
         if (rtl.length(this.reactions) > 0) JSONRoot.AddPair$1("reactions",jsonArray);
@@ -34373,7 +34848,20 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       Result = JSONRoot.ToJSON();
       return Result;
     };
-    this.overNode = function (x, y, index) {
+    this.overNode = function (x, y, node) {
+      var Result = false;
+      var i = 0;
+      Result = false;
+      for (var $l1 = 0, $end2 = rtl.length(this.nodes) - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        if (this.nodes[i].overNode(x,y)) {
+          node.set(this.nodes[i]);
+          return true;
+        };
+      };
+      return Result;
+    };
+    this.overNode$1 = function (x, y, index) {
       var Result = null;
       var i = 0;
       Result = null;
@@ -34386,24 +34874,48 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       };
       return Result;
     };
-    this.overEdge = function (x, y, index) {
+    this.overEdge = function (x, y, reactionIndex) {
       var Result = null;
       var i = 0;
-      var p1 = pas.Types.TPoint.$new();
-      var p2 = pas.Types.TPoint.$new();
-      var pt = pas.Types.TPoint.$new();
+      var j = 0;
+      var p1 = pas.uDrawTypes.TPointF.$new();
+      var p2 = pas.uDrawTypes.TPointF.$new();
       Result = null;
       for (var $l1 = 0, $end2 = rtl.length(this.reactions) - 1; $l1 <= $end2; $l1++) {
         i = $l1;
-        p1.$assign(this.reactions[i].src.getCenter());
-        p2.$assign(this.reactions[i].dest.getCenter());
-        pt.x = x;
-        pt.y = y;
-        if ($impl.ptOnLine(pas.Types.TPoint.$clone(p1),pas.Types.TPoint.$clone(p2),x,y)) {
-          index.set(i);
-          return this.reactions[i];
+        var $tmp3 = this.reactions[i].state.reactionType;
+        if ($tmp3 === pas.uNetworkTypes.TReactionType.eUniUni) {
+          p1.$assign(this.reactions[i].state.srcPtr[0].getCenter());
+          p2.$assign(this.reactions[i].state.destPtr[0].getCenter());
+          if ($impl.ptOnLine(pas.uDrawTypes.TPointF.$clone(p1),pas.uDrawTypes.TPointF.$clone(p2),x,y)) {
+            reactionIndex.set(i);
+            return this.reactions[i];
+          };
+        } else if ($tmp3 === pas.uNetworkTypes.TReactionType.eAnyToAny) {
+          for (var $l4 = 0, $end5 = this.reactions[i].state.nReactants - 1; $l4 <= $end5; $l4++) {
+            j = $l4;
+            p1.$assign(this.reactions[i].state.srcPtr[j].getCenter());
+            p2.$assign(pas.uGraphUtils.computeCentroid(this.reactions[i]));
+            if ($impl.ptOnLine(pas.uDrawTypes.TPointF.$clone(p1),pas.uDrawTypes.TPointF.$clone(p2),x,y)) {
+              reactionIndex.set(i);
+              return this.reactions[i];
+            };
+          };
+          for (var $l6 = 0, $end7 = this.reactions[i].state.nProducts - 1; $l6 <= $end7; $l6++) {
+            j = $l6;
+            p2.$assign(this.reactions[i].state.destPtr[j].getCenter());
+            p1.$assign(pas.uGraphUtils.computeCentroid(this.reactions[i]));
+            if ($impl.ptOnLine(pas.uDrawTypes.TPointF.$clone(p1),pas.uDrawTypes.TPointF.$clone(p2),x,y)) {
+              reactionIndex.set(i);
+              return this.reactions[i];
+            };
+          };
         };
       };
+      return Result;
+    };
+    this.overCentroid = function (x, y, reactionIndex) {
+      var Result = null;
       return Result;
     };
     this.addNode = function (id) {
@@ -34418,9 +34930,9 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       this.nodes = rtl.arraySetLength(this.nodes,null,rtl.length(this.nodes) + 1);
       this.nodes[rtl.length(this.nodes) - 1] = $mod.TNode.$create("create$1",[id]);
       Result = this.nodes[rtl.length(this.nodes) - 1];
-      Result.x = x;
-      Result.y = y;
-      Result.id = id;
+      Result.state.x = x;
+      Result.state.y = y;
+      Result.state.id = id;
       return Result;
     };
     this.addNode$2 = function (id, x, y, w, h) {
@@ -34428,18 +34940,75 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       this.nodes = rtl.arraySetLength(this.nodes,null,rtl.length(this.nodes) + 1);
       this.nodes[rtl.length(this.nodes) - 1] = $mod.TNode.$create("create$1",[id]);
       Result = this.nodes[rtl.length(this.nodes) - 1];
-      Result.x = x;
-      Result.y = y;
-      Result.h = h;
-      Result.w = w;
-      Result.id = id;
+      Result.state.x = x;
+      Result.state.y = y;
+      Result.state.h = h;
+      Result.state.w = w;
+      Result.state.id = id;
       return Result;
     };
-    this.addReaction = function (id, src, dest) {
+    this.addNode$3 = function (state) {
+      var Result = null;
+      this.nodes = rtl.arraySetLength(this.nodes,null,rtl.length(this.nodes) + 1);
+      this.nodes[rtl.length(this.nodes) - 1] = $mod.TNode.$create("create$1",[this.id]);
+      Result = this.nodes[rtl.length(this.nodes) - 1];
+      Result.state.$assign(state);
+      return Result;
+    };
+    this.computeUniUniCoords = function (reaction, srcNode, destNode) {
+    };
+    this.computeAnyToAnyCoordinates = function (reaction, sourceNodes, destNodes) {
+    };
+    this.addUniUniReaction = function (id, src, dest) {
       var Result = 0;
       this.reactions = rtl.arraySetLength(this.reactions,null,rtl.length(this.reactions) + 1);
-      this.reactions[rtl.length(this.reactions) - 1] = $mod.TReaction.$create("create$1",[id,src,dest]);
+      this.reactions[rtl.length(this.reactions) - 1] = $mod.TReaction.$create("create$2",[id,src,dest]);
       Result = rtl.length(this.reactions) - 1;
+      return Result;
+    };
+    this.addReaction = function (state) {
+      var Result = null;
+      this.reactions = rtl.arraySetLength(this.reactions,null,rtl.length(this.reactions) + 1);
+      this.reactions[rtl.length(this.reactions) - 1] = $mod.TReaction.$create("create$1");
+      Result = this.reactions[rtl.length(this.reactions) - 1];
+      Result.state.$assign(state);
+      return Result;
+    };
+    this.addReaction$1 = function (reaction) {
+      var Result = 0;
+      this.reactions = rtl.arraySetLength(this.reactions,null,rtl.length(this.reactions) + 1);
+      this.reactions[rtl.length(this.reactions) - 1] = reaction;
+      Result = rtl.length(this.reactions);
+      return Result;
+    };
+    this.AddAnyToAnyEdge = function (sourceNodes, destNodes, edgeIndex) {
+      var Result = null;
+      var newReaction = null;
+      var i = 0;
+      var nSource = 0;
+      var nDestination = 0;
+      nSource = rtl.length(sourceNodes);
+      nDestination = rtl.length(destNodes);
+      newReaction = $mod.TReaction.$create("create$1");
+      newReaction.state.nReactants = nSource;
+      newReaction.state.nProducts = nDestination;
+      for (var $l1 = 0, $end2 = nSource - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        newReaction.state.srcId[i] = sourceNodes[i].state.id;
+        newReaction.state.srcPtr[i] = sourceNodes[i];
+      };
+      for (var $l3 = 0, $end4 = nDestination - 1; $l3 <= $end4; $l3++) {
+        i = $l3;
+        newReaction.state.destId[i] = destNodes[i].state.id;
+        newReaction.state.destPtr[i] = destNodes[i];
+      };
+      newReaction.state.reactionType = pas.uNetworkTypes.TReactionType.eAnyToAny;
+      newReaction.state.id = "J1";
+      edgeIndex.set(this.addReaction$1(newReaction));
+      if ((nSource === 1) && (nDestination === 1)) {
+        this.computeUniUniCoords(newReaction,sourceNodes[0],destNodes[0])}
+       else this.computeAnyToAnyCoordinates(newReaction,sourceNodes,destNodes);
+      Result = newReaction;
       return Result;
     };
     this.unSelectAll = function () {
@@ -34481,7 +35050,7 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       Result = false;
       for (var $l1 = 0, $end2 = rtl.length(this.reactions) - 1; $l1 <= $end2; $l1++) {
         i = $l1;
-        if ((this.reactions[i].src === node) || (this.reactions[i].dest === node)) return true;
+        if ((this.reactions[i].state.srcPtr[0] === node) || (this.reactions[i].state.destPtr[0] === node)) return true;
       };
       return Result;
     };
@@ -34491,13 +35060,13 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       var ln = 0;
       Result.Id = this.id;
       ln = rtl.length(this.nodes);
-      Result.savedNodes = rtl.arraySetLength(Result.savedNodes,$mod.TNodeSavedState,ln);
+      Result.savedNodes = rtl.arraySetLength(Result.savedNodes,$mod.TNodeState,ln);
       for (var $l1 = 0, $end2 = ln - 1; $l1 <= $end2; $l1++) {
         i = $l1;
         Result.savedNodes[i].$assign(this.nodes[i].getCurrentState());
       };
       ln = rtl.length(this.reactions);
-      Result.savedReactions = rtl.arraySetLength(Result.savedReactions,$mod.TReactionSaveState,ln);
+      Result.savedReactions = rtl.arraySetLength(Result.savedReactions,$mod.TReactionState,ln);
       for (var $l3 = 0, $end4 = ln - 1; $l3 <= $end4; $l3++) {
         i = $l3;
         Result.savedReactions[i].$assign(this.reactions[i].getCurrentState());
@@ -34515,14 +35084,14 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       for (var $l1 = 0, $end2 = rtl.length(networkState.savedNodes) - 1; $l1 <= $end2; $l1++) {
         i = $l1;
         this.nodes[i] = $mod.TNode.$create("Create");
-        this.nodes[i].loadState($mod.TNodeSavedState.$clone(networkState.savedNodes[i]));
+        this.nodes[i].state.$assign(networkState.savedNodes[i]);
       };
       ln = rtl.length(networkState.savedReactions);
       this.reactions = rtl.arraySetLength(this.reactions,null,ln);
       for (var $l3 = 0, $end4 = ln - 1; $l3 <= $end4; $l3++) {
         i = $l3;
-        this.reactions[i] = $mod.TReaction.$create("Create");
-        this.reactions[i].loadState(this.nodes,$mod.TReactionSaveState.$clone(networkState.savedReactions[i]));
+        this.reactions[i] = $mod.TReaction.$create("create$1");
+        this.reactions[i].loadState(this.nodes,$mod.TReactionState.$clone(networkState.savedReactions[i]));
       };
     };
     this.Create$1 = function (id) {
@@ -34530,13 +35099,15 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       return this;
     };
   });
-},["WEBLib.Dialogs","WEBLib.JSON"],function () {
+},["WEBLib.Dialogs","uDrawReaction","uGraphUtils"],function () {
   "use strict";
   var $mod = this;
   var $impl = $mod.$impl;
+  $impl.AddJSONHeader = function (obj) {
+  };
   $impl.dist = function (x1, y1, x2, y2) {
     var Result = 0.0;
-    Result = Math.sqrt(pas.System.Sqr(x2 - x1) + pas.System.Sqr(y2 - y1));
+    Result = Math.sqrt(pas.System.Sqr$1(x2 - x1) + pas.System.Sqr$1(y2 - y1));
     return Result;
   };
   $impl.ptOnLine = function (p1, p2, px, py) {
@@ -43024,8 +43595,8 @@ rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","co
   var $mod = this;
   this.NOT_SELECTED = -1;
   $mod.$rtti.$DynArray("TStackOfSavedStates",{eltype: pas.uNetwork.$rtti["TNetworkSavedState"]});
-  this.TMouseStatus = {"0": "sIdle", sIdle: 0, "1": "sAddNode", sAddNode: 1, "2": "sAddEdge", sAddEdge: 2, "3": "sMouseDown", sMouseDown: 3};
-  $mod.$rtti.$Enum("TMouseStatus",{minvalue: 0, maxvalue: 3, ordtype: 1, enumtype: this.TMouseStatus});
+  this.TMouseStatus = {"0": "sIdle", sIdle: 0, "1": "sAddNode", sAddNode: 1, "2": "sAddUniUni", sAddUniUni: 2, "3": "sAddUniBi", sAddUniBi: 3, "4": "sAddBiUni", sAddBiUni: 4, "5": "sAddBiBi", sAddBiBi: 5, "6": "sMouseDown", sMouseDown: 6, "7": "sMoveCentroid", sMoveCentroid: 7};
+  $mod.$rtti.$Enum("TMouseStatus",{minvalue: 0, maxvalue: 7, ordtype: 1, enumtype: this.TMouseStatus});
   rtl.createClass($mod,"TNetworkStack",pas.System.TObject,function () {
     this.$init = function () {
       pas.System.TObject.$init.call(this);
@@ -43043,10 +43614,16 @@ rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","co
     };
     this.pop = function () {
       var Result = pas.uNetwork.TNetworkSavedState.$new();
-      if (rtl.length(this.networkStack) > 0) {
+      if (this.stackCounter !== -1) {
         Result.$assign(this.networkStack[this.stackCounter]);
         this.stackCounter -= 1;
       };
+      return Result;
+    };
+    this.ifEmpty = function () {
+      var Result = false;
+      Result = true;
+      if (this.stackCounter !== -1) Result = false;
       return Result;
     };
     this.Create$1 = function () {
@@ -43063,10 +43640,18 @@ rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","co
       this.selectedNode = 0;
       this.currentX = 0;
       this.currentY = 0;
+      this.anyByAny_nReactants = 0;
+      this.anyByAny_nProducts = 0;
+      this.sourceNodeCounter = 0;
+      this.destNodeCounter = 0;
+      this.sourceNodes = [];
+      this.destNodes = [];
       this.network = null;
       this.undoStack = null;
     };
     this.$final = function () {
+      this.sourceNodes = undefined;
+      this.destNodes = undefined;
       this.network = undefined;
       this.undoStack = undefined;
       pas.System.TObject.$final.call(this);
@@ -43077,8 +43662,23 @@ rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","co
     this.setAddNodeStatus = function () {
       this.mStatus = $mod.TMouseStatus.sAddNode;
     };
-    this.setAddReactionStatus = function () {
-      this.mStatus = $mod.TMouseStatus.sAddEdge;
+    this.setAddUniUniReaction = function () {
+      this.mStatus = $mod.TMouseStatus.sAddUniUni;
+      this.srcNode = -1;
+      this.destNode = -1;
+    };
+    this.setAddUniBiReaction = function () {
+      this.mStatus = $mod.TMouseStatus.sAddUniBi;
+      this.srcNode = -1;
+      this.destNode = -1;
+    };
+    this.setAddBiUniReaction = function () {
+      this.mStatus = $mod.TMouseStatus.sAddBiUni;
+      this.srcNode = -1;
+      this.destNode = -1;
+    };
+    this.setAddBiBiReaction = function () {
+      this.mStatus = $mod.TMouseStatus.sAddBiBi;
       this.srcNode = -1;
       this.destNode = -1;
     };
@@ -43098,14 +43698,14 @@ rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","co
     this.addReaction = function (Id, src, dest) {
       var Result = 0;
       this.prepareUndo();
-      Result = this.network.addReaction(Id,src,dest);
+      Result = this.network.addUniUniReaction(Id,src,dest);
       return Result;
     };
     this.prepareUndo = function () {
       this.undoStack.push(pas.uNetwork.TNetworkSavedState.$clone(this.network.getCurrentState()));
     };
     this.undo = function () {
-      this.network.loadState(pas.uNetwork.TNetworkSavedState.$clone(this.undoStack.pop()));
+      if (!this.undoStack.ifEmpty()) this.network.loadState(pas.uNetwork.TNetworkSavedState.$clone(this.undoStack.pop()));
     };
     this.deleteSelectedItems = function () {
       var i = 0;
@@ -43138,40 +43738,100 @@ rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","co
         };
       };
     };
-    this.OnMouseDown = function (Button, Shift, X, Y) {
+    this.addUniUniReactionMouseDown = function (Sender, x, y) {
+      var index = 0;
+      rtl.as(Sender,pas["WEBLib.ExtCtrls"].TPaintBox).SetControlCursor(21);
+      if (this.srcNode === -1) {
+        if (this.network.overNode$1(x,y,{get: function () {
+            return index;
+          }, set: function (v) {
+            index = v;
+          }}) !== null) {
+          this.srcNode = index;
+          this.destNode = -1;
+          this.network.nodes[index].reactionSelected = true;
+        } else this.mStatus = $mod.TMouseStatus.sIdle;
+      } else if (this.srcNode !== -1) {
+        if (this.network.overNode$1(x,y,{get: function () {
+            return index;
+          }, set: function (v) {
+            index = v;
+          }}) !== null) {
+          this.destNode = index;
+          this.prepareUndo();
+          this.network.addUniUniReaction("J" + pas.SysUtils.IntToStr(rtl.length(this.network.reactions)),this.network.nodes[this.srcNode],this.network.nodes[this.destNode]);
+          this.network.nodes[this.srcNode].reactionSelected = false;
+          this.srcNode = -1;
+          this.destNode = -1;
+          rtl.as(Sender,pas["WEBLib.ExtCtrls"].TPaintBox).SetControlCursor(0);
+        } else {
+          this.mStatus = $mod.TMouseStatus.sIdle;
+          this.srcNode = -1;
+          this.destNode = -1;
+        };
+      };
+    };
+    this.addAnyReactionMouseDown = function (Sender, x, y, nReactants, nProducts) {
+      var index = 0;
+      rtl.as(Sender,pas["WEBLib.ExtCtrls"].TPaintBox).SetControlCursor(21);
+      this.anyByAny_nReactants = nReactants;
+      this.anyByAny_nProducts = nProducts;
+      if (this.sourceNodeCounter === -1) this.sourceNodes = rtl.arraySetLength(this.sourceNodes,null,this.anyByAny_nReactants);
+      if (this.destNodeCounter === -1) this.destNodes = rtl.arraySetLength(this.destNodes,null,this.anyByAny_nProducts);
+      if (this.sourceNodeCounter < (this.anyByAny_nReactants - 1)) {
+        if (this.network.overNode(x,y,{a: this.sourceNodeCounter + 1, p: this.sourceNodes, get: function () {
+            return this.p[this.a];
+          }, set: function (v) {
+            this.p[this.a] = v;
+          }})) {
+          this.sourceNodeCounter = this.sourceNodeCounter + 1;
+          this.sourceNodes[this.sourceNodeCounter].selected = true;
+        };
+      } else {
+        if (this.destNodeCounter < (this.anyByAny_nProducts - 1)) {
+          if (this.network.overNode(x,y,{a: this.destNodeCounter + 1, p: this.destNodes, get: function () {
+              return this.p[this.a];
+            }, set: function (v) {
+              this.p[this.a] = v;
+            }})) {
+            this.destNodeCounter = this.destNodeCounter + 1;
+            this.destNodes[this.destNodeCounter].selected = true;
+          };
+          if (!(this.destNodeCounter < (this.anyByAny_nProducts - 1))) {
+            this.prepareUndo();
+            this.network.AddAnyToAnyEdge(this.sourceNodes,this.destNodes,{get: function () {
+                return index;
+              }, set: function (v) {
+                index = v;
+              }});
+            this.sourceNodeCounter = -1;
+            this.destNodeCounter = -1;
+            this.network.unSelectAll();
+          };
+        };
+      };
+    };
+    this.OnMouseDown = function (Sender, Button, Shift, X, Y) {
       var index = 0;
       try {
-        if (this.mStatus === $mod.TMouseStatus.sAddNode) {
+        var $tmp1 = this.mStatus;
+        if ($tmp1 === $mod.TMouseStatus.sAddNode) {
           this.addNode$1(X,Y);
           return;
-        };
-        if (this.mStatus === $mod.TMouseStatus.sAddEdge) {
-          if (this.srcNode === -1) {
-            if (this.network.overNode(X,Y,{get: function () {
-                return index;
-              }, set: function (v) {
-                index = v;
-              }}) !== null) {
-              this.srcNode = index;
-              this.network.nodes[index].reactionSelected = true;
-            } else this.mStatus = $mod.TMouseStatus.sIdle;
-          } else if (this.srcNode > -1) {
-            if (this.network.overNode(X,Y,{get: function () {
-                return index;
-              }, set: function (v) {
-                index = v;
-              }}) !== null) {
-              this.destNode = index;
-              this.prepareUndo();
-              this.network.addReaction("xx",this.network.nodes[this.srcNode],this.network.nodes[this.destNode]);
-              this.network.nodes[this.srcNode].reactionSelected = false;
-              this.srcNode = -1;
-              this.destNode = -1;
-            } else this.mStatus = $mod.TMouseStatus.sIdle;
-          };
+        } else if ($tmp1 === $mod.TMouseStatus.sAddUniUni) {
+          this.addUniUniReactionMouseDown(Sender,X,Y);
           return;
-        };
-        if (this.network.overNode(X,Y,{get: function () {
+        } else if ($tmp1 === $mod.TMouseStatus.sAddUniBi) {
+          this.addAnyReactionMouseDown(Sender,X,Y,1,2);
+          return;
+        } else if ($tmp1 === $mod.TMouseStatus.sAddBiUni) {
+          this.addAnyReactionMouseDown(Sender,X,Y,2,1);
+          return;
+        } else if ($tmp1 === $mod.TMouseStatus.sAddBiBi) {
+          this.addAnyReactionMouseDown(Sender,X,Y,2,2);
+          return;
+        } else if ($tmp1 === $mod.TMouseStatus.sIdle) ;
+        if (this.network.overNode$1(X,Y,{get: function () {
             return index;
           }, set: function (v) {
             index = v;
@@ -43193,6 +43853,17 @@ rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","co
           this.network.reactions[index].selected = true;
           return;
         };
+        if (this.network.overCentroid(X,Y,{get: function () {
+            return index;
+          }, set: function (v) {
+            index = v;
+          }}) !== null) {
+          this.network.unSelectAll();
+          this.currentX = X;
+          this.currentY = Y;
+          this.mStatus = $mod.TMouseStatus.sMoveCentroid;
+          return;
+        };
         this.mStatus = $mod.TMouseStatus.sIdle;
         this.network.unSelectAll();
       } finally {
@@ -43202,15 +43873,19 @@ rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","co
       var dx = 0;
       var dy = 0;
       var index = 0;
-      if (this.mStatus === $mod.TMouseStatus.sMouseDown) {
+      var $tmp1 = this.mStatus;
+      if ($tmp1 === $mod.TMouseStatus.sMouseDown) {
         dx = X - this.currentX;
         dy = Y - this.currentY;
-        this.network.nodes[this.selectedNode].x = this.network.nodes[this.selectedNode].x + dx;
-        this.network.nodes[this.selectedNode].y = this.network.nodes[this.selectedNode].y + dy;
+        this.network.nodes[this.selectedNode].state.x = this.network.nodes[this.selectedNode].state.x + dx;
+        this.network.nodes[this.selectedNode].state.y = this.network.nodes[this.selectedNode].state.y + dy;
         this.currentX = X;
         this.currentY = Y;
+        return;
+      } else if ($tmp1 === $mod.TMouseStatus.sMoveCentroid) {
+        return;
       };
-      if ((this.mStatus === $mod.TMouseStatus.sAddEdge) && (this.network.overNode(X,Y,{get: function () {
+      if ((this.mStatus in rtl.createSet($mod.TMouseStatus.sAddUniUni,$mod.TMouseStatus.sAddUniBi,$mod.TMouseStatus.sAddBiUni,$mod.TMouseStatus.sAddBiBi)) && (this.network.overNode$1(X,Y,{get: function () {
           return index;
         }, set: function (v) {
           index = v;
@@ -43227,196 +43902,13 @@ rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","co
       this.mStatus = $mod.TMouseStatus.sIdle;
       this.srcNode = -1;
       this.destNode = -1;
+      this.sourceNodeCounter = -1;
+      this.destNodeCounter = -1;
       return this;
     };
   });
 },["JS","Web","WEBLib.JSON"]);
-rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types","uDrawTypes"],function () {
-  "use strict";
-  var $mod = this;
-  this.Line = function (pt1, pt2) {
-    var Result = pas.uDrawTypes.TLineSegment.$new();
-    Result.p.x = pt1.x;
-    Result.p.y = pt1.y;
-    Result.q.x = pt2.x;
-    Result.q.y = pt2.y;
-    return Result;
-  };
-  this.Angle = function (x, y) {
-    var Result = 0.0;
-    if (Math.abs(x) < 1e-5) {
-      if (Math.abs(y) < 1e-5) {
-        Result = 0.0;
-        return Result;
-      } else if (y > 0.0) {
-        Result = 3.1415 * 0.5;
-        return Result;
-      } else {
-        Result = 3.1415 * 1.5;
-        return Result;
-      }}
-     else if (x < 0.0) {
-      Result = Math.atan(y / x) + 3.1415;
-      return Result;
-    } else Result = Math.atan(y / x);
-    return Result;
-  };
-  this.ScalePt = function (p1, s) {
-    var Result = pas.Types.TPoint.$new();
-    Result.x = pas.System.Trunc(p1.x * s);
-    Result.y = pas.System.Trunc(p1.y * s);
-    return Result;
-  };
-  this.MinusPt = function (p1, p2) {
-    var Result = pas.Types.TPoint.$new();
-    Result.x = p1.x - p2.x;
-    Result.y = p1.y - p2.y;
-    return Result;
-  };
-},["uNetwork"]);
-rtl.module("uDrawReaction",["System","SysUtils","WEBLib.Graphics","Types","uNetwork"],function () {
-  "use strict";
-  var $mod = this;
-  var $impl = $mod.$impl;
-  this.drawReaction = function (canvas, scaleFactor, reaction) {
-    $impl.drawLine(canvas,scaleFactor,reaction);
-  };
-},["uDrawTypes","uGraphUtils"],function () {
-  "use strict";
-  var $mod = this;
-  var $impl = $mod.$impl;
-  $impl.segmentIntersects = function (v1, v2, v) {
-    var Result = false;
-    var xlk = 0;
-    var ylk = 0;
-    var xnm = 0;
-    var ynm = 0;
-    var xmk = 0;
-    var ymk = 0;
-    var det = 0;
-    var detinv = 0.0;
-    var s = 0.0;
-    var t = 0.0;
-    xlk = v2.q.x - v2.p.x;
-    ylk = v2.q.y - v2.p.y;
-    xnm = v1.p.x - v1.q.x;
-    ynm = v1.p.y - v1.q.y;
-    xmk = v1.q.x - v2.p.x;
-    ymk = v1.q.y - v2.p.y;
-    det = (xnm * ylk) - (ynm * xlk);
-    if (Math.abs(det) < 1e-6) {
-      Result = false}
-     else {
-      detinv = 1.0 / det;
-      s = ((xnm * ymk) - (ynm * xmk)) * detinv;
-      t = ((xlk * ymk) - (ylk * xmk)) * detinv;
-      if ((s < 0.0) || (s > 1.0) || (t < 0.0) || (t > 1.0)) {
-        Result = false}
-       else {
-        v.x = v2.p.x + pas.System.Trunc(xlk * s);
-        v.y = v2.p.y + pas.System.Trunc(ylk * s);
-        Result = true;
-      };
-    };
-    return Result;
-  };
-  $impl.computeLineIntersection = function (node, scalingFactor, pt, line) {
-    var Result = false;
-    var i = 0;
-    var OuterSegs = rtl.arraySetLength(null,pas.uDrawTypes.TLineSegment,4);
-    OuterSegs = pas.uDrawTypes.TBoundingBoxSegments$clone(node.getNodeBoundingBox());
-    for (i = 1; i <= 4; i++) {
-      OuterSegs[i - 1].p.$assign(pas.uGraphUtils.ScalePt(OuterSegs[i - 1].p,scalingFactor));
-      OuterSegs[i - 1].q.$assign(pas.uGraphUtils.ScalePt(OuterSegs[i - 1].q,scalingFactor));
-    };
-    Result = false;
-    for (i = 1; i <= 4; i++) if ($impl.segmentIntersects(pas.uDrawTypes.TLineSegment.$clone(OuterSegs[i - 1]),pas.uDrawTypes.TLineSegment.$clone(line),pt)) {
-      Result = true;
-      return Result;
-    };
-    return Result;
-  };
-  $impl.drawArrow = function (canvas, reaction, tip, dxdt, dydt) {
-    var dx = 0;
-    var dy = 0;
-    var alpha = 0.0;
-    var cosine = 0.0;
-    var sine = 0.0;
-    var pg = [];
-    var adX = 0.0;
-    var adY = 0.0;
-    var scalingFactor = 0.0;
-    var scale = 0.0;
-    var fpt = [];
-    var i = 0;
-    pg = rtl.arraySetLength(pg,pas.uDrawTypes.TPointF,4);
-    scale = 1;
-    scalingFactor = 1;
-    alpha = -pas.uGraphUtils.Angle(dxdt,dydt);
-    cosine = Math.cos(alpha);
-    sine = Math.sin(alpha);
-    adX = pas.System.Trunc(1 * scalingFactor) * Math.cos(-alpha);
-    adY = pas.System.Trunc(1 * scalingFactor) * Math.sin(-alpha);
-    tip.x = tip.x + pas.System.Trunc(adX);
-    tip.y = tip.y + pas.System.Trunc(adY);
-    pg[0].x = pas.System.Trunc((0 * scale * cosine) + (14 * scale * sine));
-    pg[0].y = pas.System.Trunc((-0 * scale * sine) + (14 * scale * cosine));
-    pg[1].x = pas.System.Trunc((3 * scale * cosine) + (7 * scale * sine));
-    pg[1].y = pas.System.Trunc((-3 * scale * sine) + (7 * scale * cosine));
-    pg[2].x = pas.System.Trunc((0 * scale * cosine) + (0 * scale * sine));
-    pg[2].y = pas.System.Trunc((-0 * scale * sine) + (0 * scale * cosine));
-    pg[3].x = pas.System.Trunc((9 * scale * cosine) + (7 * scale * sine));
-    pg[3].y = pas.System.Trunc((-9 * scale * sine) + (7 * scale * cosine));
-    dx = pas.System.Trunc(tip.x - pg[3].x) & 0xFFFFFFFF;
-    dy = pas.System.Trunc(tip.y - pg[3].y) & 0xFFFFFFFF;
-    pg[0].x = pg[0].x + dx;
-    pg[0].y = pg[0].y + dy;
-    pg[1].x = pg[1].x + dx;
-    pg[1].y = pg[1].y + dy;
-    pg[2].x = pg[2].x + dx;
-    pg[2].y = pg[2].y + dy;
-    pg[3].x = tip.x;
-    pg[3].y = tip.y;
-    fpt = rtl.arraySetLength(fpt,pas.Types.TPoint,4);
-    for (i = 0; i <= 3; i++) {
-      fpt[i].x = pas.System.Trunc(pg[i].x);
-      fpt[i].y = pas.System.Trunc(pg[i].y);
-    };
-    canvas.FPen.SetColor(reaction.fillColor);
-    canvas.FBrush.FColor = reaction.fillColor;
-    canvas.Polygon(fpt);
-  };
-  $impl.drawLine = function (canvas, scalingFactor, reaction) {
-    var startPt = pas.Types.TPoint.$new();
-    var endPt = pas.Types.TPoint.$new();
-    var alpha = 0.0;
-    var adX = 0.0;
-    var adY = 0.0;
-    var srcPtIntersect = pas.Types.TPoint.$new();
-    var destPtIntersect = pas.Types.TPoint.$new();
-    var pSrc = pas.Types.TPoint.$new();
-    var pDest = pas.Types.TPoint.$new();
-    pSrc.$assign(pas.uGraphUtils.ScalePt(reaction.src.getCenter(),scalingFactor));
-    pDest.$assign(pas.uGraphUtils.ScalePt(reaction.dest.getCenter(),scalingFactor));
-    $impl.computeLineIntersection(reaction.src,scalingFactor,srcPtIntersect,pas.uDrawTypes.TLineSegment.$clone(pas.uGraphUtils.Line(pas.Types.TPoint.$clone(pSrc),pas.Types.TPoint.$clone(pDest))));
-    $impl.computeLineIntersection(reaction.dest,scalingFactor,destPtIntersect,pas.uDrawTypes.TLineSegment.$clone(pas.uGraphUtils.Line(pas.Types.TPoint.$clone(pSrc),pas.Types.TPoint.$clone(pDest))));
-    startPt.$assign(srcPtIntersect);
-    endPt.$assign(destPtIntersect);
-    startPt.$assign(srcPtIntersect);
-    endPt.$assign(destPtIntersect);
-    alpha = pas.uGraphUtils.Angle(endPt.x - startPt.x,endPt.y - startPt.y);
-    adX = pas.System.Trunc(8 * scalingFactor) * Math.cos(alpha);
-    adY = pas.System.Trunc(8 * scalingFactor) * Math.sin(alpha);
-    adX = endPt.x - pas.System.Trunc(adX);
-    adY = endPt.y - pas.System.Trunc(adY);
-    canvas.FPen.SetColor(reaction.fillColor);
-    canvas.FPen.FWidth = reaction.thickness;
-    canvas.MoveTo(startPt.x,startPt.y);
-    canvas.LineTo$1(adX,adY);
-    $impl.drawArrow(canvas,reaction,pas.Types.TPoint.$clone(endPt),pDest.x - pSrc.x,pDest.y - pSrc.y);
-  };
-});
-rtl.module("uNetworkCanvas",["System","WEBLib.Graphics","Types","WEBLib.Dialogs","uNetwork","uDrawTypes"],function () {
+rtl.module("uNetworkCanvas",["System","WEBLib.Graphics","Types","WEBLib.Dialogs","uNetwork","uDrawTypes","uDrawReaction"],function () {
   "use strict";
   var $mod = this;
   rtl.createClass($mod,"TNetworkCanvas",pas.System.TObject,function () {
@@ -43424,10 +43916,12 @@ rtl.module("uNetworkCanvas",["System","WEBLib.Graphics","Types","WEBLib.Dialogs"
       pas.System.TObject.$init.call(this);
       this.network = null;
       this.canvas = null;
+      this.reactionRenderer = null;
     };
     this.$final = function () {
       this.network = undefined;
       this.canvas = undefined;
+      this.reactionRenderer = undefined;
       pas.System.TObject.$final.call(this);
     };
     this.getControlRects = function (x, y, w, h) {
@@ -43474,7 +43968,7 @@ rtl.module("uNetworkCanvas",["System","WEBLib.Graphics","Types","WEBLib.Dialogs"
             this.canvas.FPen.FWidth = pas.System.Trunc(2 * scalingFactor);
             this.canvas.FPen.SetColor(0);
           };
-          pas.uDrawReaction.drawReaction(this.canvas,scalingFactor,this.network.reactions[i]);
+          this.reactionRenderer.draw(scalingFactor,this.network.reactions[i]);
         };
       } finally {
         this.canvas.FPen.SetColor(0);
@@ -43496,17 +43990,17 @@ rtl.module("uNetworkCanvas",["System","WEBLib.Graphics","Types","WEBLib.Dialogs"
       try {
         for (var $l1 = 0, $end2 = rtl.length(this.network.nodes) - 1; $l1 <= $end2; $l1++) {
           i = $l1;
-          scaledX = pas.System.Trunc(this.network.nodes[i].x * scalingFactor);
-          scaledY = pas.System.Trunc(this.network.nodes[i].y * scalingFactor);
-          scaledW = pas.System.Trunc(this.network.nodes[i].w * scalingFactor);
-          scaledH = pas.System.Trunc(this.network.nodes[i].h * scalingFactor);
+          scaledX = pas.System.Trunc(this.network.nodes[i].state.x * scalingFactor);
+          scaledY = pas.System.Trunc(this.network.nodes[i].state.y * scalingFactor);
+          scaledW = pas.System.Trunc(this.network.nodes[i].state.w * scalingFactor);
+          scaledH = pas.System.Trunc(this.network.nodes[i].state.h * scalingFactor);
           if (this.network.nodes[i].selected) {
             this.canvas.FPen.SetColor(255);
             this.canvas.FPen.FWidth = 1;
             this.canvas.FBrush.FStyle = pas["WEBLib.Graphics"].TBrushStyle.bsClear;
             f = pas.System.Trunc(4 * scalingFactor);
-            sX = pas.System.Trunc(this.network.nodes[i].x * scalingFactor) - f;
-            sY = pas.System.Trunc(this.network.nodes[i].y * scalingFactor) - f;
+            sX = pas.System.Trunc(this.network.nodes[i].state.x * scalingFactor) - f;
+            sY = pas.System.Trunc(this.network.nodes[i].state.y * scalingFactor) - f;
             this.canvas.Rectangle$1(sX,sY,sX + scaledW + (2 * f),sY + scaledH + (2 * f));
             this.drawMouseGrabPoints(sX,sY,scaledW + (2 * f),scaledH + (2 * f));
           };
@@ -43515,15 +44009,15 @@ rtl.module("uNetworkCanvas",["System","WEBLib.Graphics","Types","WEBLib.Dialogs"
             this.canvas.FBrush.FStyle = pas["WEBLib.Graphics"].TBrushStyle.bsClear;
             this.canvas.FPen.FWidth = 1;
             this.canvas.FPen.FStyle = pas["WEBLib.Graphics"].TPenStyle.psDash;
-            this.canvas.RoundRect$1((this.network.nodes[i].x - 7) * scalingFactor,(this.network.nodes[i].y - 7) * scalingFactor,(this.network.nodes[i].x * scalingFactor) + ((this.network.nodes[i].w + 7) * scalingFactor),(this.network.nodes[i].y * scalingFactor) + ((this.network.nodes[i].h + 7) * scalingFactor),25,25);
+            this.canvas.RoundRect$1((this.network.nodes[i].state.x - 7) * scalingFactor,(this.network.nodes[i].state.y - 7) * scalingFactor,(this.network.nodes[i].state.x * scalingFactor) + ((this.network.nodes[i].state.w + 7) * scalingFactor),(this.network.nodes[i].state.y * scalingFactor) + ((this.network.nodes[i].state.h + 7) * scalingFactor),25,25);
             this.canvas.FPen.FStyle = pas["WEBLib.Graphics"].TPenStyle.psSolid;
-            this.canvas.FPen.SetColor(this.network.nodes[i].outlineColor);
+            this.canvas.FPen.SetColor(this.network.nodes[i].state.outlineColor);
           };
-          this.canvas.FPen.SetColor(this.network.nodes[i].outlineColor);
+          this.canvas.FPen.SetColor(this.network.nodes[i].state.outlineColor);
           this.canvas.FPen.FWidth = 3;
-          this.canvas.FBrush.FColor = this.network.nodes[i].fillColor;
+          this.canvas.FBrush.FColor = this.network.nodes[i].state.fillColor;
           this.canvas.FBrush.FStyle = pas["WEBLib.Graphics"].TBrushStyle.bsSolid;
-          this.canvas.RoundRect$1(this.network.nodes[i].x * scalingFactor,this.network.nodes[i].y * scalingFactor,(this.network.nodes[i].x * scalingFactor) + (this.network.nodes[i].w * scalingFactor),(this.network.nodes[i].y * scalingFactor) + (this.network.nodes[i].h * scalingFactor),25,25);
+          this.canvas.RoundRect$1(this.network.nodes[i].state.x * scalingFactor,this.network.nodes[i].state.y * scalingFactor,(this.network.nodes[i].state.x * scalingFactor) + (this.network.nodes[i].state.w * scalingFactor),(this.network.nodes[i].state.y * scalingFactor) + (this.network.nodes[i].state.h * scalingFactor),25,25);
         };
       } finally {
         this.canvas.FPen.FWidth = oldWidth;
@@ -43534,10 +44028,11 @@ rtl.module("uNetworkCanvas",["System","WEBLib.Graphics","Types","WEBLib.Dialogs"
     this.Create$1 = function (network, Canvas) {
       this.canvas = Canvas;
       this.network = network;
+      this.reactionRenderer = pas.uDrawReaction.TReactionRender.$create("Create$1",[Canvas]);
       return this;
     };
   });
-},["uDrawReaction"]);
+});
 rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics","WEBLib.Controls","Types","WEBLib.Forms","WEBLib.Dialogs","WEBLib.ExtCtrls","WEBLib.StdCtrls","uNetwork","WEBLib.Buttons","WEBLib.JQCtrls","uController","uNetworkCanvas","WEBLib.Menus","WEBLib.WebCtrls"],function () {
   "use strict";
   var $mod = this;
@@ -43559,7 +44054,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.WebLabel2 = null;
       this.btnIdle = null;
       this.btnAddNode = null;
-      this.btnAddReaction = null;
+      this.btnAddUniUniReaction = null;
       this.btnNodeFillColor = null;
       this.btnNodeOutlineColor = null;
       this.trackBarZoom = null;
@@ -43567,6 +44062,9 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.filePicker = null;
       this.btnNew = null;
       this.btnSave = null;
+      this.addUniBiReaction = null;
+      this.btnAddBiUni = null;
+      this.btnAddBiBi = null;
       this.network = null;
       this.selectedNode = 0;
       this.currentX = 0;
@@ -43588,7 +44086,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.WebLabel2 = undefined;
       this.btnIdle = undefined;
       this.btnAddNode = undefined;
-      this.btnAddReaction = undefined;
+      this.btnAddUniUniReaction = undefined;
       this.btnNodeFillColor = undefined;
       this.btnNodeOutlineColor = undefined;
       this.trackBarZoom = undefined;
@@ -43596,10 +44094,22 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.filePicker = undefined;
       this.btnNew = undefined;
       this.btnSave = undefined;
+      this.addUniBiReaction = undefined;
+      this.btnAddBiUni = undefined;
+      this.btnAddBiBi = undefined;
       this.network = undefined;
       this.controller = undefined;
       this.networkCanvas = undefined;
       pas["WEBLib.Forms"].TForm.$final.call(this);
+    };
+    this.addUniBiReactionClick = function (Sender) {
+      this.controller.setAddUniBiReaction();
+    };
+    this.btnAddBiBiClick = function (Sender) {
+      this.controller.setAddBiBiReaction();
+    };
+    this.btnAddBiUniClick = function (Sender) {
+      this.controller.setAddBiUniReaction();
     };
     this.mnuHelpClick = function (Sender) {
       pas["WEBLib.Dialogs"].ShowMessage("Version 0.1");
@@ -43607,8 +44117,8 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
     this.btnAddNodeClick = function (Sender) {
       this.controller.setAddNodeStatus();
     };
-    this.btnAddReactionClick = function (Sender) {
-      this.controller.setAddReactionStatus();
+    this.btnAddUniUniReactionClick = function (Sender) {
+      this.controller.setAddUniUniReaction();
     };
     this.btnClearClick = function (Sender) {
       this.network.clear();
@@ -43618,7 +44128,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.FScale = 1.0;
       this.trackBarZoom.SetLeft(20);
       this.trackBarZoom.SetPosition(10);
-      this.network = pas.uNetwork.TNetwork.$create("Create$1",["test"]);
+      this.network = pas.uNetwork.TNetwork.$create("Create$1",["testNetwork"]);
       this.controller = pas.uController.TController.$create("Create$1",[this.network]);
       this.networkCanvas = pas.uNetworkCanvas.TNetworkCanvas.$create("Create$1",[this.network,this.paintBox.GetCanvas()]);
       this.pnlLeft.SetColor(16775408);
@@ -43646,7 +44156,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       for (var $l1 = 0, $end2 = rtl.length(this.network.nodes) - 1; $l1 <= $end2; $l1++) {
         i = $l1;
         if (this.network.nodes[i].selected) {
-          this.network.nodes[i].fillColor = this.btnNodeFillColor.GetColor();
+          this.network.nodes[i].state.fillColor = this.btnNodeFillColor.GetColor();
           this.paintBox.Invalidate();
         };
       };
@@ -43656,7 +44166,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       for (var $l1 = 0, $end2 = rtl.length(this.network.nodes) - 1; $l1 <= $end2; $l1++) {
         i = $l1;
         if (this.network.nodes[i].selected) {
-          this.network.nodes[i].outlineColor = this.btnNodeOutlineColor.GetColor();
+          this.network.nodes[i].state.outlineColor = this.btnNodeOutlineColor.GetColor();
           this.paintBox.Invalidate();
         };
       };
@@ -43665,7 +44175,14 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.LoadFile();
     };
     this.filePickerGetFileAsText = function (Sender, AFileIndex, AText) {
-      this.controller.loadModel(AText);
+      try {
+        this.controller.loadModel(AText);
+      } catch ($e) {
+        if (pas.SysUtils.Exception.isPrototypeOf($e)) {
+          var E = $e;
+          pas["WEBLib.Dialogs"].ShowMessage(E.fMessage);
+        } else throw $e
+      };
       this.paintBox.Invalidate();
     };
     this.mnuOpenClick = function (Sender) {
@@ -43699,7 +44216,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
     this.paintBoxMouseDown = function (Sender, Button, Shift, X, Y) {
       X = this.ScreenToWorld(X);
       Y = this.ScreenToWorld(Y);
-      this.controller.OnMouseDown(Button,rtl.refSet(Shift),X,Y);
+      this.controller.OnMouseDown(Sender,Button,rtl.refSet(Shift),X,Y);
       this.paintBox.Invalidate();
     };
     this.paintBoxMouseMove = function (Sender, Shift, X, Y) {
@@ -43747,13 +44264,16 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.WebLabel2 = pas["WEBLib.StdCtrls"].TLabel.$create("Create$1",[this]);
       this.btnIdle = pas["WEBLib.Buttons"].TSpeedButton.$create("Create$1",[this]);
       this.btnAddNode = pas["WEBLib.Buttons"].TSpeedButton.$create("Create$1",[this]);
-      this.btnAddReaction = pas["WEBLib.Buttons"].TSpeedButton.$create("Create$1",[this]);
+      this.btnAddUniUniReaction = pas["WEBLib.Buttons"].TSpeedButton.$create("Create$1",[this]);
       this.btnNodeFillColor = pas["WEBLib.StdCtrls"].TColorPicker.$create("Create$1",[this]);
       this.btnNodeOutlineColor = pas["WEBLib.StdCtrls"].TColorPicker.$create("Create$1",[this]);
       this.trackBarZoom = pas["WEBLib.ExtCtrls"].TTrackBar.$create("Create$1",[this]);
       this.filePicker = pas["WEBLib.WebCtrls"].TFilePicker.$create("Create$1",[this]);
       this.btnNew = pas["WEBLib.StdCtrls"].TButton.$create("Create$1",[this]);
       this.btnSave = pas["WEBLib.StdCtrls"].TButton.$create("Create$1",[this]);
+      this.addUniBiReaction = pas["WEBLib.Buttons"].TSpeedButton.$create("Create$1",[this]);
+      this.btnAddBiUni = pas["WEBLib.Buttons"].TSpeedButton.$create("Create$1",[this]);
+      this.btnAddBiBi = pas["WEBLib.Buttons"].TSpeedButton.$create("Create$1",[this]);
       this.paintBox = pas["WEBLib.ExtCtrls"].TPaintBox.$create("Create$1",[this]);
       this.pnlBottom.BeforeLoadDFMValues();
       this.lblX.BeforeLoadDFMValues();
@@ -43767,19 +44287,22 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
       this.WebLabel2.BeforeLoadDFMValues();
       this.btnIdle.BeforeLoadDFMValues();
       this.btnAddNode.BeforeLoadDFMValues();
-      this.btnAddReaction.BeforeLoadDFMValues();
+      this.btnAddUniUniReaction.BeforeLoadDFMValues();
       this.btnNodeFillColor.BeforeLoadDFMValues();
       this.btnNodeOutlineColor.BeforeLoadDFMValues();
       this.trackBarZoom.BeforeLoadDFMValues();
       this.filePicker.BeforeLoadDFMValues();
       this.btnNew.BeforeLoadDFMValues();
       this.btnSave.BeforeLoadDFMValues();
+      this.addUniBiReaction.BeforeLoadDFMValues();
+      this.btnAddBiUni.BeforeLoadDFMValues();
+      this.btnAddBiBi.BeforeLoadDFMValues();
       this.paintBox.BeforeLoadDFMValues();
       try {
         this.SetName("frmMain");
         this.SetLeft(0);
         this.SetTop(0);
-        this.SetWidth(843);
+        this.SetWidth(911);
         this.SetHeight(815);
         this.FFont.FCharset = 1;
         this.FFont.SetColor(65793);
@@ -43792,7 +44315,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.pnlBottom.SetName("pnlBottom");
         this.pnlBottom.SetLeft(0);
         this.pnlBottom.SetTop(732);
-        this.pnlBottom.SetWidth(843);
+        this.pnlBottom.SetWidth(911);
         this.pnlBottom.SetHeight(83);
         this.pnlBottom.SetAlign(pas["WEBLib.Controls"].TAlign.alBottom);
         this.pnlBottom.SetBorderColor(12632256);
@@ -43839,7 +44362,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.centralPanel.SetName("centralPanel");
         this.centralPanel.SetLeft(0);
         this.centralPanel.SetTop(0);
-        this.centralPanel.SetWidth(843);
+        this.centralPanel.SetWidth(911);
         this.centralPanel.SetHeight(732);
         this.centralPanel.SetAlign(pas["WEBLib.Controls"].TAlign.alClient);
         this.centralPanel.SetBorderColor(12632256);
@@ -43858,21 +44381,21 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.pnlLeft.SetChildOrderEx(2);
         this.WebLabel1.SetParentComponent(this.pnlLeft);
         this.WebLabel1.SetName("WebLabel1");
-        this.WebLabel1.SetLeft(13);
-        this.WebLabel1.SetTop(232);
+        this.WebLabel1.SetLeft(73);
+        this.WebLabel1.SetTop(493);
         this.WebLabel1.SetWidth(33);
         this.WebLabel1.SetHeight(14);
         this.WebLabel1.SetCaption("Outline");
         this.WebLabel2.SetParentComponent(this.pnlLeft);
         this.WebLabel2.SetName("WebLabel2");
-        this.WebLabel2.SetLeft(13);
-        this.WebLabel2.SetTop(285);
+        this.WebLabel2.SetLeft(14);
+        this.WebLabel2.SetTop(493);
         this.WebLabel2.SetWidth(12);
         this.WebLabel2.SetHeight(14);
         this.WebLabel2.SetCaption("Fill");
         this.btnIdle.SetParentComponent(this.pnlLeft);
         this.btnIdle.SetName("btnIdle");
-        this.btnIdle.SetLeft(12);
+        this.btnIdle.SetLeft(14);
         this.btnIdle.SetTop(107);
         this.btnIdle.SetWidth(52);
         this.btnIdle.SetHeight(54);
@@ -43882,28 +44405,29 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.SetEvent(this.btnIdle,this,"OnClick","btnIdleClick");
         this.btnAddNode.SetParentComponent(this.pnlLeft);
         this.btnAddNode.SetName("btnAddNode");
-        this.btnAddNode.SetLeft(12);
-        this.btnAddNode.SetTop(170);
+        this.btnAddNode.SetLeft(14);
+        this.btnAddNode.SetTop(179);
         this.btnAddNode.SetWidth(52);
         this.btnAddNode.SetHeight(54);
         this.btnAddNode.SetHint("Add Node");
         this.btnAddNode.SetMaterialGlyph("brightness_1");
         this.btnAddNode.SetShowHint(true);
         this.SetEvent(this.btnAddNode,this,"OnClick","btnAddNodeClick");
-        this.btnAddReaction.SetParentComponent(this.pnlLeft);
-        this.btnAddReaction.SetName("btnAddReaction");
-        this.btnAddReaction.SetLeft(73);
-        this.btnAddReaction.SetTop(170);
-        this.btnAddReaction.SetWidth(52);
-        this.btnAddReaction.SetHeight(54);
-        this.btnAddReaction.SetHint("Add Reaction");
-        this.btnAddReaction.SetMaterialGlyph("trending_up");
-        this.btnAddReaction.SetShowHint(true);
-        this.SetEvent(this.btnAddReaction,this,"OnClick","btnAddReactionClick");
+        this.btnAddUniUniReaction.SetParentComponent(this.pnlLeft);
+        this.btnAddUniUniReaction.SetName("btnAddUniUniReaction");
+        this.btnAddUniUniReaction.SetLeft(14);
+        this.btnAddUniUniReaction.SetTop(239);
+        this.btnAddUniUniReaction.SetWidth(52);
+        this.btnAddUniUniReaction.SetHeight(54);
+        this.btnAddUniUniReaction.SetHint("Add UniUni Reaction");
+        this.btnAddUniUniReaction.SetCaption("Uni-Uni");
+        this.btnAddUniUniReaction.FLayout = pas["WEBLib.Buttons"].TButtonLayout.blGlyphRight;
+        this.btnAddUniUniReaction.SetShowHint(true);
+        this.SetEvent(this.btnAddUniUniReaction,this,"OnClick","btnAddUniUniReactionClick");
         this.btnNodeFillColor.SetParentComponent(this.pnlLeft);
         this.btnNodeFillColor.SetName("btnNodeFillColor");
-        this.btnNodeFillColor.SetLeft(13);
-        this.btnNodeFillColor.SetTop(305);
+        this.btnNodeFillColor.SetLeft(14);
+        this.btnNodeFillColor.SetTop(513);
         this.btnNodeFillColor.SetWidth(52);
         this.btnNodeFillColor.SetHeight(29);
         this.btnNodeFillColor.SetChildOrderEx(3);
@@ -43912,8 +44436,8 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.SetEvent(this.btnNodeFillColor,this,"OnSelect","btnNodeFillColorSelect");
         this.btnNodeOutlineColor.SetParentComponent(this.pnlLeft);
         this.btnNodeOutlineColor.SetName("btnNodeOutlineColor");
-        this.btnNodeOutlineColor.SetLeft(12);
-        this.btnNodeOutlineColor.SetTop(252);
+        this.btnNodeOutlineColor.SetLeft(72);
+        this.btnNodeOutlineColor.SetTop(513);
         this.btnNodeOutlineColor.SetWidth(52);
         this.btnNodeOutlineColor.SetHeight(28);
         this.btnNodeOutlineColor.SetChildOrderEx(3);
@@ -43922,8 +44446,8 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.SetEvent(this.btnNodeOutlineColor,this,"OnSelect","btnNodeOutlineColorClick");
         this.trackBarZoom.SetParentComponent(this.pnlLeft);
         this.trackBarZoom.SetName("trackBarZoom");
-        this.trackBarZoom.SetLeft(23);
-        this.trackBarZoom.SetTop(405);
+        this.trackBarZoom.SetLeft(20);
+        this.trackBarZoom.SetTop(569);
         this.trackBarZoom.SetWidth(20);
         this.trackBarZoom.SetHeight(134);
         this.trackBarZoom.SetChildOrderEx(6);
@@ -43935,9 +44459,9 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.SetEvent(this.trackBarZoom,this,"OnChange","trackBarZoomChange");
         this.filePicker.SetParentComponent(this.pnlLeft);
         this.filePicker.SetName("filePicker");
-        this.filePicker.SetLeft(8);
-        this.filePicker.SetTop(63);
-        this.filePicker.SetWidth(121);
+        this.filePicker.SetLeft(14);
+        this.filePicker.SetTop(57);
+        this.filePicker.SetWidth(77);
         this.filePicker.SetHeight(19);
         this.filePicker.SetChildOrderEx(5);
         this.SetEvent(this.filePicker,this,"OnChange","filePickerChange");
@@ -43960,11 +44484,44 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.btnSave.SetCaption("Save");
         this.btnSave.SetChildOrderEx(9);
         this.SetEvent(this.btnSave,this,"OnClick","mnuSaveClick");
+        this.addUniBiReaction.SetParentComponent(this.pnlLeft);
+        this.addUniBiReaction.SetName("addUniBiReaction");
+        this.addUniBiReaction.SetLeft(14);
+        this.addUniBiReaction.SetTop(299);
+        this.addUniBiReaction.SetWidth(52);
+        this.addUniBiReaction.SetHeight(54);
+        this.addUniBiReaction.SetHint("Add Uni-Bi Reaction");
+        this.addUniBiReaction.SetCaption("Uni-Bi");
+        this.addUniBiReaction.FLayout = pas["WEBLib.Buttons"].TButtonLayout.blGlyphRight;
+        this.addUniBiReaction.SetShowHint(true);
+        this.SetEvent(this.addUniBiReaction,this,"OnClick","addUniBiReactionClick");
+        this.btnAddBiUni.SetParentComponent(this.pnlLeft);
+        this.btnAddBiUni.SetName("btnAddBiUni");
+        this.btnAddBiUni.SetLeft(14);
+        this.btnAddBiUni.SetTop(359);
+        this.btnAddBiUni.SetWidth(52);
+        this.btnAddBiUni.SetHeight(54);
+        this.btnAddBiUni.SetHint("Add Bi-Uni Reaction");
+        this.btnAddBiUni.SetCaption("Bi-Uni");
+        this.btnAddBiUni.FLayout = pas["WEBLib.Buttons"].TButtonLayout.blGlyphRight;
+        this.btnAddBiUni.SetShowHint(true);
+        this.SetEvent(this.btnAddBiUni,this,"OnClick","btnAddBiUniClick");
+        this.btnAddBiBi.SetParentComponent(this.pnlLeft);
+        this.btnAddBiBi.SetName("btnAddBiBi");
+        this.btnAddBiBi.SetLeft(14);
+        this.btnAddBiBi.SetTop(421);
+        this.btnAddBiBi.SetWidth(52);
+        this.btnAddBiBi.SetHeight(54);
+        this.btnAddBiBi.SetHint("Add Bi-Bi Reaction");
+        this.btnAddBiBi.SetCaption("Bi-Bi");
+        this.btnAddBiBi.FLayout = pas["WEBLib.Buttons"].TButtonLayout.blGlyphRight;
+        this.btnAddBiBi.SetShowHint(true);
+        this.SetEvent(this.btnAddBiBi,this,"OnClick","btnAddBiBiClick");
         this.paintBox.SetParentComponent(this.centralPanel);
         this.paintBox.SetName("paintBox");
         this.paintBox.SetLeft(135);
         this.paintBox.SetTop(0);
-        this.paintBox.SetWidth(708);
+        this.paintBox.SetWidth(776);
         this.paintBox.SetHeight(732);
         this.paintBox.SetAlign(pas["WEBLib.Controls"].TAlign.alClient);
         this.paintBox.SetChildOrderEx(2);
@@ -43986,13 +44543,16 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
         this.WebLabel2.AfterLoadDFMValues();
         this.btnIdle.AfterLoadDFMValues();
         this.btnAddNode.AfterLoadDFMValues();
-        this.btnAddReaction.AfterLoadDFMValues();
+        this.btnAddUniUniReaction.AfterLoadDFMValues();
         this.btnNodeFillColor.AfterLoadDFMValues();
         this.btnNodeOutlineColor.AfterLoadDFMValues();
         this.trackBarZoom.AfterLoadDFMValues();
         this.filePicker.AfterLoadDFMValues();
         this.btnNew.AfterLoadDFMValues();
         this.btnSave.AfterLoadDFMValues();
+        this.addUniBiReaction.AfterLoadDFMValues();
+        this.btnAddBiUni.AfterLoadDFMValues();
+        this.btnAddBiBi.AfterLoadDFMValues();
         this.paintBox.AfterLoadDFMValues();
       };
     };
@@ -44020,7 +44580,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
     $r.addField("WebLabel2",pas["WEBLib.StdCtrls"].$rtti["TLabel"]);
     $r.addField("btnIdle",pas["WEBLib.Buttons"].$rtti["TSpeedButton"]);
     $r.addField("btnAddNode",pas["WEBLib.Buttons"].$rtti["TSpeedButton"]);
-    $r.addField("btnAddReaction",pas["WEBLib.Buttons"].$rtti["TSpeedButton"]);
+    $r.addField("btnAddUniUniReaction",pas["WEBLib.Buttons"].$rtti["TSpeedButton"]);
     $r.addField("btnNodeFillColor",pas["WEBLib.StdCtrls"].$rtti["TColorPicker"]);
     $r.addField("btnNodeOutlineColor",pas["WEBLib.StdCtrls"].$rtti["TColorPicker"]);
     $r.addField("trackBarZoom",pas["WEBLib.ExtCtrls"].$rtti["TTrackBar"]);
@@ -44028,9 +44588,15 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
     $r.addField("filePicker",pas["WEBLib.WebCtrls"].$rtti["TFilePicker"]);
     $r.addField("btnNew",pas["WEBLib.StdCtrls"].$rtti["TButton"]);
     $r.addField("btnSave",pas["WEBLib.StdCtrls"].$rtti["TButton"]);
+    $r.addField("addUniBiReaction",pas["WEBLib.Buttons"].$rtti["TSpeedButton"]);
+    $r.addField("btnAddBiUni",pas["WEBLib.Buttons"].$rtti["TSpeedButton"]);
+    $r.addField("btnAddBiBi",pas["WEBLib.Buttons"].$rtti["TSpeedButton"]);
+    $r.addMethod("addUniBiReactionClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
+    $r.addMethod("btnAddBiBiClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
+    $r.addMethod("btnAddBiUniClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("mnuHelpClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnAddNodeClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
-    $r.addMethod("btnAddReactionClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
+    $r.addMethod("btnAddUniUniReactionClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnClearClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("WebFormCreate",0,[["Sender",pas.System.$rtti["TObject"]]]);
     $r.addMethod("btnDrawClick",0,[["Sender",pas.System.$rtti["TObject"]]]);
@@ -44052,7 +44618,7 @@ rtl.module("ufMain",["System","SysUtils","Classes","JS","Web","WEBLib.Graphics",
   });
   this.frmMain = null;
 },["uGraphUtils"]);
-rtl.module("program",["System","WEBLib.Forms","ufMain","uNetwork","uGraphUtils","uDrawTypes","uNetworkCanvas","uController","uDrawReaction"],function () {
+rtl.module("program",["System","WEBLib.Forms","ufMain","uNetwork","uGraphUtils","uDrawTypes","uNetworkCanvas","uController","uDrawReaction","uNetworkTypes"],function () {
   "use strict";
   var $mod = this;
   $mod.$main = function () {
