@@ -391,6 +391,15 @@ var rtl = {
     return null;
   },
 
+  hideProp: function(o,p,v){
+    Object.defineProperty(o,p, {
+      enumerable: false,
+      configurable: true,
+      writable: true
+    });
+    if(arguments.length>2){ o[p]=v; }
+  },
+
   recNewT: function(parent,name,initfn,full){
     // create new record type
     var t = {};
@@ -814,10 +823,20 @@ var rtl = {
     return (arr == null) ? 0 : arr.length;
   },
 
+  arrayRef: function(a){
+    if (a!=null) rtl.hideProp(a,'$pas2jsrefcnt',1);
+    return a;
+  },
+
   arraySetLength: function(arr,defaultvalue,newlength){
     var stack = [];
+    var s = 9999;
     for (var i=2; i<arguments.length; i++){
-      stack.push({ dim:arguments[i]+0, a:null, i:0, src:null });
+      var j = arguments[i];
+      if (j==='s'){ s = i-2; }
+      else {
+        stack.push({ dim:j+0, a:null, i:0, src:null });
+      }
     }
     var dimmax = stack.length-1;
     var depth = 0;
@@ -825,13 +844,28 @@ var rtl = {
     var item = null;
     var a = null;
     var src = arr;
-    var oldlen = 0
+    var srclen = 0, oldlen = 0;
     do{
-      a = [];
       if (depth>0){
         item=stack[depth-1];
-        item.a[item.i]=a;
         src = (item.src && item.src.length>item.i)?item.src[item.i]:null;
+      }
+      if (!src){
+        a = [];
+        srclen = 0;
+        oldlen = 0;
+      } else if (src.$pas2jsrefcnt>0 || depth>=s){
+        a = [];
+        srclen = src.length;
+        oldlen = srclen;
+      } else {
+        a = src;
+        srclen = 0;
+        oldlen = a.length;
+      }
+      a.length = stack[depth].dim;
+      if (depth>0){
+        item.a[item.i]=a;
         item.i++;
       }
       if (depth<dimmax){
@@ -841,20 +875,23 @@ var rtl = {
         item.src = src;
         depth++;
       } else {
-        oldlen = src?src.length:0;
         if (rtl.isArray(defaultvalue)){
-          for (var i=0; i<lastlen; i++) a[i]=(i<oldlen)?src[i]:[]; // array of dyn array
+          // array of dyn array
+          for (var i=0; i<srclen; i++) a[i]=src[i];
+          for (var i=oldlen; i<lastlen; i++) a[i]=[];
         } else if (rtl.isObject(defaultvalue)) {
           if (rtl.isTRecord(defaultvalue)){
-            for (var i=0; i<lastlen; i++){
-              a[i]=(i<oldlen)?defaultvalue.$clone(src[i]):defaultvalue.$new(); // e.g. record
-            }
+            // array of record
+            for (var i=0; i<srclen; i++) a[i]=defaultvalue.$clone(src[i]);
+            for (var i=oldlen; i<lastlen; i++) a[i]=defaultvalue.$new();
           } else {
-            for (var i=0; i<lastlen; i++) a[i]=(i<oldlen)?rtl.refSet(src[i]):{}; // e.g. set
+            // array of set
+            for (var i=0; i<srclen; i++) a[i]=rtl.refSet(src[i]);
+            for (var i=oldlen; i<lastlen; i++) a[i]={};
           }
         } else {
-          for (var i=0; i<lastlen; i++)
-            a[i]=(i<oldlen)?src[i]:defaultvalue;
+          for (var i=0; i<srclen; i++) a[i]=src[i];
+          for (var i=oldlen; i<lastlen; i++) a[i]=defaultvalue;
         }
         while ((depth>0) && (stack[depth-1].i>=stack[depth-1].dim)){
           depth--;
@@ -866,40 +903,6 @@ var rtl = {
       }
     }while (true);
   },
-
-  /*arrayChgLength: function(arr,defaultvalue,newlength){
-    // multi dim: (arr,defaultvalue,dim1,dim2,...)
-    if (arr == null) arr = [];
-    var p = arguments;
-    function setLength(a,argNo){
-      var oldlen = a.length;
-      var newlen = p[argNo];
-      if (oldlen!==newlength){
-        a.length = newlength;
-        if (argNo === p.length-1){
-          if (rtl.isArray(defaultvalue)){
-            for (var i=oldlen; i<newlen; i++) a[i]=[]; // nested array
-          } else if (rtl.isObject(defaultvalue)) {
-            if (rtl.isTRecord(defaultvalue)){
-              for (var i=oldlen; i<newlen; i++) a[i]=defaultvalue.$new(); // e.g. record
-            } else {
-              for (var i=oldlen; i<newlen; i++) a[i]={}; // e.g. set
-            }
-          } else {
-            for (var i=oldlen; i<newlen; i++) a[i]=defaultvalue;
-          }
-        } else {
-          for (var i=oldlen; i<newlen; i++) a[i]=[]; // nested array
-        }
-      }
-      if (argNo < p.length-1){
-        // multi argNo
-        for (var i=0; i<newlen; i++) a[i]=setLength(a[i],argNo+1);
-      }
-      return a;
-    }
-    return setLength(arr,2);
-  },*/
 
   arrayEq: function(a,b){
     if (a===null) return b===null;
@@ -1479,6 +1482,9 @@ rtl.module("System",[],function () {
     $r.addField("Time",rtl.longint);
     $r.addField("Date",rtl.longint);
   });
+  this.TCompareOption = {"0": "coIgnoreCase", coIgnoreCase: 0};
+  $mod.$rtti.$Enum("TCompareOption",{minvalue: 0, maxvalue: 0, ordtype: 1, enumtype: this.TCompareOption});
+  $mod.$rtti.$Set("TCompareOptions",{comptype: $mod.$rtti["TCompareOption"]});
   rtl.recNewT($mod,"TGuid",function () {
     this.D1 = 0;
     this.D2 = 0;
@@ -1932,6 +1938,17 @@ rtl.module("System",[],function () {
   this.upcase = function (c) {
     return c.toUpperCase();
   };
+  this.binstr = function (val, cnt) {
+    var Result = "";
+    var i = 0;
+    Result = rtl.strSetLength(Result,cnt);
+    for (var $l1 = cnt; $l1 >= 1; $l1--) {
+      i = $l1;
+      Result = rtl.setCharAt(Result,i - 1,String.fromCharCode(48 + (val & 1)));
+      val = Math.floor(val / 2);
+    };
+    return Result;
+  };
   this.val = function (S, NI, Code) {
     NI.set($impl.valint(S,-4503599627370496,4503599627370495,Code));
   };
@@ -2135,6 +2152,7 @@ rtl.module("RTLConsts",["System"],function () {
   this.SParserLocInfo = " (at %d,%d, stream offset %.8x)";
   this.SParserUnterminatedBinValue = "Unterminated byte value";
   this.SParserInvalidProperty = "Invalid property";
+  this.SRangeError = "Range error";
 });
 rtl.module("Types",["System"],function () {
   "use strict";
@@ -2545,7 +2563,7 @@ rtl.module("JS",["System","Types"],function () {
             a.push(obj[i]);
           }
         };
-    Result = a;
+    Result = rtl.arrayRef(a);
     return Result;
   };
 });
@@ -3413,8 +3431,8 @@ rtl.module("SysUtils",["System","RTLConsts","JS"],function () {
     while (Result.length < Digits) Result = "0" + Result;
     return Result;
   };
-  this.MaxCurrency = 450359962737.0495;
-  this.MinCurrency = -450359962737.0496;
+  this.MaxCurrency = 900719925474.0991;
+  this.MinCurrency = -900719925474.0991;
   this.TFloatFormat = {"0": "ffFixed", ffFixed: 0, "1": "ffGeneral", ffGeneral: 1, "2": "ffExponent", ffExponent: 2, "3": "ffNumber", ffNumber: 3, "4": "ffCurrency", ffCurrency: 4};
   $mod.$rtti.$Enum("TFloatFormat",{minvalue: 0, maxvalue: 4, ordtype: 1, enumtype: this.TFloatFormat});
   var Rounds = "123456789:";
@@ -3849,6 +3867,16 @@ rtl.module("SysUtils",["System","RTLConsts","JS"],function () {
     };
     return Result;
   };
+  this.SwapEndian = function (W) {
+    var Result = 0;
+    Result = ((W & 0xFF) << 8) | ((W >>> 8) & 0xFF);
+    return Result;
+  };
+  this.SwapEndian$1 = function (C) {
+    var Result = 0;
+    Result = rtl.lw(rtl.lw(rtl.lw(rtl.lw((C & 0xFF) << 24) | rtl.lw((C & 0xFF00) << 8)) | (rtl.lw(C >>> 8) & 0xFF00)) | (rtl.lw(C >>> 24) & 0xFF));
+    return Result;
+  };
   this.TrueBoolStrs = [];
   this.FalseBoolStrs = [];
   this.StrToBool = function (S) {
@@ -4078,12 +4106,12 @@ rtl.module("SysUtils",["System","RTLConsts","JS"],function () {
     };
     this.GetLongDayNames = function () {
       var Result = rtl.arraySetLength(null,"",7);
-      Result = $mod.LongDayNames.slice(0);
+      Result = $mod.LongDayNames;
       return Result;
     };
     this.GetLongMonthNames = function () {
       var Result = rtl.arraySetLength(null,"",12);
-      Result = $mod.LongMonthNames.slice(0);
+      Result = $mod.LongMonthNames;
       return Result;
     };
     this.GetLongTimeFormat = function () {
@@ -4103,12 +4131,12 @@ rtl.module("SysUtils",["System","RTLConsts","JS"],function () {
     };
     this.GetShortDayNames = function () {
       var Result = rtl.arraySetLength(null,"",7);
-      Result = $mod.ShortDayNames.slice(0);
+      Result = $mod.ShortDayNames;
       return Result;
     };
     this.GetShortMonthNames = function () {
       var Result = rtl.arraySetLength(null,"",12);
-      Result = $mod.ShortMonthNames.slice(0);
+      Result = $mod.ShortMonthNames;
       return Result;
     };
     this.GetShortTimeFormat = function () {
@@ -5349,6 +5377,2267 @@ rtl.module("SysUtils",["System","RTLConsts","JS"],function () {
     };
     return Result;
   };
+  this.EncodeHTMLEntities = function (S) {
+    var Result = "";
+    Result = "";
+    if (S === "") return Result;
+    return S.replace(/[\u00A0-\u9999<>\&]/gim, function(i) {
+      return '&#'+i.charCodeAt(0)+';';
+    });
+    return Result;
+  };
+  $mod.$rtti.$DynArray("TCharArray",{eltype: rtl.char});
+  $mod.$rtti.$Int("TByteBitIndex",{minvalue: 0, maxvalue: 7, ordtype: 1});
+  $mod.$rtti.$Int("TShortIntBitIndex",{minvalue: 0, maxvalue: 7, ordtype: 1});
+  $mod.$rtti.$Int("TWordBitIndex",{minvalue: 0, maxvalue: 15, ordtype: 1});
+  $mod.$rtti.$Int("TSmallIntBitIndex",{minvalue: 0, maxvalue: 15, ordtype: 1});
+  $mod.$rtti.$Int("TCardinalBitIndex",{minvalue: 0, maxvalue: 31, ordtype: 1});
+  $mod.$rtti.$Int("TIntegerBitIndex",{minvalue: 0, maxvalue: 31, ordtype: 1});
+  $mod.$rtti.$Int("TQwordBitIndex",{minvalue: 0, maxvalue: 52, ordtype: 1});
+  $mod.$rtti.$Int("TInt64BitIndex",{minvalue: 0, maxvalue: 52, ordtype: 1});
+  $mod.$rtti.$Int("TNativeIntBitIndex",{minvalue: 0, maxvalue: 52, ordtype: 1});
+  $mod.$rtti.$Int("TNativeUIntBitIndex",{minvalue: 0, maxvalue: 52, ordtype: 1});
+  this.CPUEndian = $mod.TEndian.Big;
+  rtl.createHelper($mod,"TGuidHelper",null,function () {
+    this.Create = function (Src, BigEndian) {
+      var Result = pas.System.TGuid.$new();
+      Result.$assign(Src);
+      if (!BigEndian) {
+        Result.D1 = $mod.SwapEndian$1(Result.D1);
+        Result.D2 = $mod.SwapEndian(Result.D2);
+        Result.D3 = $mod.SwapEndian(Result.D3);
+      };
+      return Result;
+    };
+    this.Create$1 = function (Buf, AStartIndex, BigEndian) {
+      var Result = pas.System.TGuid.$new();
+      var A = 0;
+      var B = 0;
+      var C = 0;
+      var V = null;
+      V = new DataView(Buf);
+      if (BigEndian) {
+        A = V.getUint32(AStartIndex);
+        B = V.getUint16(AStartIndex + 4);
+        C = V.getUint16(AStartIndex + 6);
+      } else {
+        A = $mod.SwapEndian$1(V.getUint32(AStartIndex));
+        B = $mod.SwapEndian(V.getUint16(AStartIndex + 4));
+        C = $mod.SwapEndian(V.getUint16(AStartIndex + 6));
+      };
+      Result.$assign($mod.TGuidHelper.Create$7(A,B,C,V.getUint8(AStartIndex + 8),V.getUint8(AStartIndex + 9),V.getUint8(AStartIndex + 10),V.getUint8(AStartIndex + 11),V.getUint8(AStartIndex + 12),V.getUint8(AStartIndex + 13),V.getUint8(AStartIndex + 14),V.getUint8(AStartIndex + 15)));
+      return Result;
+    };
+    this.Create$2 = function (Data, AStartIndex, BigEndian) {
+      var Result = pas.System.TGuid.$new();
+      var D = null;
+      if ((rtl.length(Data) - AStartIndex) < 16) throw $mod.EArgumentException.$create("CreateFmt",["The length of a GUID array must be at least %d",[]]);
+      D = Uint8Array.from(Data);
+      Result.$assign($mod.TGuidHelper.Create$1(D.buffer,AStartIndex,BigEndian));
+      return Result;
+    };
+    this.Create$3 = function (B, DataEndian) {
+      var Result = pas.System.TGuid.$new();
+      Result.$assign($mod.TGuidHelper.Create$4(B,0,DataEndian));
+      return Result;
+    };
+    this.Create$4 = function (B, AStartIndex, DataEndian) {
+      var Result = pas.System.TGuid.$new();
+      if ((rtl.length(B) - AStartIndex) < 16) throw $mod.EArgumentException.$create("CreateFmt",["The length of a GUID array must be at least %d",[]]);
+      Result.$assign($mod.TGuidHelper.Create$2(B,AStartIndex,DataEndian === $mod.TEndian.Big));
+      return Result;
+    };
+    this.Create$5 = function (S) {
+      var Result = pas.System.TGuid.$new();
+      Result.$assign($mod.StringToGUID(S));
+      return Result;
+    };
+    this.Create$6 = function (A, B, C, D) {
+      var Result = pas.System.TGuid.$new();
+      if (rtl.length(D) !== 8) throw $mod.EArgumentException.$create("CreateFmt",["The length of a GUID array must be %d",[]]);
+      Result.$assign($mod.TGuidHelper.Create$7(A >>> 0,B & 65535,C & 65535,D[0],D[1],D[2],D[3],D[4],D[5],D[6],D[7]));
+      return Result;
+    };
+    this.Create$7 = function (A, B, C, D, E, F, G, H, I, J, K) {
+      var Result = pas.System.TGuid.$new();
+      Result.D1 = A;
+      Result.D2 = B;
+      Result.D3 = C;
+      Result.D4[0] = D;
+      Result.D4[1] = E;
+      Result.D4[2] = F;
+      Result.D4[3] = G;
+      Result.D4[4] = H;
+      Result.D4[5] = I;
+      Result.D4[6] = J;
+      Result.D4[7] = K;
+      return Result;
+    };
+    this.NewGuid = function () {
+      var Result = pas.System.TGuid.$new();
+      $mod.CreateGUID(Result);
+      return Result;
+    };
+    this.ToByteArray = function (DataEndian) {
+      var Result = [];
+      var D = null;
+      var V = null;
+      var I = 0;
+      D = new Uint8Array(16);
+      V = new DataView(D.buffer);
+      V.setUint32(0,this.D1,DataEndian === $mod.TEndian.Little);
+      V.setUint16(4,this.D2,DataEndian === $mod.TEndian.Little);
+      V.setUint16(6,this.D3,DataEndian === $mod.TEndian.Little);
+      for (I = 0; I <= 7; I++) V.setUint8(8 + I,this.D4[I]);
+      Result = rtl.arraySetLength(Result,0,16);
+      for (I = 0; I <= 15; I++) Result[I] = V.getUint8(I);
+      return Result;
+    };
+    this.ToString = function (SkipBrackets) {
+      var Result = "";
+      Result = $mod.GUIDToString(this);
+      if (SkipBrackets) Result = pas.System.Copy(Result,2,Result.length - 2);
+      return Result;
+    };
+  });
+  this.TStringSplitOptions = {"0": "None", None: 0, "1": "ExcludeEmpty", ExcludeEmpty: 1};
+  $mod.$rtti.$Enum("TStringSplitOptions",{minvalue: 0, maxvalue: 1, ordtype: 1, enumtype: this.TStringSplitOptions});
+  rtl.createHelper($mod,"TStringHelper",null,function () {
+    this.Empty = "";
+    this.GetChar = function (AIndex) {
+      var Result = "";
+      Result = this.get().charAt((AIndex + 1) - 1);
+      return Result;
+    };
+    this.GetLength = function () {
+      var Result = 0;
+      Result = this.get().length;
+      return Result;
+    };
+    this.Compare = function (A, B) {
+      var Result = 0;
+      Result = $mod.TStringHelper.Compare$5(A,0,B,0,B.length,{});
+      return Result;
+    };
+    this.Compare$1 = function (A, B, IgnoreCase) {
+      var Result = 0;
+      if (IgnoreCase) {
+        Result = $mod.TStringHelper.Compare$2(A,B,rtl.createSet(pas.System.TCompareOption.coIgnoreCase))}
+       else Result = $mod.TStringHelper.Compare$2(A,B,{});
+      return Result;
+    };
+    this.Compare$2 = function (A, B, Options) {
+      var Result = 0;
+      Result = $mod.TStringHelper.Compare$5(A,0,B,0,B.length,rtl.refSet(Options));
+      return Result;
+    };
+    this.Compare$3 = function (A, IndexA, B, IndexB, ALen) {
+      var Result = 0;
+      Result = $mod.TStringHelper.Compare$5(A,IndexA,B,IndexB,ALen,{});
+      return Result;
+    };
+    this.Compare$4 = function (A, IndexA, B, IndexB, ALen, IgnoreCase) {
+      var Result = 0;
+      if (IgnoreCase) {
+        Result = $mod.TStringHelper.Compare$5(A,IndexA,B,IndexB,ALen,rtl.createSet(pas.System.TCompareOption.coIgnoreCase))}
+       else Result = $mod.TStringHelper.Compare$5(A,IndexA,B,IndexB,ALen,{});
+      return Result;
+    };
+    this.Compare$5 = function (A, IndexA, B, IndexB, ALen, Options) {
+      var Result = 0;
+      var AL = "";
+      var BL = "";
+      AL = pas.System.Copy(A,IndexA + 1,ALen);
+      BL = pas.System.Copy(B,IndexB + 1,ALen);
+      if (pas.System.TCompareOption.coIgnoreCase in Options) {
+        Result = $mod.TStringHelper.UpperCase(AL).localeCompare($mod.TStringHelper.UpperCase(BL))}
+       else Result = AL.localeCompare(BL);
+      return Result;
+    };
+    this.CompareOrdinal = function (A, B) {
+      var Result = 0;
+      var L = 0;
+      L = B.length;
+      if (L > A.length) L = A.length;
+      Result = $mod.TStringHelper.CompareOrdinal$1(A,0,B,0,L);
+      return Result;
+    };
+    this.CompareOrdinal$1 = function (A, IndexA, B, IndexB, ALen) {
+      var Result = 0;
+      var I = 0;
+      var M = 0;
+      M = A.length - IndexA;
+      if (M > (B.length - IndexB)) M = B.length - IndexB;
+      if (M > ALen) M = ALen;
+      I = 0;
+      Result = 0;
+      while ((Result === 0) && (I < M)) {
+        Result = A.charCodeAt(IndexA + I) - B.charCodeAt(IndexB + I);
+        I += 1;
+      };
+      return Result;
+    };
+    this.CompareText = function (A, B) {
+      var Result = 0;
+      Result = $mod.CompareText(A,B);
+      return Result;
+    };
+    this.Copy = function (Str) {
+      var Result = "";
+      Result = Str;
+      return Result;
+    };
+    this.Create = function (AChar, ACount) {
+      var Result = "";
+      Result = pas.System.StringOfChar(AChar,ACount);
+      return Result;
+    };
+    this.Create$1 = function (AValue) {
+      var Result = "";
+      Result = $mod.TStringHelper.Create$2(AValue,0,rtl.length(AValue));
+      return Result;
+    };
+    this.Create$2 = function (AValue, StartIndex, ALen) {
+      var Result = "";
+      var I = 0;
+      Result = rtl.strSetLength(Result,ALen);
+      for (var $l1 = 1, $end2 = ALen; $l1 <= $end2; $l1++) {
+        I = $l1;
+        Result = rtl.setCharAt(Result,I - 1,AValue[(StartIndex + I) - 1]);
+      };
+      return Result;
+    };
+    this.EndsText = function (ASubText, AText) {
+      var Result = false;
+      Result = (ASubText !== "") && ($mod.CompareText(pas.System.Copy(AText,(AText.length - ASubText.length) + 1,ASubText.length),ASubText) === 0);
+      return Result;
+    };
+    this.Equals = function (a, b) {
+      var Result = false;
+      Result = a === b;
+      return Result;
+    };
+    this.Format = function (AFormat, args) {
+      var Result = "";
+      Result = $mod.Format(AFormat,args);
+      return Result;
+    };
+    this.IsNullOrEmpty = function (AValue) {
+      var Result = false;
+      Result = AValue.length === 0;
+      return Result;
+    };
+    this.IsNullOrWhiteSpace = function (AValue) {
+      var Result = false;
+      Result = $mod.Trim(AValue).length === 0;
+      return Result;
+    };
+    this.Join = function (Separator, Values) {
+      var Result = "";
+      Result = Values.join(Separator);
+      return Result;
+    };
+    this.Join$1 = function (Separator, Values) {
+      var Result = "";
+      Result = Values.join(Separator);
+      return Result;
+    };
+    this.Join$2 = function (Separator, Values, StartIndex, ACount) {
+      var Result = "";
+      var VLen = 0;
+      VLen = rtl.length(Values) - 1;
+      if ((ACount < 0) || ((StartIndex > 0) && (StartIndex > VLen))) throw $mod.ERangeError.$create("Create$1",[pas.RTLConsts.SRangeError]);
+      if ((ACount === 0) || (VLen < 0)) {
+        Result = ""}
+       else Result = Values.slice(StartIndex,StartIndex + ACount).join(Separator);
+      return Result;
+    };
+    this.LowerCase = function (S) {
+      var Result = "";
+      Result = $mod.LowerCase(S);
+      return Result;
+    };
+    this.Parse = function (AValue) {
+      var Result = "";
+      Result = $mod.BoolToStr(AValue,false);
+      return Result;
+    };
+    this.Parse$1 = function (AValue) {
+      var Result = "";
+      Result = $mod.FloatToStr(AValue);
+      return Result;
+    };
+    this.Parse$2 = function (AValue) {
+      var Result = "";
+      Result = $mod.IntToStr(AValue);
+      return Result;
+    };
+    this.Parse$3 = function (AValue) {
+      var Result = "";
+      Result = $mod.IntToStr(AValue);
+      return Result;
+    };
+    this.ToBoolean = function (S) {
+      var Result = false;
+      Result = $mod.StrToBool(S);
+      return Result;
+    };
+    this.ToDouble = function (S) {
+      var Result = 0.0;
+      Result = $mod.StrToFloat(S);
+      return Result;
+    };
+    this.ToExtended = function (S) {
+      var Result = 0.0;
+      Result = $mod.StrToFloat(S);
+      return Result;
+    };
+    this.ToNativeInt = function (S) {
+      var Result = 0;
+      Result = $mod.StrToInt64(S);
+      return Result;
+    };
+    this.ToInteger = function (S) {
+      var Result = 0;
+      Result = $mod.StrToInt(S);
+      return Result;
+    };
+    this.UpperCase = function (S) {
+      var Result = "";
+      Result = $mod.UpperCase(S);
+      return Result;
+    };
+    this.ToCharArray = function (S) {
+      var Result = [];
+      var I = 0;
+      var Len = 0;
+      Len = S.length;
+      Result = rtl.arraySetLength(Result,"",Len);
+      for (var $l1 = 1, $end2 = Len; $l1 <= $end2; $l1++) {
+        I = $l1;
+        Result[I - 1] = S.charAt(I - 1);
+      };
+      return Result;
+    };
+    this.CompareTo = function (B) {
+      var Result = 0;
+      Result = $mod.TStringHelper.Compare(this.get(),B);
+      return Result;
+    };
+    this.Contains = function (AValue) {
+      var Result = false;
+      Result = (AValue !== "") && (pas.System.Pos(AValue,this.get()) > 0);
+      return Result;
+    };
+    this.CountChar = function (C) {
+      var Result = 0;
+      var S = "";
+      Result = 0;
+      for (var $in1 = this.get(), $l2 = 0, $end3 = $in1.length - 1; $l2 <= $end3; $l2++) {
+        S = $in1.charAt($l2);
+        if (S === C) Result += 1;
+      };
+      return Result;
+    };
+    this.DeQuotedString = function () {
+      var Result = "";
+      Result = $mod.TStringHelper.DeQuotedString$1.call(this,"'");
+      return Result;
+    };
+    this.DeQuotedString$1 = function (AQuoteChar) {
+      var Result = "";
+      var L = 0;
+      var I = 0;
+      var Res = [];
+      var PS = 0;
+      var PD = 0;
+      var IsQuote = false;
+      L = this.get().length;
+      if ((L < 2) || !((this.get().charAt(0) === AQuoteChar) && (this.get().charAt(L - 1) === AQuoteChar))) return this.get();
+      Res = rtl.arraySetLength(Res,"",L);
+      IsQuote = false;
+      PS = 2;
+      PD = 1;
+      for (var $l1 = 2, $end2 = L - 1; $l1 <= $end2; $l1++) {
+        I = $l1;
+        if (this.get().charAt(PS - 1) === AQuoteChar) {
+          IsQuote = !IsQuote;
+          if (!IsQuote) {
+            Result = rtl.setCharAt(Result,PD - 1,this.get().charAt(PS - 1));
+            PD += 1;
+          };
+        } else {
+          if (IsQuote) IsQuote = false;
+          Result = rtl.setCharAt(Result,PD - 1,this.get().charAt(PS - 1));
+          PD += 1;
+        };
+        PS += 1;
+      };
+      Result = rtl.strSetLength(Result,PD - 1);
+      return Result;
+    };
+    this.EndsWith = function (AValue) {
+      var Result = false;
+      Result = $mod.TStringHelper.EndsWith$1.call(this,AValue,false);
+      return Result;
+    };
+    this.EndsWith$1 = function (AValue, IgnoreCase) {
+      var Result = false;
+      var L = 0;
+      var S = "";
+      L = AValue.length;
+      Result = L === 0;
+      if (!Result) {
+        S = pas.System.Copy(this.get(),($mod.TStringHelper.GetLength.call(this) - L) + 1,L);
+        Result = S.length === L;
+        if (Result) if (IgnoreCase) {
+          Result = $mod.TStringHelper.CompareText(S,AValue) === 0}
+         else Result = S === AValue;
+      };
+      return Result;
+    };
+    this.Equals$1 = function (AValue) {
+      var Result = false;
+      Result = this.get() === AValue;
+      return Result;
+    };
+    this.Format$1 = function (args) {
+      var Result = "";
+      Result = $mod.Format(this.get(),args);
+      return Result;
+    };
+    this.GetHashCode = function () {
+      var Result = 0;
+      var P = 0;
+      var pmax = 0;
+      var L = null;
+      L = this.get();
+      Result = 0;
+      P = 1;
+      pmax = $mod.TStringHelper.GetLength.call(this) + 1;
+      while (P < pmax) {
+        Result = rtl.xor(((Result << 5) - Result) >>> 0,L.charCodeAt(P));
+        P += 1;
+      };
+      return Result;
+    };
+    this.IndexOf = function (AValue) {
+      var Result = 0;
+      Result = $mod.TStringHelper.IndexOf$4.call(this,AValue,0,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.IndexOf$1 = function (AValue) {
+      var Result = 0;
+      Result = $mod.TStringHelper.IndexOf$5.call(this,AValue,0,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.IndexOf$2 = function (AValue, StartIndex) {
+      var Result = 0;
+      Result = $mod.TStringHelper.IndexOf$4.call(this,AValue,StartIndex,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.IndexOf$3 = function (AValue, StartIndex) {
+      var Result = 0;
+      Result = $mod.TStringHelper.IndexOf$5.call(this,AValue,StartIndex,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.IndexOf$4 = function (AValue, StartIndex, ACount) {
+      var Result = 0;
+      var S = "";
+      S = pas.System.Copy(this.get(),StartIndex + 1,ACount);
+      Result = pas.System.Pos(AValue,S) - 1;
+      if (Result !== -1) Result = Result + StartIndex;
+      return Result;
+    };
+    this.IndexOf$5 = function (AValue, StartIndex, ACount) {
+      var Result = 0;
+      var S = "";
+      S = pas.System.Copy(this.get(),StartIndex + 1,ACount);
+      Result = pas.System.Pos(AValue,S) - 1;
+      if (Result !== -1) Result = Result + StartIndex;
+      return Result;
+    };
+    this.IndexOfUnQuoted = function (AValue, StartQuote, EndQuote, StartIndex) {
+      var $Self = this;
+      var Result = 0;
+      var LV = 0;
+      var S = "";
+      function MatchAt(I) {
+        var Result = false;
+        var J = 0;
+        J = 1;
+        do {
+          Result = S.charAt((I + J) - 1 - 1) === AValue.charAt(J - 1);
+          J += 1;
+        } while (!(!Result || (J > LV)));
+        return Result;
+      };
+      var I = 0;
+      var L = 0;
+      var Q = 0;
+      S = $Self.get();
+      Result = -1;
+      LV = AValue.length;
+      L = ($mod.TStringHelper.GetLength.call($Self) - LV) + 1;
+      if (L < 0) L = 0;
+      I = StartIndex + 1;
+      Q = 0;
+      if (StartQuote === EndQuote) {
+        while ((Result === -1) && (I <= L)) {
+          if (S.charAt(I - 1) === StartQuote) Q = 1 - Q;
+          if ((Q === 0) && MatchAt(I)) Result = I - 1;
+          I += 1;
+        };
+      } else {
+        while ((Result === -1) && (I <= L)) {
+          if (S.charAt(I - 1) === StartQuote) {
+            Q += 1}
+           else if ((S.charAt(I - 1) === EndQuote) && (Q > 0)) Q -= 1;
+          if ((Q === 0) && MatchAt(I)) Result = I - 1;
+          I += 1;
+        };
+      };
+      return Result;
+    };
+    this.IndexOfAny = function (AnyOf) {
+      var Result = 0;
+      Result = $mod.TStringHelper.IndexOfAny$1.call(this,$mod.TStringHelper.ToCharArray$1.call({get: function () {
+          return AnyOf;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}));
+      return Result;
+    };
+    this.IndexOfAny$1 = function (AnyOf) {
+      var Result = 0;
+      Result = $mod.TStringHelper.IndexOfAny$5.call(this,AnyOf,0,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.IndexOfAny$2 = function (AnyOf, StartIndex) {
+      var Result = 0;
+      Result = $mod.TStringHelper.IndexOfAny$3.call(this,$mod.TStringHelper.ToCharArray$1.call({get: function () {
+          return AnyOf;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}),StartIndex);
+      return Result;
+    };
+    this.IndexOfAny$3 = function (AnyOf, StartIndex) {
+      var Result = 0;
+      Result = $mod.TStringHelper.IndexOfAny$5.call(this,AnyOf,StartIndex,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.IndexOfAny$4 = function (AnyOf, StartIndex, ACount) {
+      var Result = 0;
+      Result = $mod.TStringHelper.IndexOfAny$5.call(this,$mod.TStringHelper.ToCharArray$1.call({get: function () {
+          return AnyOf;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}),StartIndex,ACount);
+      return Result;
+    };
+    this.IndexOfAny$5 = function (AnyOf, StartIndex, ACount) {
+      var Result = 0;
+      var i = 0;
+      var L = 0;
+      i = StartIndex + 1;
+      L = (i + ACount) - 1;
+      if (L > $mod.TStringHelper.GetLength.call(this)) L = $mod.TStringHelper.GetLength.call(this);
+      Result = -1;
+      while ((Result === -1) && (i <= L)) {
+        if ($impl.HaveChar(this.get().charAt(i - 1),AnyOf)) Result = i - 1;
+        i += 1;
+      };
+      return Result;
+    };
+    this.IndexOfAny$6 = function (AnyOf) {
+      var Result = 0;
+      Result = $mod.TStringHelper.IndexOfAny$8.call(this,AnyOf,0,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.IndexOfAny$7 = function (AnyOf, StartIndex) {
+      var Result = 0;
+      Result = $mod.TStringHelper.IndexOfAny$8.call(this,AnyOf,StartIndex,$mod.TStringHelper.GetLength.call(this) - StartIndex);
+      return Result;
+    };
+    this.IndexOfAny$8 = function (AnyOf, StartIndex, ACount) {
+      var Result = 0;
+      var M = 0;
+      Result = $mod.TStringHelper.IndexOfAny$9.call(this,AnyOf,StartIndex,ACount,{get: function () {
+          return M;
+        }, set: function (v) {
+          M = v;
+        }});
+      return Result;
+    };
+    this.IndexOfAny$9 = function (AnyOf, StartIndex, ACount, AMatch) {
+      var Result = 0;
+      var L = 0;
+      var I = 0;
+      Result = -1;
+      for (var $l1 = 0, $end2 = rtl.length(AnyOf) - 1; $l1 <= $end2; $l1++) {
+        I = $l1;
+        L = $mod.TStringHelper.IndexOf$5.call(this,AnyOf[I],StartIndex,ACount);
+        if ((L >= 0) && ((Result === -1) || (L < Result))) {
+          Result = L;
+          AMatch.set(I);
+        };
+      };
+      return Result;
+    };
+    this.IndexOfAnyUnquoted = function (AnyOf, StartQuote, EndQuote) {
+      var Result = 0;
+      Result = $mod.TStringHelper.IndexOfAnyUnquoted$2.call(this,AnyOf,StartQuote,EndQuote,0,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.IndexOfAnyUnquoted$1 = function (AnyOf, StartQuote, EndQuote, StartIndex) {
+      var Result = 0;
+      Result = $mod.TStringHelper.IndexOfAnyUnquoted$2.call(this,AnyOf,StartQuote,EndQuote,StartIndex,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.IndexOfAnyUnquoted$2 = function (AnyOf, StartQuote, EndQuote, StartIndex, ACount) {
+      var Result = 0;
+      var I = 0;
+      var L = 0;
+      var Q = 0;
+      Result = -1;
+      L = (StartIndex + ACount) - 1;
+      if (L > $mod.TStringHelper.GetLength.call(this)) L = $mod.TStringHelper.GetLength.call(this);
+      I = StartIndex + 1;
+      Q = 0;
+      if (StartQuote === EndQuote) {
+        while ((Result === -1) && (I <= L)) {
+          if (this.get().charAt(I - 1) === StartQuote) Q = 1 - Q;
+          if ((Q === 0) && $impl.HaveChar(this.get().charAt(I - 1),AnyOf)) Result = I - 1;
+          I += 1;
+        };
+      } else {
+        while ((Result === -1) && (I <= L)) {
+          if (this.get().charAt(I - 1) === StartQuote) {
+            Q += 1}
+           else if ((this.get().charAt(I - 1) === EndQuote) && (Q > 0)) Q -= 1;
+          if ((Q === 0) && $impl.HaveChar(this.get().charAt(I - 1),AnyOf)) Result = I - 1;
+          I += 1;
+        };
+      };
+      return Result;
+    };
+    this.IndexOfAnyUnquoted$3 = function (AnyOf, StartQuote, EndQuote, StartIndex, Matched) {
+      var Result = 0;
+      var L = 0;
+      var I = 0;
+      Result = -1;
+      for (var $l1 = 0, $end2 = rtl.length(AnyOf) - 1; $l1 <= $end2; $l1++) {
+        I = $l1;
+        L = $mod.TStringHelper.IndexOfUnQuoted.call(this,AnyOf[I],StartQuote,EndQuote,StartIndex);
+        if ((L >= 0) && ((Result === -1) || (L < Result))) {
+          Result = L;
+          Matched.set(I);
+        };
+      };
+      return Result;
+    };
+    this.Insert = function (StartIndex, AValue) {
+      var Result = "";
+      pas.System.Insert(AValue,this,StartIndex + 1);
+      Result = this.get();
+      return Result;
+    };
+    this.IsDelimiter = function (Delimiters, Index) {
+      var Result = false;
+      Result = $mod.IsDelimiter(Delimiters,this.get(),Index + 1);
+      return Result;
+    };
+    this.IsEmpty = function () {
+      var Result = false;
+      Result = $mod.TStringHelper.GetLength.call(this) === 0;
+      return Result;
+    };
+    this.LastDelimiter = function (Delims) {
+      var Result = 0;
+      Result = $mod.LastDelimiter(Delims,this.get()) - 1;
+      return Result;
+    };
+    this.LastIndexOf = function (AValue) {
+      var Result = 0;
+      Result = $mod.TStringHelper.LastIndexOf$4.call(this,AValue,$mod.TStringHelper.GetLength.call(this) - 1,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.LastIndexOf$1 = function (AValue) {
+      var Result = 0;
+      Result = $mod.TStringHelper.LastIndexOf$5.call(this,AValue,$mod.TStringHelper.GetLength.call(this) - 1,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.LastIndexOf$2 = function (AValue, AStartIndex) {
+      var Result = 0;
+      Result = $mod.TStringHelper.LastIndexOf$4.call(this,AValue,AStartIndex,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.LastIndexOf$3 = function (AValue, AStartIndex) {
+      var Result = 0;
+      Result = $mod.TStringHelper.LastIndexOf$5.call(this,AValue,AStartIndex,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.LastIndexOf$4 = function (AValue, AStartIndex, ACount) {
+      var Result = 0;
+      var Min = 0;
+      Result = AStartIndex + 1;
+      Min = (Result - ACount) + 1;
+      if (Min < 1) Min = 1;
+      while ((Result >= Min) && (this.get().charAt(Result - 1) !== AValue)) Result -= 1;
+      if (Result < Min) {
+        Result = -1}
+       else Result = Result - 1;
+      return Result;
+    };
+    this.LastIndexOf$5 = function (AValue, AStartIndex, ACount) {
+      var Result = 0;
+      Result = this.get().lastIndexOf(AValue,AStartIndex);
+      if ((AStartIndex - Result) > ACount) Result = -1;
+      return Result;
+    };
+    this.LastIndexOfAny = function (AnyOf) {
+      var Result = 0;
+      Result = $mod.TStringHelper.LastIndexOfAny$2.call(this,AnyOf,$mod.TStringHelper.GetLength.call(this) - 1,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.LastIndexOfAny$1 = function (AnyOf, AStartIndex) {
+      var Result = 0;
+      Result = $mod.TStringHelper.LastIndexOfAny$2.call(this,AnyOf,AStartIndex,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.LastIndexOfAny$2 = function (AnyOf, AStartIndex, ACount) {
+      var Result = 0;
+      var Min = 0;
+      Result = AStartIndex + 1;
+      Min = (Result - ACount) + 1;
+      if (Min < 1) Min = 1;
+      while ((Result >= Min) && !$impl.HaveChar(this.get().charAt(Result - 1),AnyOf)) Result -= 1;
+      if (Result < Min) {
+        Result = -1}
+       else Result = Result - 1;
+      return Result;
+    };
+    this.PadLeft = function (ATotalWidth) {
+      var Result = "";
+      Result = $mod.TStringHelper.PadLeft$1.call(this,ATotalWidth," ");
+      return Result;
+    };
+    this.PadLeft$1 = function (ATotalWidth, PaddingChar) {
+      var Result = "";
+      var L = 0;
+      Result = this.get();
+      L = ATotalWidth - $mod.TStringHelper.GetLength.call(this);
+      if (L > 0) Result = pas.System.StringOfChar(PaddingChar,L) + Result;
+      return Result;
+    };
+    this.PadRight = function (ATotalWidth) {
+      var Result = "";
+      Result = $mod.TStringHelper.PadRight$1.call(this,ATotalWidth," ");
+      return Result;
+    };
+    this.PadRight$1 = function (ATotalWidth, PaddingChar) {
+      var Result = "";
+      var L = 0;
+      Result = this.get();
+      L = ATotalWidth - $mod.TStringHelper.GetLength.call(this);
+      if (L > 0) Result = Result + pas.System.StringOfChar(PaddingChar,L);
+      return Result;
+    };
+    this.QuotedString = function () {
+      var Result = "";
+      Result = $mod.QuotedStr(this.get(),"'");
+      return Result;
+    };
+    this.QuotedString$1 = function (AQuoteChar) {
+      var Result = "";
+      Result = $mod.QuotedStr(this.get(),AQuoteChar);
+      return Result;
+    };
+    this.Remove = function (StartIndex) {
+      var Result = "";
+      Result = $mod.TStringHelper.Remove$1.call(this,StartIndex,$mod.TStringHelper.GetLength.call(this) - StartIndex);
+      return Result;
+    };
+    this.Remove$1 = function (StartIndex, ACount) {
+      var Result = "";
+      Result = this.get();
+      pas.System.Delete({get: function () {
+          return Result;
+        }, set: function (v) {
+          Result = v;
+        }},StartIndex + 1,ACount);
+      return Result;
+    };
+    this.Replace = function (OldChar, NewChar) {
+      var Result = "";
+      Result = $mod.TStringHelper.Replace$1.call(this,OldChar,NewChar,rtl.createSet($mod.TStringReplaceFlag.rfReplaceAll));
+      return Result;
+    };
+    this.Replace$1 = function (OldChar, NewChar, ReplaceFlags) {
+      var Result = "";
+      Result = $mod.StringReplace(this.get(),OldChar,NewChar,rtl.refSet(ReplaceFlags));
+      return Result;
+    };
+    this.Replace$2 = function (OldValue, NewValue) {
+      var Result = "";
+      Result = $mod.TStringHelper.Replace$3.call(this,OldValue,NewValue,rtl.createSet($mod.TStringReplaceFlag.rfReplaceAll));
+      return Result;
+    };
+    this.Replace$3 = function (OldValue, NewValue, ReplaceFlags) {
+      var Result = "";
+      Result = $mod.StringReplace(this.get(),OldValue,NewValue,rtl.refSet(ReplaceFlags));
+      return Result;
+    };
+    this.Split = function (Separators) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$1.call(this,$mod.TStringHelper.ToCharArray$1.call({get: function () {
+          return Separators;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}));
+      return Result;
+    };
+    this.Split$1 = function (Separators) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$21.call(this,Separators,"\x00","\x00",$mod.TStringHelper.GetLength.call(this) + 1,$mod.TStringSplitOptions.None);
+      return Result;
+    };
+    this.Split$2 = function (Separators, ACount) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$3.call(this,$mod.TStringHelper.ToCharArray$1.call({get: function () {
+          return Separators;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}),ACount);
+      return Result;
+    };
+    this.Split$3 = function (Separators, ACount) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$21.call(this,Separators,"\x00","\x00",ACount,$mod.TStringSplitOptions.None);
+      return Result;
+    };
+    this.Split$4 = function (Separators, Options) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$5.call(this,$mod.TStringHelper.ToCharArray$1.call({get: function () {
+          return Separators;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}),Options);
+      return Result;
+    };
+    this.Split$5 = function (Separators, Options) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$7.call(this,Separators,$mod.TStringHelper.GetLength.call(this) + 1,Options);
+      return Result;
+    };
+    this.Split$6 = function (Separators, ACount, Options) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$7.call(this,$mod.TStringHelper.ToCharArray$1.call({get: function () {
+          return Separators;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}),ACount,Options);
+      return Result;
+    };
+    this.Split$7 = function (Separators, ACount, Options) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$21.call(this,Separators,"\x00","\x00",ACount,Options);
+      return Result;
+    };
+    this.Split$8 = function (Separators) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$9.call(this,Separators,$mod.TStringHelper.GetLength.call(this) + 1);
+      return Result;
+    };
+    this.Split$9 = function (Separators, ACount) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$11.call(this,Separators,ACount,$mod.TStringSplitOptions.None);
+      return Result;
+    };
+    this.Split$10 = function (Separators, Options) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$11.call(this,Separators,$mod.TStringHelper.GetLength.call(this) + 1,Options);
+      return Result;
+    };
+    this.Split$11 = function (Separators, ACount, Options) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$26.call(this,Separators,"\x00","\x00",ACount,Options);
+      return Result;
+    };
+    this.Split$12 = function (Separators, AQuote) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$13.call(this,$mod.TStringHelper.ToCharArray$1.call({get: function () {
+          return Separators;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}),AQuote);
+      return Result;
+    };
+    this.Split$13 = function (Separators, AQuote) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$15.call(this,Separators,AQuote,AQuote);
+      return Result;
+    };
+    this.Split$14 = function (Separators, AQuoteStart, AQuoteEnd) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$15.call(this,$mod.TStringHelper.ToCharArray$1.call({get: function () {
+          return Separators;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}),AQuoteStart,AQuoteEnd);
+      return Result;
+    };
+    this.Split$15 = function (Separators, AQuoteStart, AQuoteEnd) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$17.call(this,Separators,AQuoteStart,AQuoteEnd,$mod.TStringSplitOptions.None);
+      return Result;
+    };
+    this.Split$16 = function (Separators, AQuoteStart, AQuoteEnd, Options) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$17.call(this,$mod.TStringHelper.ToCharArray$1.call({get: function () {
+          return Separators;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}),AQuoteStart,AQuoteEnd,Options);
+      return Result;
+    };
+    this.Split$17 = function (Separators, AQuoteStart, AQuoteEnd, Options) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$21.call(this,Separators,AQuoteStart,AQuoteEnd,$mod.TStringHelper.GetLength.call(this) + 1,Options);
+      return Result;
+    };
+    this.Split$18 = function (Separators, AQuoteStart, AQuoteEnd, ACount) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$19.call(this,$mod.TStringHelper.ToCharArray$1.call({get: function () {
+          return Separators;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}),AQuoteStart,AQuoteEnd,ACount);
+      return Result;
+    };
+    this.Split$19 = function (Separators, AQuoteStart, AQuoteEnd, ACount) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$21.call(this,Separators,AQuoteStart,AQuoteEnd,ACount,$mod.TStringSplitOptions.None);
+      return Result;
+    };
+    this.Split$20 = function (Separators, AQuoteStart, AQuoteEnd, ACount, Options) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$21.call(this,$mod.TStringHelper.ToCharArray$1.call({get: function () {
+          return Separators;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}),AQuoteStart,AQuoteEnd,ACount,Options);
+      return Result;
+    };
+    var BlockSize = 10;
+    this.Split$21 = function (Separators, AQuoteStart, AQuoteEnd, ACount, Options) {
+      var $Self = this;
+      var Result = [];
+      var S = "";
+      function NextSep(StartIndex) {
+        var Result = 0;
+        if (AQuoteStart !== "\x00") {
+          Result = $mod.TStringHelper.IndexOfAnyUnquoted$1.call({get: function () {
+              return S;
+            }, set: function (v) {
+              S = v;
+            }},Separators,AQuoteStart,AQuoteEnd,StartIndex)}
+         else Result = $mod.TStringHelper.IndexOfAny$3.call({get: function () {
+            return S;
+          }, set: function (v) {
+            S = v;
+          }},Separators,StartIndex);
+        return Result;
+      };
+      function MaybeGrow(Curlen) {
+        if (rtl.length(Result) <= Curlen) Result = rtl.arraySetLength(Result,"",rtl.length(Result) + 10);
+      };
+      var Sep = 0;
+      var LastSep = 0;
+      var Len = 0;
+      var T = "";
+      S = $Self.get();
+      Result = rtl.arraySetLength(Result,"",10);
+      Len = 0;
+      LastSep = 0;
+      Sep = NextSep(0);
+      while ((Sep !== -1) && ((ACount === 0) || (Len < ACount))) {
+        T = $mod.TStringHelper.Substring$1.call($Self,LastSep,Sep - LastSep);
+        if ((T !== "") || !($mod.TStringSplitOptions.ExcludeEmpty === Options)) {
+          MaybeGrow(Len);
+          Result[Len] = T;
+          Len += 1;
+        };
+        LastSep = Sep + 1;
+        Sep = NextSep(LastSep);
+      };
+      if ((LastSep <= $mod.TStringHelper.GetLength.call($Self)) && ((ACount === 0) || (Len < ACount))) {
+        T = $mod.TStringHelper.Substring.call($Self,LastSep);
+        if ((T !== "") || !($mod.TStringSplitOptions.ExcludeEmpty === Options)) {
+          MaybeGrow(Len);
+          Result[Len] = T;
+          Len += 1;
+        };
+      };
+      Result = rtl.arraySetLength(Result,"",Len);
+      return Result;
+    };
+    this.Split$22 = function (Separators, AQuote) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$23.call(this,Separators,AQuote,AQuote);
+      return Result;
+    };
+    this.Split$23 = function (Separators, AQuoteStart, AQuoteEnd) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$26.call(this,Separators,AQuoteStart,AQuoteEnd,$mod.TStringHelper.GetLength.call(this) + 1,$mod.TStringSplitOptions.None);
+      return Result;
+    };
+    this.Split$24 = function (Separators, AQuoteStart, AQuoteEnd, Options) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$26.call(this,Separators,AQuoteStart,AQuoteEnd,$mod.TStringHelper.GetLength.call(this) + 1,Options);
+      return Result;
+    };
+    this.Split$25 = function (Separators, AQuoteStart, AQuoteEnd, ACount) {
+      var Result = [];
+      Result = $mod.TStringHelper.Split$26.call(this,Separators,AQuoteStart,AQuoteEnd,ACount,$mod.TStringSplitOptions.None);
+      return Result;
+    };
+    var BlockSize$1 = 10;
+    this.Split$26 = function (Separators, AQuoteStart, AQuoteEnd, ACount, Options) {
+      var $Self = this;
+      var Result = [];
+      var S = "";
+      function NextSep(StartIndex, Match) {
+        var Result = 0;
+        if (AQuoteStart !== "\x00") {
+          Result = $mod.TStringHelper.IndexOfAnyUnquoted$3.call({get: function () {
+              return S;
+            }, set: function (v) {
+              S = v;
+            }},Separators,AQuoteStart,AQuoteEnd,StartIndex,Match)}
+         else Result = -1;
+        return Result;
+      };
+      function MaybeGrow(Curlen) {
+        if (rtl.length(Result) <= Curlen) Result = rtl.arraySetLength(Result,"",rtl.length(Result) + 10);
+      };
+      var Sep = 0;
+      var LastSep = 0;
+      var Len = 0;
+      var Match = 0;
+      var T = "";
+      S = $Self.get();
+      Result = rtl.arraySetLength(Result,"",10);
+      Len = 0;
+      LastSep = 0;
+      Sep = NextSep(0,{get: function () {
+          return Match;
+        }, set: function (v) {
+          Match = v;
+        }});
+      while ((Sep !== -1) && ((ACount === 0) || (Len < ACount))) {
+        T = $mod.TStringHelper.Substring$1.call($Self,LastSep,Sep - LastSep);
+        if ((T !== "") || !($mod.TStringSplitOptions.ExcludeEmpty === Options)) {
+          MaybeGrow(Len);
+          Result[Len] = T;
+          Len += 1;
+        };
+        LastSep = Sep + Separators[Match].length;
+        Sep = NextSep(LastSep,{get: function () {
+            return Match;
+          }, set: function (v) {
+            Match = v;
+          }});
+      };
+      if ((LastSep <= $mod.TStringHelper.GetLength.call($Self)) && ((ACount === 0) || (Len < ACount))) {
+        T = $mod.TStringHelper.Substring.call($Self,LastSep);
+        if ((T !== "") || !($mod.TStringSplitOptions.ExcludeEmpty === Options)) {
+          MaybeGrow(Len);
+          Result[Len] = T;
+          Len += 1;
+        };
+      };
+      Result = rtl.arraySetLength(Result,"",Len);
+      return Result;
+    };
+    this.StartsWith = function (AValue) {
+      var Result = false;
+      Result = $mod.TStringHelper.StartsWith$1.call(this,AValue,false);
+      return Result;
+    };
+    this.StartsWith$1 = function (AValue, IgnoreCase) {
+      var Result = false;
+      var L = 0;
+      var S = "";
+      L = AValue.length;
+      Result = L <= 0;
+      if (!Result) {
+        S = pas.System.Copy(this.get(),1,L);
+        Result = S.length === L;
+        if (Result) if (IgnoreCase) {
+          Result = $mod.SameText(S,AValue)}
+         else Result = $mod.SameStr(S,AValue);
+      };
+      return Result;
+    };
+    this.Substring = function (AStartIndex) {
+      var Result = "";
+      Result = $mod.TStringHelper.Substring$1.call(this,AStartIndex,$mod.TStringHelper.GetLength.call(this) - AStartIndex);
+      return Result;
+    };
+    this.Substring$1 = function (AStartIndex, ALen) {
+      var Result = "";
+      Result = pas.System.Copy(this.get(),AStartIndex + 1,ALen);
+      return Result;
+    };
+    this.ToBoolean$1 = function () {
+      var Result = false;
+      Result = $mod.StrToBool(this.get());
+      return Result;
+    };
+    this.ToInteger$1 = function () {
+      var Result = 0;
+      Result = $mod.StrToInt(this.get());
+      return Result;
+    };
+    this.ToNativeInt$1 = function () {
+      var Result = 0;
+      Result = $mod.StrToNativeInt(this.get());
+      return Result;
+    };
+    this.ToDouble$1 = function () {
+      var Result = 0.0;
+      Result = $mod.StrToFloat(this.get());
+      return Result;
+    };
+    this.ToExtended$1 = function () {
+      var Result = 0.0;
+      Result = $mod.StrToFloat(this.get());
+      return Result;
+    };
+    this.ToCharArray$1 = function () {
+      var Result = [];
+      Result = $mod.TStringHelper.ToCharArray$2.call(this,0,$mod.TStringHelper.GetLength.call(this));
+      return Result;
+    };
+    this.ToCharArray$2 = function (AStartIndex, ALen) {
+      var Result = [];
+      var I = 0;
+      Result = rtl.arraySetLength(Result,"",ALen);
+      for (var $l1 = 0, $end2 = ALen - 1; $l1 <= $end2; $l1++) {
+        I = $l1;
+        Result[I] = this.get().charAt((AStartIndex + I + 1) - 1);
+      };
+      return Result;
+    };
+    this.ToLower = function () {
+      var Result = "";
+      Result = $mod.TStringHelper.LowerCase(this.get());
+      return Result;
+    };
+    this.ToLowerInvariant = function () {
+      var Result = "";
+      Result = $mod.TStringHelper.LowerCase(this.get());
+      return Result;
+    };
+    this.ToUpper = function () {
+      var Result = "";
+      Result = $mod.TStringHelper.UpperCase(this.get());
+      return Result;
+    };
+    this.ToUpperInvariant = function () {
+      var Result = "";
+      Result = $mod.TStringHelper.UpperCase(this.get());
+      return Result;
+    };
+    this.Trim = function () {
+      var Result = "";
+      Result = $mod.Trim(this.get());
+      return Result;
+    };
+    this.TrimLeft = function () {
+      var Result = "";
+      Result = $mod.TrimLeft(this.get());
+      return Result;
+    };
+    this.TrimRight = function () {
+      var Result = "";
+      Result = $mod.TrimRight(this.get());
+      return Result;
+    };
+    this.Trim$1 = function (ATrimChars) {
+      var Result = "";
+      Result = $mod.TStringHelper.TrimRight$1.call({a: $mod.TStringHelper.TrimLeft$1.call(this,ATrimChars), get: function () {
+          return this.a;
+        }, set: function (v) {
+          this.a = v;
+        }},ATrimChars);
+      return Result;
+    };
+    this.TrimLeft$1 = function (ATrimChars) {
+      var Result = "";
+      var I = 0;
+      var Len = 0;
+      I = 1;
+      Len = $mod.TStringHelper.GetLength.call(this);
+      while ((I <= Len) && $impl.HaveChar(this.get().charAt(I - 1),ATrimChars)) I += 1;
+      if (I === 1) {
+        Result = this.get()}
+       else if (I > Len) {
+        Result = ""}
+       else Result = pas.System.Copy(this.get(),I,(Len - I) + 1);
+      return Result;
+    };
+    this.TrimRight$1 = function (ATrimChars) {
+      var Result = "";
+      var I = 0;
+      var Len = 0;
+      Len = $mod.TStringHelper.GetLength.call(this);
+      I = Len;
+      while ((I >= 1) && $impl.HaveChar(this.get().charAt(I - 1),ATrimChars)) I -= 1;
+      if (I < 1) {
+        Result = ""}
+       else if (I === Len) {
+        Result = this.get()}
+       else Result = pas.System.Copy(this.get(),1,I);
+      return Result;
+    };
+    this.TrimEnd = function (ATrimChars) {
+      var Result = "";
+      Result = $mod.TStringHelper.TrimRight$1.call(this,ATrimChars);
+      return Result;
+    };
+    this.TrimStart = function (ATrimChars) {
+      var Result = "";
+      Result = $mod.TStringHelper.TrimLeft$1.call(this,ATrimChars);
+      return Result;
+    };
+  });
+  rtl.createHelper($mod,"TDoubleHelper",null,function () {
+    this.Epsilon = 4.9406564584124654418e-324;
+    this.MaxValue = 1.7976931348623157081e+308;
+    this.MinValue = -1.7976931348623157081e+308;
+    this.GetB = function (AIndex) {
+      var Result = 0;
+      var F = null;
+      var B = null;
+      F = new Float64Array(1);
+      B = new Uint8Array(F.buffer);
+      F[0] = this.get();
+      Result = B[AIndex];
+      return Result;
+    };
+    this.GetW = function (AIndex) {
+      var Result = 0;
+      var F = null;
+      var W = null;
+      F = new Float64Array(1);
+      W = new Uint16Array(F.buffer);
+      F[0] = this.get();
+      Result = W[AIndex];
+      return Result;
+    };
+    this.GetE = function () {
+      var Result = 0;
+      Result = $impl.FloatToParts(this.get()).exp;
+      return Result;
+    };
+    this.GetF = function () {
+      var Result = 0;
+      Result = 0;
+      $impl.NotImplemented("GetF");
+      return Result;
+    };
+    this.GetS = function () {
+      var Result = false;
+      Result = $impl.FloatToParts(this.get()).sign;
+      return Result;
+    };
+    this.SetS = function (aValue) {
+      var F = null;
+      var B = null;
+      F = new Float64Array(1);
+      B = new Uint8Array(F.buffer);
+      F[0] = this.get();
+      if (aValue) {
+        B[7] = B[7] | (1 >>> 7)}
+       else B[7] = B[7] & ~(1 >>> 7);
+      this.set(F[0]);
+    };
+    this.SetB = function (AIndex, AValue) {
+      var F = null;
+      var B = null;
+      if (AIndex >= 8) throw $mod.ERangeError.$create("Create$1",[pas.RTLConsts.SRangeError]);
+      F = new Float64Array(1);
+      B = new Uint8Array(F.buffer);
+      F[0] = this.get();
+      B[AIndex] = AValue;
+      this.set(F[0]);
+    };
+    this.SetW = function (AIndex, AValue) {
+      var F = null;
+      var W = null;
+      if (AIndex >= 4) throw $mod.ERangeError.$create("Create$1",[pas.RTLConsts.SRangeError]);
+      F = new Float64Array(1);
+      W = new Uint16Array(F.buffer);
+      F[0] = this.get();
+      W[AIndex] = AValue;
+      this.set(F[0]);
+    };
+    this.IsInfinity = function (AValue) {
+      var Result = false;
+      Result = !isFinite(AValue);
+      return Result;
+    };
+    this.IsNan = function (AValue) {
+      var Result = false;
+      Result = isNaN(AValue);
+      return Result;
+    };
+    this.IsNegativeInfinity = function (AValue) {
+      var Result = false;
+      return (AValue=Number.NEGATIVE_INFINITY);
+      Result = AValue === 0;
+      return Result;
+    };
+    this.IsPositiveInfinity = function (AValue) {
+      var Result = false;
+      return (AValue=Number.POSITIVE_INFINITY);
+      Result = AValue === 0;
+      return Result;
+    };
+    this.Parse = function (AString) {
+      var Result = 0.0;
+      Result = $mod.StrToFloat(AString);
+      return Result;
+    };
+    this.ToString = function (AValue) {
+      var Result = "";
+      Result = $mod.FloatToStr(AValue);
+      return Result;
+    };
+    this.ToString$1 = function (AValue, AFormat, APrecision, ADigits) {
+      var Result = "";
+      Result = $mod.FloatToStrF(AValue,AFormat,APrecision,ADigits);
+      return Result;
+    };
+    this.TryParse = function (AString, AValue) {
+      var Result = false;
+      Result = $mod.TryStrToFloat(AString,AValue);
+      return Result;
+    };
+    this.BuildUp = function (ASignFlag, AMantissa, AExponent) {
+      $impl.NotImplemented("BuildUp");
+      if (ASignFlag && (AMantissa > 0) && (AExponent < 0)) return;
+    };
+    this.Exponent = function () {
+      var Result = 0;
+      Result = $impl.FloatToParts(this.get()).exp;
+      return Result;
+    };
+    this.Fraction = function () {
+      var Result = 0.0;
+      Result = pas.System.Frac(this.get());
+      return Result;
+    };
+    this.IsInfinity$1 = function () {
+      var Result = false;
+      Result = $mod.TDoubleHelper.IsInfinity(this.get());
+      return Result;
+    };
+    this.IsNan$1 = function () {
+      var Result = false;
+      Result = $mod.TDoubleHelper.IsNan(this.get());
+      return Result;
+    };
+    this.IsNegativeInfinity$1 = function () {
+      var Result = false;
+      Result = $mod.TDoubleHelper.IsNegativeInfinity(this.get());
+      return Result;
+    };
+    this.IsPositiveInfinity$1 = function () {
+      var Result = false;
+      Result = $mod.TDoubleHelper.IsPositiveInfinity(this.get());
+      return Result;
+    };
+    this.Mantissa = function () {
+      var Result = 0;
+      Result = pas.System.Trunc($impl.FloatToParts(this.get()).mantissa);
+      return Result;
+    };
+    this.ToString$2 = function (AFormat, APrecision, ADigits) {
+      var Result = "";
+      Result = $mod.FloatToStrF(this.get(),AFormat,APrecision,ADigits);
+      return Result;
+    };
+    this.ToString$3 = function () {
+      var Result = "";
+      Result = $mod.FloatToStr(this.get());
+      return Result;
+    };
+  });
+  rtl.createHelper($mod,"TByteHelper",null,function () {
+    this.MaxValue = 255;
+    this.MinValue = 0;
+    this.Parse = function (AString) {
+      var Result = 0;
+      Result = $mod.StrToInt(AString);
+      return Result;
+    };
+    this.Size = function () {
+      var Result = 0;
+      Result = 1;
+      return Result;
+    };
+    this.ToString = function (AValue) {
+      var Result = "";
+      Result = $mod.IntToStr(AValue);
+      return Result;
+    };
+    this.TryParse = function (AString, AValue) {
+      var Result = false;
+      var C = 0;
+      pas.System.val$3(AString,AValue,{get: function () {
+          return C;
+        }, set: function (v) {
+          C = v;
+        }});
+      Result = C === 0;
+      return Result;
+    };
+    this.ToBoolean = function () {
+      var Result = false;
+      Result = this.get() !== 0;
+      return Result;
+    };
+    this.ToDouble = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToExtended = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToBinString = function () {
+      var Result = "";
+      Result = pas.System.binstr(this.get(),$mod.TByteHelper.Size() * 8);
+      return Result;
+    };
+    this.ToHexString = function (AMinDigits) {
+      var Result = "";
+      Result = $mod.IntToHex(this.get(),AMinDigits);
+      return Result;
+    };
+    this.ToHexString$1 = function () {
+      var Result = "";
+      Result = $mod.IntToHex(this.get(),$mod.TByteHelper.Size() * 2);
+      return Result;
+    };
+    this.ToString$1 = function () {
+      var Result = "";
+      Result = $mod.IntToStr(this.get());
+      return Result;
+    };
+    this.SetBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() | (1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.ClearBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() & ~(1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.ToggleBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() ^ (1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.TestBit = function (Index) {
+      var Result = false;
+      Result = (this.get() & (1 << Index)) !== 0;
+      return Result;
+    };
+  });
+  rtl.createHelper($mod,"TShortIntHelper",null,function () {
+    this.MaxValue = 127;
+    this.MinValue = -128;
+    this.Parse = function (AString) {
+      var Result = 0;
+      Result = $mod.StrToInt(AString);
+      return Result;
+    };
+    this.Size = function () {
+      var Result = 0;
+      Result = 1;
+      return Result;
+    };
+    this.ToString = function (AValue) {
+      var Result = "";
+      Result = $mod.IntToStr(AValue);
+      return Result;
+    };
+    this.TryParse = function (AString, AValue) {
+      var Result = false;
+      var C = 0;
+      pas.System.val$2(AString,AValue,{get: function () {
+          return C;
+        }, set: function (v) {
+          C = v;
+        }});
+      Result = C === 0;
+      return Result;
+    };
+    this.ToBoolean = function () {
+      var Result = false;
+      Result = this.get() !== 0;
+      return Result;
+    };
+    this.ToDouble = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToExtended = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToBinString = function () {
+      var Result = "";
+      Result = pas.System.binstr(this.get(),$mod.TShortIntHelper.Size() * 8);
+      return Result;
+    };
+    this.ToHexString = function (AMinDigits) {
+      var Result = "";
+      var B = 0;
+      var U = null;
+      var S = null;
+      if (this.get() >= 0) {
+        B = this.get()}
+       else {
+        S = new Int8Array(1);
+        S[0] = this.get();
+        U = new Uint8Array(S);
+        B = U[0];
+        if (AMinDigits > 2) B = 0xFF00 + B;
+      };
+      Result = $mod.IntToHex(B,AMinDigits);
+      return Result;
+    };
+    this.ToHexString$1 = function () {
+      var Result = "";
+      Result = $mod.TShortIntHelper.ToHexString.call(this,$mod.TShortIntHelper.Size() * 2);
+      return Result;
+    };
+    this.ToString$1 = function () {
+      var Result = "";
+      Result = $mod.IntToStr(this.get());
+      return Result;
+    };
+    this.SetBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() | (1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.ClearBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() & ~(1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.ToggleBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() ^ (1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.TestBit = function (Index) {
+      var Result = false;
+      Result = (this.get() & (1 << Index)) !== 0;
+      return Result;
+    };
+  });
+  rtl.createHelper($mod,"TSmallIntHelper",null,function () {
+    this.MaxValue = 32767;
+    this.MinValue = -32768;
+    this.Parse = function (AString) {
+      var Result = 0;
+      Result = $mod.StrToInt(AString);
+      return Result;
+    };
+    this.Size = function () {
+      var Result = 0;
+      Result = 2;
+      return Result;
+    };
+    this.ToString = function (AValue) {
+      var Result = "";
+      Result = $mod.IntToStr(AValue);
+      return Result;
+    };
+    this.TryParse = function (AString, AValue) {
+      var Result = false;
+      var C = 0;
+      pas.System.val$4(AString,AValue,{get: function () {
+          return C;
+        }, set: function (v) {
+          C = v;
+        }});
+      Result = C === 0;
+      return Result;
+    };
+    this.ToString$1 = function () {
+      var Result = "";
+      Result = $mod.IntToStr(this.get());
+      return Result;
+    };
+    this.ToBoolean = function () {
+      var Result = false;
+      Result = this.get() !== 0;
+      return Result;
+    };
+    this.ToBinString = function () {
+      var Result = "";
+      Result = pas.System.binstr(this.get(),$mod.TSmallIntHelper.Size() * 8);
+      return Result;
+    };
+    this.ToHexString = function () {
+      var Result = "";
+      Result = $mod.TSmallIntHelper.ToHexString$1.call(this,$mod.TSmallIntHelper.Size() * 2);
+      return Result;
+    };
+    this.ToHexString$1 = function (AMinDigits) {
+      var Result = "";
+      var B = 0;
+      var U = null;
+      var S = null;
+      if (this.get() >= 0) {
+        B = this.get()}
+       else {
+        S = new Int16Array(1);
+        S[0] = this.get();
+        U = new Uint16Array(S);
+        B = U[0];
+        if (AMinDigits > 6) {
+          B = 0xFFFF0000 + B}
+         else if (AMinDigits > 4) B = 0xFF0000 + B;
+      };
+      Result = $mod.IntToHex(B,AMinDigits);
+      return Result;
+    };
+    this.ToDouble = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToExtended = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.SetBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() | (1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.ClearBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() & ~(1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.ToggleBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() ^ (1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.TestBit = function (Index) {
+      var Result = false;
+      Result = (this.get() & (1 << Index)) !== 0;
+      return Result;
+    };
+  });
+  rtl.createHelper($mod,"TWordHelper",null,function () {
+    this.MaxValue = 65535;
+    this.MinValue = 0;
+    this.Parse = function (AString) {
+      var Result = 0;
+      Result = $mod.StrToInt(AString);
+      return Result;
+    };
+    this.Size = function () {
+      var Result = 0;
+      Result = 2;
+      return Result;
+    };
+    this.ToString = function (AValue) {
+      var Result = "";
+      Result = $mod.IntToStr(AValue);
+      return Result;
+    };
+    this.TryParse = function (AString, AValue) {
+      var Result = false;
+      var C = 0;
+      pas.System.val$5(AString,AValue,{get: function () {
+          return C;
+        }, set: function (v) {
+          C = v;
+        }});
+      Result = C === 0;
+      return Result;
+    };
+    this.ToBoolean = function () {
+      var Result = false;
+      Result = this.get() !== 0;
+      return Result;
+    };
+    this.ToDouble = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToExtended = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToBinString = function () {
+      var Result = "";
+      Result = pas.System.binstr(this.get(),$mod.TWordHelper.Size() * 8);
+      return Result;
+    };
+    this.ToHexString = function (AMinDigits) {
+      var Result = "";
+      Result = $mod.IntToHex(this.get(),AMinDigits);
+      return Result;
+    };
+    this.ToHexString$1 = function () {
+      var Result = "";
+      Result = $mod.IntToHex(this.get(),$mod.TWordHelper.Size() * 2);
+      return Result;
+    };
+    this.ToString$1 = function () {
+      var Result = "";
+      Result = $mod.IntToStr(this.get());
+      return Result;
+    };
+    this.SetBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() | (1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.ClearBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() & ~(1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.ToggleBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() ^ (1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.TestBit = function (Index) {
+      var Result = false;
+      Result = (this.get() & (1 << Index)) !== 0;
+      return Result;
+    };
+  });
+  rtl.createHelper($mod,"TCardinalHelper",null,function () {
+    this.MaxValue = 4294967295;
+    this.MinValue = 0;
+    this.Parse = function (AString) {
+      var Result = 0;
+      Result = $mod.StrToInt(AString);
+      return Result;
+    };
+    this.Size = function () {
+      var Result = 0;
+      Result = 4;
+      return Result;
+    };
+    this.ToString = function (AValue) {
+      var Result = "";
+      Result = $mod.IntToStr(AValue);
+      return Result;
+    };
+    this.TryParse = function (AString, AValue) {
+      var Result = false;
+      var C = 0;
+      pas.System.val$7(AString,AValue,{get: function () {
+          return C;
+        }, set: function (v) {
+          C = v;
+        }});
+      Result = C === 0;
+      return Result;
+    };
+    this.ToBoolean = function () {
+      var Result = false;
+      Result = this.get() !== 0;
+      return Result;
+    };
+    this.ToDouble = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToExtended = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToBinString = function () {
+      var Result = "";
+      Result = pas.System.binstr(this.get(),$mod.TCardinalHelper.Size() * 8);
+      return Result;
+    };
+    this.ToHexString = function (AMinDigits) {
+      var Result = "";
+      Result = $mod.IntToHex(this.get(),AMinDigits);
+      return Result;
+    };
+    this.ToHexString$1 = function () {
+      var Result = "";
+      Result = $mod.TCardinalHelper.ToHexString.call(this,$mod.TCardinalHelper.Size() * 2);
+      return Result;
+    };
+    this.ToString$1 = function () {
+      var Result = "";
+      Result = $mod.IntToStr(this.get());
+      return Result;
+    };
+    this.SetBit = function (Index) {
+      var Result = 0;
+      this.set(rtl.lw(this.get() | rtl.lw(1 << Index)));
+      Result = this.get();
+      return Result;
+    };
+    this.ClearBit = function (Index) {
+      var Result = 0;
+      this.set(rtl.lw(this.get() & rtl.lw(~rtl.lw(1 << Index))));
+      Result = this.get();
+      return Result;
+    };
+    this.ToggleBit = function (Index) {
+      var Result = 0;
+      this.set(rtl.lw(this.get() ^ rtl.lw(1 << Index)));
+      Result = this.get();
+      return Result;
+    };
+    this.TestBit = function (Index) {
+      var Result = false;
+      Result = rtl.lw(this.get() & rtl.lw(1 << Index)) !== 0;
+      return Result;
+    };
+  });
+  rtl.createHelper($mod,"TIntegerHelper",null,function () {
+    this.MaxValue = 2147483647;
+    this.MinValue = -2147483648;
+    this.Size = function () {
+      var Result = 0;
+      Result = 4;
+      return Result;
+    };
+    this.ToString = function (AValue) {
+      var Result = "";
+      Result = $mod.IntToStr(AValue);
+      return Result;
+    };
+    this.Parse = function (AString) {
+      var Result = 0;
+      Result = $mod.StrToInt(AString);
+      return Result;
+    };
+    this.TryParse = function (AString, AValue) {
+      var Result = false;
+      var C = 0;
+      pas.System.val$6(AString,AValue,{get: function () {
+          return C;
+        }, set: function (v) {
+          C = v;
+        }});
+      Result = C === 0;
+      return Result;
+    };
+    this.ToBoolean = function () {
+      var Result = false;
+      Result = this.get() !== 0;
+      return Result;
+    };
+    this.ToDouble = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToExtended = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToBinString = function () {
+      var Result = "";
+      Result = pas.System.binstr(this.get(),$mod.TIntegerHelper.Size() * 8);
+      return Result;
+    };
+    this.ToHexString = function (AMinDigits) {
+      var Result = "";
+      var B = 0;
+      var U = null;
+      var S = null;
+      if (this.get() >= 0) {
+        B = this.get()}
+       else {
+        S = new Int32Array(1);
+        S[0] = this.get();
+        U = new Uint32Array(S);
+        B = U[0];
+      };
+      Result = $mod.IntToHex(B,AMinDigits);
+      return Result;
+    };
+    this.ToHexString$1 = function () {
+      var Result = "";
+      Result = $mod.TIntegerHelper.ToHexString.call(this,$mod.TIntegerHelper.Size() * 2);
+      return Result;
+    };
+    this.ToString$1 = function () {
+      var Result = "";
+      Result = $mod.IntToStr(this.get());
+      return Result;
+    };
+    this.SetBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() | (1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.ClearBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() & ~(1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.ToggleBit = function (Index) {
+      var Result = 0;
+      this.set(this.get() ^ (1 << Index));
+      Result = this.get();
+      return Result;
+    };
+    this.TestBit = function (Index) {
+      var Result = false;
+      Result = (this.get() & (1 << Index)) !== 0;
+      return Result;
+    };
+  });
+  rtl.createHelper($mod,"TNativeIntHelper",null,function () {
+    this.MaxValue = 4503599627370495;
+    this.MinValue = -4503599627370496;
+    this.Parse = function (AString) {
+      var Result = 0;
+      Result = $mod.StrToInt(AString);
+      return Result;
+    };
+    this.Size = function () {
+      var Result = 0;
+      Result = 7;
+      return Result;
+    };
+    this.ToString = function (AValue) {
+      var Result = "";
+      Result = $mod.IntToStr(AValue);
+      return Result;
+    };
+    this.TryParse = function (AString, AValue) {
+      var Result = false;
+      var C = 0;
+      pas.System.val(AString,AValue,{get: function () {
+          return C;
+        }, set: function (v) {
+          C = v;
+        }});
+      Result = C === 0;
+      return Result;
+    };
+    this.ToBoolean = function () {
+      var Result = false;
+      Result = this.get() !== 0;
+      return Result;
+    };
+    this.ToDouble = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToExtended = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToBinString = function () {
+      var Result = "";
+      Result = pas.System.binstr(this.get(),$mod.TNativeIntHelper.Size() * 8);
+      return Result;
+    };
+    this.ToHexString = function (AMinDigits) {
+      var Result = "";
+      Result = $mod.IntToHex(this.get(),AMinDigits);
+      return Result;
+    };
+    this.ToHexString$1 = function () {
+      var Result = "";
+      Result = $mod.IntToHex(this.get(),$mod.TNativeIntHelper.Size() * 2);
+      return Result;
+    };
+    this.ToString$1 = function () {
+      var Result = "";
+      Result = $mod.IntToStr(this.get());
+      return Result;
+    };
+    this.SetBit = function (Index) {
+      var Result = 0;
+      this.set(rtl.or(this.get(),rtl.shl(1,Index)));
+      Result = this.get();
+      return Result;
+    };
+    this.ClearBit = function (Index) {
+      var Result = 0;
+      this.set(rtl.and(this.get(),~rtl.shl(1,Index)));
+      Result = this.get();
+      return Result;
+    };
+    this.ToggleBit = function (Index) {
+      var Result = 0;
+      this.set(rtl.xor(this.get(),rtl.shl(1,Index)));
+      Result = this.get();
+      return Result;
+    };
+    this.TestBit = function (Index) {
+      var Result = false;
+      Result = rtl.and(this.get(),rtl.shl(1,Index)) !== 0;
+      return Result;
+    };
+  });
+  rtl.createHelper($mod,"TNativeUIntHelper",null,function () {
+    this.MaxValue = 4503599627370495;
+    this.MinValue = 0;
+    this.Parse = function (AString) {
+      var Result = 0;
+      Result = $mod.StrToInt(AString);
+      return Result;
+    };
+    this.Size = function () {
+      var Result = 0;
+      Result = 7;
+      return Result;
+    };
+    this.ToString = function (AValue) {
+      var Result = "";
+      Result = $mod.IntToStr(AValue);
+      return Result;
+    };
+    this.TryParse = function (AString, AValue) {
+      var Result = false;
+      var C = 0;
+      pas.System.val$1(AString,AValue,{get: function () {
+          return C;
+        }, set: function (v) {
+          C = v;
+        }});
+      Result = C === 0;
+      return Result;
+    };
+    this.ToBoolean = function () {
+      var Result = false;
+      Result = this.get() !== 0;
+      return Result;
+    };
+    this.ToDouble = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToExtended = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToBinString = function () {
+      var Result = "";
+      Result = pas.System.binstr(this.get(),$mod.TNativeUIntHelper.Size() * 8);
+      return Result;
+    };
+    this.ToHexString = function (AMinDigits) {
+      var Result = "";
+      Result = $mod.IntToHex(this.get(),AMinDigits);
+      return Result;
+    };
+    this.ToHexString$1 = function () {
+      var Result = "";
+      Result = $mod.IntToHex(this.get(),$mod.TNativeUIntHelper.Size() * 2);
+      return Result;
+    };
+    this.ToSingle = function () {
+      var Result = 0.0;
+      Result = this.get();
+      return Result;
+    };
+    this.ToString$1 = function () {
+      var Result = "";
+      Result = $mod.IntToStr(this.get());
+      return Result;
+    };
+    this.SetBit = function (Index) {
+      var Result = 0;
+      this.set(rtl.or(this.get(),rtl.shl(1,Index)));
+      Result = this.get();
+      return Result;
+    };
+    this.ClearBit = function (Index) {
+      var Result = 0;
+      this.set(rtl.and(this.get(),~rtl.shl(1,Index)));
+      Result = this.get();
+      return Result;
+    };
+    this.ToggleBit = function (Index) {
+      var Result = 0;
+      this.set(rtl.xor(this.get(),rtl.shl(1,Index)));
+      Result = this.get();
+      return Result;
+    };
+    this.TestBit = function (Index) {
+      var Result = false;
+      Result = rtl.and(this.get(),rtl.shl(1,Index)) !== 0;
+      return Result;
+    };
+  });
+  this.TUseBoolStrs = {"0": "False", False: 0, "1": "True", True: 1};
+  $mod.$rtti.$Enum("TUseBoolStrs",{minvalue: 0, maxvalue: 1, ordtype: 1, enumtype: this.TUseBoolStrs});
+  rtl.createHelper($mod,"TBooleanHelper",null,function () {
+    this.Parse = function (S) {
+      var Result = false;
+      Result = $mod.StrToBool(S);
+      return Result;
+    };
+    this.Size = function () {
+      var Result = 0;
+      Result = 1;
+      return Result;
+    };
+    this.ToString = function (AValue, UseBoolStrs) {
+      var Result = "";
+      Result = $mod.BoolToStr(AValue,UseBoolStrs === $mod.TUseBoolStrs.True);
+      return Result;
+    };
+    this.TryToParse = function (S, AValue) {
+      var Result = false;
+      Result = $mod.TryStrToBool(S,AValue);
+      return Result;
+    };
+    this.ToInteger = function () {
+      var Result = 0;
+      Result = (this.get() ? 1 : 0);
+      return Result;
+    };
+    this.ToString$1 = function (UseBoolStrs) {
+      var Result = "";
+      Result = $mod.BoolToStr(this.get(),UseBoolStrs === $mod.TUseBoolStrs.True);
+      return Result;
+    };
+  });
+  rtl.createHelper($mod,"TByteBoolHelper",null,function () {
+    this.Parse = function (S) {
+      var Result = false;
+      Result = $mod.StrToBool(S);
+      return Result;
+    };
+    this.Size = function () {
+      var Result = 0;
+      Result = 1;
+      return Result;
+    };
+    this.ToString = function (AValue, UseBoolStrs) {
+      var Result = "";
+      Result = $mod.BoolToStr(AValue,UseBoolStrs === $mod.TUseBoolStrs.True);
+      return Result;
+    };
+    this.TryToParse = function (S, AValue) {
+      var Result = false;
+      Result = $mod.TryStrToBool(S,AValue);
+      return Result;
+    };
+    this.ToString$1 = function (UseBoolStrs) {
+      var Result = "";
+      Result = $mod.BoolToStr(this.get(),UseBoolStrs === $mod.TUseBoolStrs.True);
+      return Result;
+    };
+  });
+  rtl.createHelper($mod,"TWordBoolHelper",null,function () {
+    this.Parse = function (S) {
+      var Result = false;
+      Result = $mod.StrToBool(S);
+      return Result;
+    };
+    this.Size = function () {
+      var Result = 0;
+      Result = 2;
+      return Result;
+    };
+    this.ToString = function (AValue, UseBoolStrs) {
+      var Result = "";
+      Result = $mod.BoolToStr(AValue,UseBoolStrs === $mod.TUseBoolStrs.True);
+      return Result;
+    };
+    this.TryToParse = function (S, AValue) {
+      var Result = false;
+      Result = $mod.TryStrToBool(S,AValue);
+      return Result;
+    };
+    this.ToString$1 = function (UseBoolStrs) {
+      var Result = "";
+      Result = $mod.BoolToStr(this.get(),UseBoolStrs === $mod.TUseBoolStrs.True);
+      return Result;
+    };
+  });
+  rtl.createHelper($mod,"TLongBoolHelper",null,function () {
+    this.Parse = function (S) {
+      var Result = false;
+      Result = $mod.StrToBool(S);
+      return Result;
+    };
+    this.Size = function () {
+      var Result = 0;
+      Result = 4;
+      return Result;
+    };
+    this.ToString = function (AValue, UseBoolStrs) {
+      var Result = "";
+      Result = $mod.BoolToStr(AValue,UseBoolStrs === $mod.TUseBoolStrs.True);
+      return Result;
+    };
+    this.TryToParse = function (S, AValue) {
+      var Result = false;
+      Result = $mod.TryStrToBool(S,AValue);
+      return Result;
+    };
+    this.ToString$1 = function (UseBoolStrs) {
+      var Result = "";
+      Result = $mod.BoolToStr(this.get(),UseBoolStrs === $mod.TUseBoolStrs.True);
+      return Result;
+    };
+  });
   $mod.$init = function () {
     $mod.FormatSettings = $mod.TFormatSettings.$create("Create");
     $mod.LongDayNames[0] = "Sunday";
@@ -5750,7 +8039,7 @@ rtl.module("SysUtils",["System","RTLConsts","JS"],function () {
     };
     return Result;
   };
-  $impl.RESpecials = "([\\+\\[\\]\\(\\)\\\\\\.\\*])";
+  $impl.RESpecials = "([\\$\\+\\[\\]\\(\\)\\\\\\.\\*\\^])";
   $impl.DoEncodeDate = function (Year, Month, Day) {
     var Result = 0;
     var D = 0.0;
@@ -6098,6 +8387,52 @@ rtl.module("SysUtils",["System","RTLConsts","JS"],function () {
         DateStr.set("");
       };
     };
+    return Result;
+  };
+  $impl.NotImplemented = function (S) {
+    throw $mod.Exception.$create("Create$1",["Not yet implemented : " + S]);
+  };
+  $impl.HaveChar = function (AChar, AList) {
+    var Result = false;
+    var I = 0;
+    I = 0;
+    Result = false;
+    while (!Result && (I < rtl.length(AList))) {
+      Result = AList[I] === AChar;
+      I += 1;
+    };
+    return Result;
+  };
+  rtl.recNewT($impl,"TFloatParts",function () {
+    this.sign = false;
+    this.exp = 0;
+    this.mantissa = 0.0;
+    this.$eq = function (b) {
+      return (this.sign === b.sign) && (this.exp === b.exp) && (this.mantissa === b.mantissa);
+    };
+    this.$assign = function (s) {
+      this.sign = s.sign;
+      this.exp = s.exp;
+      this.mantissa = s.mantissa;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TFloatParts",{});
+    $r.addField("sign",rtl.boolean);
+    $r.addField("exp",rtl.longint);
+    $r.addField("mantissa",rtl.double);
+  });
+  $impl.FloatToParts = function (aValue) {
+    var Result = $impl.TFloatParts.$new();
+    var F = null;
+    var B = null;
+    F = new Float64Array(1);
+    B = new Uint8Array(F.buffer);
+    F[0] = aValue;
+    Result.sign = (B[7] >>> 7) === 0;
+    Result.exp = (((B[7] & 0x7f) << 4) | (B[6] >>> 4)) - 0x3ff;
+    B[3] = 0x3F;
+    B[6] = B[6] | 0xF0;
+    Result.mantissa = F[0];
     return Result;
   };
 });
@@ -8178,7 +10513,7 @@ rtl.module("Classes",["System","RTLConsts","Types","SysUtils","JS","TypInfo","We
     };
     this.Sort = function (Compare) {
       if (!(rtl.length(this.FList) > 0) || (this.FCount < 2)) return;
-      $impl.QuickSort(this.FList,0,this.FCount - 1,Compare);
+      $impl.QuickSort(rtl.arrayRef(this.FList),0,this.FCount - 1,Compare);
     };
     this.ForEachCall = function (proc2call, arg) {
       var i = 0;
@@ -9563,7 +11898,7 @@ rtl.module("Classes",["System","RTLConsts","Types","SysUtils","JS","TypInfo","We
     };
     this.GetIndex = function () {
       var Result = 0;
-      if (this.FCollection !== null) {
+      if (this.FCollection != null) {
         Result = this.FCollection.FItems.IndexOf(this)}
        else Result = -1;
       return Result;
@@ -10280,10 +12615,10 @@ rtl.module("Classes",["System","RTLConsts","Types","SysUtils","JS","TypInfo","We
         };
       } while (!(I > J));
       if ((J - L) < (R - I)) {
-        if (L < J) $impl.QuickSort(aList,L,J,Compare);
+        if (L < J) $impl.QuickSort(rtl.arrayRef(aList),L,J,Compare);
         L = I;
       } else {
-        if (I < R) $impl.QuickSort(aList,I,R,Compare);
+        if (I < R) $impl.QuickSort(rtl.arrayRef(aList),I,R,Compare);
         R = J;
       };
     } while (!(L >= R));
@@ -12620,7 +14955,11 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
         this.FName = rtl.as(Source,$mod.TFont).FName;
         this.FColor = rtl.as(Source,$mod.TFont).FColor;
         this.FSize = rtl.as(Source,$mod.TFont).FSize;
-        this.FStyle = rtl.refSet(rtl.as(Source,$mod.TFont).FStyle);
+        this.FStyle = {};
+        if ($mod.TFontStyle.fsBold in rtl.as(Source,$mod.TFont).FStyle) this.FStyle = rtl.unionSet(this.FStyle,rtl.createSet($mod.TFontStyle.fsBold));
+        if ($mod.TFontStyle.fsItalic in rtl.as(Source,$mod.TFont).FStyle) this.FStyle = rtl.unionSet(this.FStyle,rtl.createSet($mod.TFontStyle.fsItalic));
+        if ($mod.TFontStyle.fsUnderline in rtl.as(Source,$mod.TFont).FStyle) this.FStyle = rtl.unionSet(this.FStyle,rtl.createSet($mod.TFontStyle.fsUnderline));
+        if ($mod.TFontStyle.fsStrikeOut in rtl.as(Source,$mod.TFont).FStyle) this.FStyle = rtl.unionSet(this.FStyle,rtl.createSet($mod.TFontStyle.fsStrikeOut));
       };
     };
     this.Create$1 = function () {
@@ -12651,10 +14990,11 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
     $r.addProperty("Color",2,$mod.$rtti["TColor"],"FColor","SetColor");
     $r.addProperty("Size",2,rtl.longint,"FSize","SetSize");
   });
-  this.TImageType = {"0": "itBase64", itBase64: 0, "1": "itBMP", itBMP: 1, "2": "itPNG", itPNG: 2, "3": "itJPEG", itJPEG: 3, "4": "itGIF", itGIF: 4};
-  $mod.$rtti.$Enum("TImageType",{minvalue: 0, maxvalue: 4, ordtype: 1, enumtype: this.TImageType});
+  this.TImageType = {"0": "itBase64", itBase64: 0, "1": "itBMP", itBMP: 1, "2": "itPNG", itPNG: 2, "3": "itJPEG", itJPEG: 3, "4": "itGIF", itGIF: 4, "5": "itSVG", itSVG: 5};
+  $mod.$rtti.$Enum("TImageType",{minvalue: 0, maxvalue: 5, ordtype: 1, enumtype: this.TImageType});
   $mod.$rtti.$Class("TCanvas");
   $mod.$rtti.$Class("TBitmap");
+  $mod.$rtti.$RefToProcVar("TBitmapLoadedProc",{procsig: rtl.newTIProcSig(null)});
   rtl.createClass($mod,"TGraphic",pas.System.TObject,function () {
     this.$init = function () {
       pas.System.TObject.$init.call(this);
@@ -12667,6 +15007,8 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
       this.FImage = null;
       this.FBitmap = null;
       this.FURL = "";
+      this.FLoaded = null;
+      this.FUsedCanvas = false;
     };
     this.$final = function () {
       this.FCanvasElement = undefined;
@@ -12674,6 +15016,7 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
       this.FOnChange = undefined;
       this.FImage = undefined;
       this.FBitmap = undefined;
+      this.FLoaded = undefined;
       pas.System.TObject.$final.call(this);
     };
     this.SetHeight = function (Value) {
@@ -12690,6 +15033,7 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
       var Result = null;
       if (!(this.FCanvas != null)) this.RecreateCanvas();
       Result = this.FCanvas;
+      this.FUsedCanvas = true;
       return Result;
     };
     this.DoChange = function () {
@@ -12705,9 +15049,13 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
         };
       };
       if (this.FOnChange != null) this.FOnChange(this);
+      if (this.FLoaded != null) {
+        this.FLoaded();
+        this.FLoaded = null;
+      };
     };
     this.SetURL = function (URL) {
-      this.LoadFromURL(URL);
+      this.LoadFromURL(URL,null);
     };
     this.GetWidth = function () {
       var Result = 0;
@@ -12758,7 +15106,7 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
     this.CreateImage = function () {
       this.FImage = new Image();
     };
-    this.LoadFromCache = function (AData) {
+    this.LoadFromCache = function (AData, ALoaded) {
       var dt = "";
       var o = null;
       var b = false;
@@ -12767,6 +15115,8 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
       this.FData = AData;
       dt = AData;
       if (dt === "") return;
+      this.FLoaded = ALoaded;
+      this.FUsedCanvas = false;
       if (!$impl.FCache.Find(dt,{get: function () {
           return o;
         }, set: function (v) {
@@ -12815,7 +15165,7 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
     this.CreateFromURL$1 = function (AURL, AInstance) {
       var Result = null;
       Result = $mod.TGraphic.$create("Create$3");
-      Result.LoadFromURL(AURL);
+      Result.LoadFromURL(AURL,null);
       return Result;
     };
     this.Image = function () {
@@ -12845,7 +15195,7 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
       this.FEmpty = true;
       this.FData = "";
       this.Create$3();
-      this.LoadFromURL(URL);
+      this.LoadFromURL(URL,null);
       return this;
     };
     this.Create$2 = function (Img) {
@@ -12854,12 +15204,14 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
       this.FData = "";
       this.FURL = "";
       this.FImage = Img;
+      this.FLoaded = null;
       return this;
     };
     this.Create$3 = function () {
       this.FAddToQueue = true;
       this.FEmpty = true;
       this.FData = "";
+      this.FUsedCanvas = false;
       this.CreateImage();
       this.AssignEvents();
       return this;
@@ -12880,28 +15232,28 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
         this.LoadFromCanvas(Source.FCanvas)}
        else if ((Source != null) && (Source.FImage != null) && !Source.Empty()) {
         s = Source.FImage.src;
-        this.LoadFromURL(s);
+        this.LoadFromURL(s,null);
       } else if (!(Source != null)) {
         this.FImage.src = "";
         this.DoChange();
       };
     };
-    this.LoadFromURL = function (AURL) {
-      this.LoadFromURL$1(AURL,0);
+    this.LoadFromURL = function (AURL, ALoaded) {
+      this.LoadFromURL$1(AURL,0,ALoaded);
     };
-    this.LoadFromURL$1 = function (AURL, AHInstance) {
+    this.LoadFromURL$1 = function (AURL, AHInstance, ALoaded) {
       this.FEmpty = true;
-      this.LoadFromCache(AURL);
+      this.LoadFromCache(AURL,ALoaded);
     };
-    this.LoadFromFile = function (AFileName) {
-      this.LoadFromURL(AFileName);
+    this.LoadFromFile = function (AFileName, ALoaded) {
+      this.LoadFromURL$1(AFileName,0,ALoaded);
     };
     this.LoadFromResource = function (AResource) {
       this.LoadFromResource$1(AResource,0);
     };
     this.LoadFromResource$1 = function (AResource, AHInstance) {
       this.FEmpty = true;
-      this.LoadFromCache(AResource);
+      this.LoadFromCache(AResource,null);
     };
     this.LoadFromStream = function (AStream) {
       this.DoChange();
@@ -13187,13 +15539,13 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
           }});
         this.FContext.moveTo(X1 + (X3 / 2),Y1 + dy);
         this.FContext.lineTo(X2 - (X3 / 2),Y1 + dy);
-        this.FContext.quadraticCurveTo(X2 + dx,Y1 + dy,X2 + dx,Y1 + (Y3 / 2));
+        this.FContext.quadraticCurveTo(X2 + dx,Y1 + dy,X2 + dx,Y1 + dy + (Y3 / 2));
         this.FContext.lineTo(X2 + dx,Y2 - (Y3 / 2));
-        this.FContext.quadraticCurveTo(X2 + dx,Y2 + dy,X2 - (X3 / 2),Y2 + dy);
+        this.FContext.quadraticCurveTo(X2 + dx,Y2 + dy,X2 - (X3 / 2) - dx,Y2 + dy);
         this.FContext.lineTo(X1 + (X3 / 2),Y2 + dy);
         this.FContext.quadraticCurveTo(X1 + dx,Y2 + dy,X1 + dx,Y2 - (Y3 / 2));
-        this.FContext.lineTo(X1 + dx,Y1 + (Y3 / 2));
-        this.FContext.quadraticCurveTo(X1 + dx,Y1 + dy,X1 + (X3 / 2),Y1 + dy);
+        this.FContext.lineTo(X1 + dx,Y1 + (Y3 / 2) + dy);
+        this.FContext.quadraticCurveTo(X1 + dx,Y1 + dy,X1 + (X3 / 2) + dx,Y1 + dy);
         if (this.FBrush.FStyle !== $mod.TBrushStyle.bsClear) this.FContext.fill();
         if (this.FPen.FStyle !== $mod.TPenStyle.psClear) this.FContext.stroke();
       };
@@ -13353,7 +15705,11 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
       var img = null;
       if (this.FContext != null) {
         img = Graphic.Image();
-        this.FContext.drawImage(img,X,Y);
+        if (img != null) {
+          if (Graphic.FUsedCanvas) {
+            this.FContext.drawImage(Graphic.FCanvasElement,X,Y)}
+           else this.FContext.drawImage(img,X,Y);
+        };
       };
     };
     this.StretchDraw = function (Rect, Graphic) {
@@ -13677,7 +16033,9 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
           Result = this.FElementCanvas.toDataURL("image\/jpeg",1.0)}
          else if ($tmp1 === $mod.TImageType.itBMP) {
           Result = this.FElementCanvas.toDataURL("image\/bmp")}
-         else if ($tmp1 === $mod.TImageType.itGIF) Result = this.FElementCanvas.toDataURL("image\/gif");
+         else if ($tmp1 === $mod.TImageType.itGIF) {
+          Result = this.FElementCanvas.toDataURL("image\/gif")}
+         else if ($tmp1 === $mod.TImageType.itSVG) Result = this.FElementCanvas.toDataURL("image\/svg+xml");
       };
       return Result;
     };
@@ -14014,6 +16372,67 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
     Result = pas.SysUtils.StrToInt64(s);
     return Result;
   };
+  this.RGBToColor = function (argb) {
+    var Result = 0;
+    var r = "";
+    var g = "";
+    var b = "";
+    var ri = 0;
+    var gi = 0;
+    var bi = 0;
+    var e = 0;
+    Result = -1;
+    argb = pas.SysUtils.Trim(argb);
+    if (pas.System.Pos("RGB",pas.SysUtils.UpperCase(argb)) > 0) {
+      pas.System.Delete({get: function () {
+          return argb;
+        }, set: function (v) {
+          argb = v;
+        }},1,4);
+      r = pas.System.Copy(argb,1,pas.System.Pos(",",argb) - 1);
+      pas.System.Delete({get: function () {
+          return argb;
+        }, set: function (v) {
+          argb = v;
+        }},1,pas.System.Pos(",",argb) + 1);
+      g = pas.System.Copy(argb,1,pas.System.Pos(",",argb) - 1);
+      pas.System.Delete({get: function () {
+          return argb;
+        }, set: function (v) {
+          argb = v;
+        }},1,pas.System.Pos(",",argb) + 1);
+      b = pas.System.Copy(argb,1,pas.System.Pos(")",argb) - 1);
+      pas.System.val$3(r,{get: function () {
+          return ri;
+        }, set: function (v) {
+          ri = v;
+        }},{get: function () {
+          return e;
+        }, set: function (v) {
+          e = v;
+        }});
+      pas.System.val$3(g,{get: function () {
+          return gi;
+        }, set: function (v) {
+          gi = v;
+        }},{get: function () {
+          return e;
+        }, set: function (v) {
+          e = v;
+        }});
+      pas.System.val$3(b,{get: function () {
+          return bi;
+        }, set: function (v) {
+          bi = v;
+        }},{get: function () {
+          return e;
+        }, set: function (v) {
+          e = v;
+        }});
+      Result = $mod.RGB(ri,gi,bi);
+    };
+    return Result;
+  };
   this.FontSizeToPx = function (sz) {
     var Result = 0.0;
     Result = (sz * 96) / 72;
@@ -14215,7 +16634,7 @@ rtl.module("WEBLib.Graphics",["System","Classes","Types","Web","JS"],function ()
     return Result;
   };
 });
-rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysUtils","Web"],function () {
+rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysUtils","Web","JS"],function () {
   "use strict";
   var $mod = this;
   var $impl = $mod.$impl;
@@ -14351,6 +16770,78 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
   $mod.$rtti.$Set("TShiftState",{comptype: $mod.$rtti["TShiftState$a"]});
   this.TTextDirection = {"0": "tdDefault", tdDefault: 0, "1": "tdLeftToRight", tdLeftToRight: 1, "2": "tdRightToLeft", tdRightToLeft: 2, "3": "tdInherit", tdInherit: 3};
   $mod.$rtti.$Enum("TTextDirection",{minvalue: 0, maxvalue: 3, ordtype: 1, enumtype: this.TTextDirection});
+  rtl.recNewT($mod,"TJSXMLHttpRequestRecord",function () {
+    this.req = null;
+    this.$eq = function (b) {
+      return this.req === b.req;
+    };
+    this.$assign = function (s) {
+      this.req = s.req;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TJSXMLHttpRequestRecord",{});
+    $r.addField("req",pas.Web.$rtti["TJSXMLHttpRequest"]);
+  });
+  rtl.recNewT($mod,"TJSEventRecord",function () {
+    this.event = null;
+    this.$eq = function (b) {
+      return this.event === b.event;
+    };
+    this.$assign = function (s) {
+      this.event = s.event;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TJSEventRecord",{});
+    $r.addField("event",pas.Web.$rtti["TEventListenerEvent"]);
+  });
+  rtl.recNewT($mod,"TJSHTMLElementRecord",function () {
+    this.element = null;
+    this.$eq = function (b) {
+      return this.element === b.element;
+    };
+    this.$assign = function (s) {
+      this.element = s.element;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TJSHTMLElementRecord",{});
+    $r.addField("element",pas.Web.$rtti["TJSHTMLElement"]);
+  });
+  rtl.recNewT($mod,"TJSObjectRecord",function () {
+    this.jsobject = null;
+    this.$eq = function (b) {
+      return this.jsobject === b.jsobject;
+    };
+    this.$assign = function (s) {
+      this.jsobject = s.jsobject;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TJSObjectRecord",{});
+    $r.addField("jsobject",pas.JS.$rtti["TJSObject"]);
+  });
+  rtl.recNewT($mod,"TJSArrayRecord",function () {
+    this.jsarray = null;
+    this.$eq = function (b) {
+      return this.jsarray === b.jsarray;
+    };
+    this.$assign = function (s) {
+      this.jsarray = s.jsarray;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TJSArrayRecord",{});
+    $r.addField("jsarray",pas.JS.$rtti["TJSArray"]);
+  });
+  rtl.recNewT($mod,"TJSArrayBufferRecord",function () {
+    this.jsarraybuffer = null;
+    this.$eq = function (b) {
+      return this.jsarraybuffer === b.jsarraybuffer;
+    };
+    this.$assign = function (s) {
+      this.jsarraybuffer = s.jsarraybuffer;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TJSArrayBufferRecord",{});
+    $r.addField("jsarraybuffer",pas.JS.$rtti["TJSArrayBuffer"]);
+  });
   rtl.createClass($mod,"TDragSourceObject",pas.System.TObject,function () {
     this.$init = function () {
       pas.System.TObject.$init.call(this);
@@ -14759,15 +17250,45 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
     };
     this.SetID = function (Value) {
       var eh = null;
+      var frm = null;
+      var p = null;
       if (this.FNew && (this.FID !== Value)) {
         eh = document.getElementById(Value);
         if (eh != null) {
           this.UnbindEvents();
-          if (this.FContainer != null) this.FContainer.parentElement.removeChild(this.FContainer);
+          if (this.FContainer != null) {
+            this.FParentElement = this.FContainer.parentElement;
+          };
+          p = this.FParent;
+          this.SetParent(null);
           this.CreateWithID(Value);
+          this.SetParentComponent(p);
           this.FID = Value;
+          this.UpdateElement();
           return;
         };
+      };
+      if (!this.FNew && (this.FID !== Value)) {
+        eh = document.getElementById(this.FID);
+        if (eh != null) {
+          this.UnbindEvents();
+        };
+        this.FNew = true;
+        this.FElement = null;
+        this.CreateControl();
+        if (this.FParentElement != null) {
+          this.FParentElement.appendChild(this.GetContainer());
+        } else document.body.appendChild(this.GetContainer());
+        frm = pas["WEBLib.Forms"].GetParentForm(this);
+        if (frm != null) {
+          if (pas.Classes.TComponentStateItem.csDesigning in frm.FComponentState) {
+            this.SetParent(frm);
+            this.SetElementPosition($mod.TElementPosition.epAbsolute);
+            this.SetLeft(0);
+            this.SetTop(0);
+          };
+        };
+        this.UpdateElement();
       };
       this.FID = Value;
       if (this.FContainer != null) this.FContainer.setAttribute("id",Value);
@@ -15049,6 +17570,23 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
     this.IsEnabled = function () {
       var Result = false;
       Result = this.FEnabled;
+      return Result;
+    };
+    this.GetNewName = function () {
+      var Result = "";
+      var s = "";
+      var lPrefix = "";
+      var frm = null;
+      s = this.$classname;
+      pas.System.Delete({get: function () {
+          return s;
+        }, set: function (v) {
+          s = v;
+        }},1,1);
+      lPrefix = "";
+      frm = pas["WEBLib.Forms"].GetParentForm(this);
+      if (frm != null) lPrefix = frm.$classname;
+      Result = lPrefix + "_" + $mod.FindUniqueName(s);
       return Result;
     };
     this.RecreateElement = function () {
@@ -15598,6 +18136,7 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
          else if (this.FElementPosition === $mod.TElementPosition.epRelative) {
           eh.style.setProperty("position","relative")}
          else eh.style.removeProperty("position");
+        eh.style.setProperty("box-sizing","border-box");
       };
     };
     this.UpdateElementVisual = function () {
@@ -15696,7 +18235,7 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
       var I = 0;
       var c = null;
       if (AControl != null) {
-        AControl.DoRealign();
+        if (AControl.FAlign !== $mod.TAlign.alNone) AControl.DoRealign();
         if ($mod.TCustomControl.isPrototypeOf(AControl)) {
           rtl.as(AControl,$mod.TCustomControl).RecreateCanvas();
           rtl.as(AControl,$mod.TCustomControl).Invalidate();
@@ -15715,12 +18254,22 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
         this.GetControls(i).PersistinHTML();
       };
     };
+    this.LoadFromHTML = function (HTML) {
+      if (this.GetElementHandle() != null) this.GetElementHandle().outerHTML = HTML;
+    };
     this.InitFromHTML = function () {
       var i = 0;
       for (var $l1 = 0, $end2 = this.GetControlsCount() - 1; $l1 <= $end2; $l1++) {
         i = $l1;
         this.GetControls(i).InitFromHTML();
       };
+    };
+    this.SaveState = function () {
+      var Result = "";
+      Result = "";
+      return Result;
+    };
+    this.LoadState = function (AState) {
     };
     this.DisableTab = function () {
       var i = 0;
@@ -15765,6 +18314,7 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
       this.FFont.SetColor(AValue.FColor);
     };
     this.SetParent = function (AValue) {
+      if (AValue != null) AValue = AValue.CanAcceptChild(this);
       if (this.FParent !== AValue) {
         if (this.FParent != null) this.FParent.UnRegisterParent(this);
         this.FPrevParent = this.FParent;
@@ -15774,7 +18324,7 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
         this.UpdateElement();
         this.InitScript();
         if (this.FParent != null) this.FParent.RegisterParent(this);
-        this.Realign();
+        if (AValue != null) this.Realign();
       };
     };
     this.RegisterParent = function (AValue) {
@@ -15793,6 +18343,11 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
         if (flg && (i < (rtl.length(this.FControls) - 1))) this.FControls[i] = this.FControls[i + 1];
       };
       if (flg) this.FControls = rtl.arraySetLength(this.FControls,null,rtl.length(this.FControls) - 1);
+    };
+    this.CanAcceptChild = function (AValue) {
+      var Result = null;
+      Result = this;
+      return Result;
     };
     this.SetLeft = function (AValue) {
       if (this.FLeft !== AValue) {
@@ -16054,7 +18609,29 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
     };
     this.GetClientRect = function () {
       var Result = pas.Types.TRect.$new();
-      Result.$assign(pas.Types.Rect(0,0,this.GetWidth(),this.GetHeight()));
+      var css = "";
+      var p = 0;
+      var brdr = 0;
+      css = pas.SysUtils.UpperCase(this.GetStyle("border-width"));
+      brdr = 0;
+      p = pas.System.Pos("PX",css);
+      if (p > 0) {
+        pas.System.Delete({get: function () {
+            return css;
+          }, set: function (v) {
+            css = v;
+          }},p,2);
+        pas.System.val$6(css,{get: function () {
+            return brdr;
+          }, set: function (v) {
+            brdr = v;
+          }},{get: function () {
+            return p;
+          }, set: function (v) {
+            p = v;
+          }});
+      };
+      Result.$assign(pas.Types.Rect(0,0,this.GetWidth() - (2 * brdr),this.GetHeight() - (2 * brdr)));
       return Result;
     };
     this.CreateControl = function () {
@@ -16276,7 +18853,7 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
         el = document.getElementById(frm.FFormContainer);
         if (el != null) {
           cr = el.getBoundingClientRect();
-          ctop = Math.round(cr.top);
+          ctop = Math.round(cr.top + 1);
         };
       };
       this.FIsAligning = true;
@@ -16292,14 +18869,16 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
       };
       r.$assign(this.GetClientRect());
       if ((r.Bottom + ctop) > window.innerHeight) {
-        if ((this.FParent != null) && pas["WEBLib.Forms"].TCustomForm.isPrototypeOf(this.FParent)) r.Bottom = window.innerHeight - ctop;
+        if (((this.FParent != null) && pas["WEBLib.Forms"].TCustomForm.isPrototypeOf(this.FParent)) || pas["WEBLib.Forms"].TCustomForm.isPrototypeOf(this)) {
+          r.Bottom = window.innerHeight - ctop;
+        };
       };
       if ((eh != null) && (eh.tagName === "BODY")) {
         vscrl = 0;
-        if (document.body.scrollHeight > document.body.clientHeight) vscrl = 16;
+        if ((document.body.scrollHeight > document.body.clientHeight) && !(pas.Classes.TComponentStateItem.csDesigning in this.FComponentState)) vscrl = 16;
         if (frm.FFormContainer !== "") {
-          r.Bottom = Math.round(Math.min(r.Bottom - 2,window.innerHeight - 2));
-          r.Right = Math.round(Math.min(r.Right - 2 - vscrl,window.innerWidth - 2));
+          r.Bottom = Math.round(Math.min(r.Bottom,window.innerHeight));
+          r.Right = Math.round(Math.min(r.Right - vscrl,window.innerWidth));
         } else {
           r.Bottom = frm.GetHeight();
           r.Right = frm.GetWidth();
@@ -16434,7 +19013,7 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
       this.FShowFocus = false;
       this.FBorderWidth = 0;
       this.FEnablePropagation = false;
-      this.FColor = -1;
+      this.FColor = 16711422;
       this.FMargins = $mod.TMargins.$create("Create$1");
       this.FMargins.FOnChange = rtl.createCallback(this,"DoMarginsChanged");
       this.FParent = null;
@@ -16704,6 +19283,18 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
       Result = "";
       return Result;
     };
+    this.GetStyle = function (css) {
+      var Result = "";
+      var res = "";
+      var el = null;
+      el = this.GetElementHandle();
+      res = "";
+      if (!(el != null)) return Result;
+      if (window.getComputedStyle) res = getComputedStyle(el, '')[css];
+      if(el.currentStyle) res = el.currentStyle[css];
+      Result = res;
+      return Result;
+    };
     this.SetBoundsInt = function (X, Y, AWidth, AHeight) {
       if ((X !== this.GetLeft()) || (Y !== this.GetTop()) || (AWidth !== this.GetWidth()) || (AHeight !== this.GetHeight())) {
         this.FBlockUpdateElement = true;
@@ -16730,33 +19321,30 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
       return this;
     };
     this.Create$1 = function (AOwner) {
-      var s = "";
-      var lPrefix = "";
       var lName = "";
       var frm = null;
+      var lDesign = false;
       this.FGotFocus = false;
       this.FTabStop = true;
       this.FAllowTouch = true;
       this.ClearMethodPointers();
       pas.Classes.TComponent.Create$1.call(this,AOwner);
+      this.FEventStopPropagation = rtl.createSet($mod.TElementEvent.eeClick,$mod.TElementEvent.eeDblClick,$mod.TElementEvent.eeMouseUp,$mod.TElementEvent.eeMouseMove,$mod.TElementEvent.eeMouseDown,$mod.TElementEvent.eeKeyPress,$mod.TElementEvent.eeKeyDown,$mod.TElementEvent.eeKeyUp);
       this.FScriptLoaded = false;
       this.FElementFont = $mod.TElementFont.efProperty;
       this.FElementPosition = $mod.TElementPosition.epAbsolute;
       this.FParentElement = null;
       this.FTextDirection = $mod.TTextDirection.tdDefault;
-      s = this.$classname;
-      pas.System.Delete({get: function () {
-          return s;
-        }, set: function (v) {
-          s = v;
-        }},1,1);
-      lPrefix = "";
+      lDesign = false;
       frm = pas["WEBLib.Forms"].GetParentForm(this);
-      if (frm != null) lPrefix = frm.$classname;
-      lName = lPrefix + "_" + $mod.FindUniqueName(s);
-      this.CreateWithID(lName);
+      if (frm != null) {
+        lDesign = pas.Classes.TComponentStateItem.csDesigning in frm.FComponentState;
+      };
+      lName = this.GetNewName();
+      if (lDesign) {
+        this.CreateWithID("")}
+       else this.CreateWithID(lName);
       if ((AOwner != null) && !(pas.Classes.TComponentStateItem.csDesigning in AOwner.FComponentState)) this.SetName(lName);
-      this.FEventStopPropagation = rtl.createSet($mod.TElementEvent.eeClick,$mod.TElementEvent.eeDblClick,$mod.TElementEvent.eeMouseUp,$mod.TElementEvent.eeMouseMove,$mod.TElementEvent.eeMouseDown,$mod.TElementEvent.eeKeyPress,$mod.TElementEvent.eeKeyDown,$mod.TElementEvent.eeKeyUp);
       return this;
     };
     this.Destroy = function () {
@@ -16829,17 +19417,15 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
       };
     };
     this.BringToFront = function () {
-      if (this.GetElementHandle() != null) {
-        if (((this.FElementPosition !== $mod.TElementPosition.epAbsolute) || this.GetIsLinked()) && (this.GetElementHandle().parentElement != null)) {
-          this.GetElementHandle().parentElement.appendChild(this.GetElementHandle());
-        } else this.GetElementHandle().style.setProperty($mod.CSSZIndex,"999998");
+      if ((this.GetElementHandle() != null) && (this.GetElementHandle().parentElement != null)) {
+        this.GetElementHandle().parentElement.appendChild(this.GetElementHandle());
+        if (!((this.FElementPosition !== $mod.TElementPosition.epAbsolute) || this.GetIsLinked())) this.GetElementHandle().style.setProperty($mod.CSSZIndex,"9999");
       };
     };
     this.SendToBack = function () {
-      if (this.GetElementHandle() != null) {
-        if (((this.FElementPosition !== $mod.TElementPosition.epAbsolute) || this.GetIsLinked()) && (this.GetElementHandle().parentElement != null)) {
-          this.GetElementHandle().parentElement.insertBefore(this.GetElementHandle(),this.GetElementHandle().parentElement.firstElementChild);
-        } else this.GetElementHandle().style.setProperty($mod.CSSZIndex,"0");
+      if ((this.GetElementHandle() != null) && (this.GetElementHandle().parentElement != null)) {
+        this.GetElementHandle().parentElement.insertBefore(this.GetElementHandle(),this.GetElementHandle().parentElement.firstElementChild);
+        if (!((this.FElementPosition !== $mod.TElementPosition.epAbsolute) || this.GetIsLinked())) this.GetElementHandle().style.setProperty($mod.CSSZIndex,"0");
       };
     };
     this.PreventDefault = function () {
@@ -17019,16 +19605,37 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
       Result = this.FCanvas;
       return Result;
     };
-    this.RenderDesigning = function (ACaption, AElement, AControl, ADisplay) {
+    this.GetContext = function () {
+      var Result = null;
+      var ctx = null;
+      ctx = FElementCanvas.getContext("2d");
+      Result = ctx;
+      return Result;
+    };
+    this.RenderDesigning = function (ACaption, AElement, AControl, ADisplay, AImage) {
       var LContainer = null;
       var LLabel = null;
+      var LDiv = null;
       var LHasLabel = false;
       LContainer = AElement;
       LLabel = LContainer.firstChild;
-      LHasLabel = (LLabel != null) && (LLabel.getAttribute("data-design") === "1");
+      LHasLabel = (LLabel != null) && (LLabel.tagName === "DIV") && (LLabel.getAttribute("data-design") === "1");
       if ((pas.Classes.TComponentStateItem.csDesigning in AControl.FComponentState) && ADisplay && (this.FElementClassName === "")) {
         if (LHasLabel) return;
         LContainer.innerHTML = "";
+        if (AImage !== "") {
+          LDiv = document.createElement("DIV");
+          LDiv.style.setProperty("background-color","white");
+          LDiv.style.setProperty("background-repeat","no-repeat");
+          LDiv.style.setProperty("background-position-y","center");
+          LDiv.style.setProperty("background-image","url(" + AImage + ")");
+          LDiv.style.setProperty("background-position-x","center");
+          LDiv.style.setProperty("background-size","128px");
+          LDiv.style.setProperty("top","50%");
+          LDiv.style.setProperty("left","50%");
+          LDiv.style.setProperty("height","70%");
+          LContainer.appendChild(LDiv);
+        };
         LLabel = document.createElement("DIV");
         LLabel.setAttribute("data-design","1");
         LLabel.innerHTML = ACaption;
@@ -17039,7 +19646,9 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
         LLabel.style.setProperty("transform","translateX(-50%)");
         LLabel.style.setProperty("display","inline-block");
         LContainer.style.setProperty("border","1px solid gray");
-        LContainer.style.setProperty("background-color","silver");
+        if (AImage === "") {
+          LContainer.style.setProperty("background-color","silver")}
+         else LContainer.style.setProperty("background-color","white");
         this.FCustomBorder = true;
         LContainer.appendChild(LLabel);
       } else {
@@ -17185,7 +19794,6 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
     };
     this.CreateInitialize = function () {
       $mod.TControl.CreateInitialize.call(this);
-      this.FCaption = "";
       this.FControlStyle = rtl.unionSet(this.FControlStyle,rtl.createSet($mod.TControlStyleValue.csSetCaption));
       this.FBorderStyle = $mod.TBorderStyle.bsSingle;
       this.FBorderColor = 12632256;
@@ -17215,6 +19823,8 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
       var frm = null;
       $mod.TControl.Invalidate.call(this);
       if ((this.FParent === null) || (pas.Classes.TComponentStateItem.csDestroying in this.FComponentState)) return;
+      if (!this.FVisible) return;
+      if (this.FUpdateCount > 0) return;
       frm = pas["WEBLib.Forms"].GetParentForm(this);
       if (frm != null) if (frm.IsUpdating()) return;
       px = this.GetPixelRatio();
@@ -17232,6 +19842,10 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
       var Result = false;
       Result = $mod.TControl.Focused.call(this);
       return Result;
+    };
+    this.EndUpdate = function () {
+      $mod.TControl.EndUpdate.call(this);
+      this.Invalidate();
     };
     rtl.addIntf(this,pas.System.IUnknown);
   });
@@ -17412,11 +20026,6 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
     var $r = this.$rtti;
     $r.addProperty("CSSFragments",2,$mod.$rtti["TCSSCodeFragments"],"FCSSFragments","SetCSSFragments");
   });
-  rtl.createHelper($mod,"TCollectionItemHelper",null,function () {
-    this.SetEvent = function (ALookupRoot, APropName, AMethodName) {
-      pas.Classes.TPersistent.SetEvent.call(this,this,ALookupRoot,APropName,AMethodName);
-    };
-  });
   this.FindGlobalComponent = function (Name) {
     var Result = null;
     Result = null;
@@ -17519,12 +20128,14 @@ rtl.module("WEBLib.Controls",["System","Classes","WEBLib.Graphics","Types","SysU
         if (s !== "") s = s + " ";
         s = s + "line-through";
       };
-      if (s !== "") AElement.style.setProperty("text-decoration",s);
+      if (s !== "") {
+        AElement.style.setProperty("text-decoration",s)}
+       else AElement.style.removeProperty("text-decoration");
       AElement.style.setProperty("font-size",pas.SysUtils.IntToStr(AFont.FSize) + "pt");
     };
   };
   this.SetHTMLElementColor = function (AElement, AColor, UseCSS) {
-    if (UseCSS || (AColor === -1)) {
+    if (UseCSS || (AColor === -1) || (AColor === 16711422)) {
       AElement.style.removeProperty($impl.cStyleBkgColor)}
      else AElement.style.setProperty($impl.cStyleBkgColor,pas["WEBLib.Graphics"].ColorToHTML(AColor));
   };
@@ -18251,7 +20862,8 @@ rtl.module("WEBLib.JSON",["System","Classes","Web","JS","SysUtils"],function () 
           Result = $mod.TJSONTrue.$create("Create")}
          else Result = $mod.TJSONFalse.$create("Create");
       };
-      if (Result != null) Result.fjv = AJSValue;
+      if (!(Result != null)) Result = $mod.TJSONNull.$create("Create");
+      Result.fjv = AJSValue;
       return Result;
     };
     this.Create$2 = function () {
@@ -18298,7 +20910,7 @@ rtl.module("WEBLib.JSON",["System","Classes","Web","JS","SysUtils"],function () 
       var jsv = null;
       Result = null;
       jv = this.fjo[Name];
-      if (pas.System.Assigned(jv)) {
+      if (jv != null) {
         Result = $mod.TJSONPair.$create("Create$1");
         jsv = this.JSONValueFromJS(jv);
         Result.fjs.SetStrValue(Name);
@@ -18368,11 +20980,12 @@ rtl.module("WEBLib.JSON",["System","Classes","Web","JS","SysUtils"],function () 
         };
         for (var $l1 = 1, $end2 = Size - 1; $l1 <= $end2; $l1++) {
           I = $l1;
-          s = s + ",";
           if (this.fjo != null) {
             jp = this.Get$1(I);
-            if (jp != null) s = s + jp.ToString();
-          } else s = s + rtl.getObject(this.FMembers.Get(I)).ToString();
+            if (jp != null) {
+              s = s + "," + jp.ToString()}
+             else s = s + "," + '"' + Object.keys(this.fjo)[I] + '":null';
+          } else s = s + "," + rtl.getObject(this.FMembers.Get(I)).ToString();
         };
         s = s + "}";
         Result = s;
@@ -18567,12 +21180,31 @@ rtl.module("WEBLib.JSON",["System","Classes","Web","JS","SysUtils"],function () 
 rtl.module("WEBLib.Consts",["System"],function () {
   "use strict";
   var $mod = this;
-  $mod.$resourcestrings = {SWarning: {org: "Warning"}, SError: {org: "Error"}, SInformation: {org: "Information"}, SConfirm: {org: "Confirm"}, SOK: {org: "OK"}, SCancel: {org: "Cancel"}, SYes: {org: "Yes"}, SNo: {org: "No"}, SAbort: {org: "Abort"}, SRetry: {org: "Retry"}, SIgnore: {org: "Ignore"}, SHelp: {org: "Help"}, SClose: {org: "Close"}, SAll: {org: "All"}, SYesToAll: {org: "Yes to all"}, SNoToAll: {org: "No to all"}, SReadError: {org: "Stream read error"}, SWriteError: {org: "Stream write error"}, SCannotGetFile: {org: "Cannot get the file from the URL %s because of the error %d!"}, SErrorLoadFromFile: {org: "There was an error during the download of the file %s!"}, SLoadFromFileAborted: {org: "The download of the file %s was abroted!"}};
+  $mod.$resourcestrings = {SWarning: {org: "Warning"}, SError: {org: "Error"}, SInformation: {org: "Information"}, SConfirm: {org: "Confirm"}, SOK: {org: "OK"}, SCancel: {org: "Cancel"}, SYes: {org: "Yes"}, SNo: {org: "No"}, SAbort: {org: "Abort"}, SRetry: {org: "Retry"}, SIgnore: {org: "Ignore"}, SHelp: {org: "Help"}, SClose: {org: "Close"}, SAll: {org: "All"}, SYesToAll: {org: "Yes to all"}, SNoToAll: {org: "No to all"}, SReadError: {org: "Stream read error"}, SWriteError: {org: "Stream write error"}, SCannotGetFile: {org: "Cannot get the file from the URL %s because of the error %d!"}, SErrorLoadFromFile: {org: "There was an error during the download of the file %s!"}, SLoadFromFileAborted: {org: "The download of the file %s was aborted!"}};
 });
 rtl.module("WEBLib.Utils",["System","Types","Web","SysUtils","Math","Classes","JS"],function () {
   "use strict";
   var $mod = this;
   var $impl = $mod.$impl;
+  this.DayMonday = 1;
+  this.DayTuesday = 2;
+  this.DayWednesday = 3;
+  this.DayThursday = 4;
+  this.DayFriday = 5;
+  this.DaySaturday = 6;
+  this.DaySunday = 7;
+  this.MonthJanuary = 1;
+  this.MonthFebruary = 2;
+  this.MonthMarch = 3;
+  this.MonthApril = 4;
+  this.MonthMay = 5;
+  this.MonthJune = 6;
+  this.MonthJuly = 7;
+  this.MonthAugust = 8;
+  this.MonthSeptember = 9;
+  this.MonthOctober = 10;
+  this.MonthNovember = 11;
+  this.MonthDecember = 12;
   $mod.$rtti.$Class("TInterfaceList");
   $mod.$rtti.$RefToProcVar("TProc",{procsig: rtl.newTIProcSig(null)});
   $mod.$rtti.$RefToProcVar("TProcBoolean",{procsig: rtl.newTIProcSig([["AValue",rtl.boolean]])});
@@ -18917,6 +21549,12 @@ rtl.module("WEBLib.Utils",["System","Types","Web","SysUtils","Math","Classes","J
         }, set: function (v) {
           rtl.raiseE("EPropReadOnly");
         }})) > (AStartIndex + ACount)) Result = -1;
+      return Result;
+    };
+    this.Insert = function (AStartIndex, AValue) {
+      var Result = "";
+      pas.System.Insert(AValue,this,AStartIndex + 1);
+      Result = this.get();
       return Result;
     };
     this.IsEmpty = function () {
@@ -20292,6 +22930,72 @@ rtl.module("WEBLib.Utils",["System","Types","Web","SysUtils","Math","Classes","J
     var $r = $mod.$rtti.$Record("TDirectory",{});
     $r.addMethod("GetCurrentDirectory",5,null,rtl.string,{flags: 1});
   },true);
+  rtl.createClass($mod,"TStringBuilder",pas.System.TObject,function () {
+    this.$init = function () {
+      pas.System.TObject.$init.call(this);
+      this.FData = "";
+    };
+    this.get_Length = function () {
+      var Result = 0;
+      Result = $mod.TStringHelper.get_Length.call({p: this, get: function () {
+          return this.p.FData;
+        }, set: function (v) {
+          this.p.FData = v;
+        }});
+      return Result;
+    };
+    this.set_Length = function (AValue) {
+      $mod.TStringHelper.set_Length.call({p: this, get: function () {
+          return this.p.FData;
+        }, set: function (v) {
+          this.p.FData = v;
+        }},AValue);
+    };
+    this.Create$1 = function (AValue) {
+      pas.System.TObject.Create.call(this);
+      this.FData = AValue;
+      return this;
+    };
+    this.Append = function (AValue) {
+      var Result = null;
+      Result = this.Append$1($mod.TLongIntHelper.ToString.call({get: function () {
+          return AValue;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}));
+      return Result;
+    };
+    this.Append$1 = function (AValue) {
+      var Result = null;
+      this.FData = this.FData + AValue;
+      Result = this;
+      return Result;
+    };
+    this.Insert = function (AIndex, AValue) {
+      var Result = null;
+      Result = this.Insert$1(AIndex,$mod.TLongIntHelper.ToString.call({get: function () {
+          return AValue;
+        }, set: function (v) {
+          rtl.raiseE("EPropReadOnly");
+        }}));
+      return Result;
+    };
+    this.Insert$1 = function (AIndex, AValue) {
+      var Result = null;
+      $mod.TStringHelper.Insert.call({p: this, get: function () {
+          return this.p.FData;
+        }, set: function (v) {
+          this.p.FData = v;
+        }},AIndex,AValue);
+      Result = this;
+      return Result;
+    };
+    this.ToString = function () {
+      var Result = "";
+      Result = this.FData;
+      return Result;
+    };
+  });
   this.DateTimeToStr = function (ADateTime, AFormatSettings, AForceTimeIfZero) {
     var Result = "";
     Result = $mod.FormatDateTime(AFormatSettings.DateTimeToStrFormat[+AForceTimeIfZero],AFormatSettings,ADateTime);
@@ -21300,17 +24004,16 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
     };
     this.CreateElement = function () {
       var Result = null;
-      var LLabel = null;
+      var LDiv = null;
       if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) {
-        Result = document.createElement("DIV");
-        LLabel = document.createElement("DIV");
-        LLabel.innerHTML = "TWebYouTube";
-        this.SetBorderStyle(pas["WEBLib.Controls"].TBorderStyle.bsSingle);
-        LLabel.setAttribute("align","center");
-        LLabel.style.setProperty("border","1px solid gray");
-        LLabel.style.setProperty("vertical-align","middle");
-        LLabel.style.setProperty("display","table-cell");
-        Result.appendChild(LLabel);
+        LDiv = document.createElement("DIV");
+        LDiv.style.setProperty("background-color","slategray");
+        LDiv.style.setProperty("background-repeat","no-repeat");
+        LDiv.style.setProperty("background-position-y","center");
+        LDiv.style.setProperty("background-image","url(data:image\/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA\/PjxzdmcgdmVyc2lvbj0iMS4xIiB2aWV3Qm94PSIwIDAuNDc5OTk5OTU5NDY4ODQyIDE2OS43MDk4Njkz" + "ODQ3NjYgMTE5LjA4NTYyODA5MjI4OSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+PG" + "RlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJkZWYwIiB4MT0iMC41IiB4Mj0iMC41IiB5MT0iMSIgeTI9IjMuMTAwNzJFLTA2Ij48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNG" + "RjAwMDAiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNGRjZCMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Zz48cGF0aCBkPSJNMzEuMDI5MywxLjc3NzM0QzEzLj" + "E0MjcsMi45OTQ2Nyw0LjE1NDY3LDYuMTIsMS40ODgsMjguNzkzM0wxLjQ4OCwyOC43OTMzQzAuNTA2NjY3LDM3LjEzNiwwLjAwOTMzMzMzLDQ4LjQwMTMsMCw1OS42OTg3TDAsNjAu" + "MzQ1M0MwLjAwOTMzMzMzLDcxLjYyOTMsMC41MDQsODIuODg5MywxLjQ4OCw5MS4yNTA3TDEuNDg4LDkxLjI1MDdDNC4xNTQ2NywxMTMuOTI3LDEzLjE0MjcsMTE3LjA1MiwzMS4wMj" + "kzLDExOC4yNjdMMzEuMDI5MywxMTguMjY3QzU2LjQ3NzMsMTIwLDExMy4yNTEsMTE5Ljk5NywxMzguNjgsMTE4LjI2N0wxMzguNjgsMTE4LjI2N0MxNTYuNTY4LDExNy4wNTIsMTY1" + "LjU1NSwxMTMuOTI3LDE2OC4yMjMsOTEuMjUwN0wxNjguMjIzLDkxLjI1MDdDMTcwLjIwMyw3NC40MTczLDE3MC4yMDgsNDUuNjg2NywxNjguMjIzLDI4Ljc5MzNMMTY4LjIyMywyOC" + "43OTMzQzE2NS41NTUsNi4xMTg2OCwxNTYuNTY4LDIuOTk0NjcsMTM4LjY4LDEuNzc3MzRMMTM4LjY4LDEuNzc3MzRDMTI1Ljk2MywwLjkxMjAxLDEwNS4zOTcsMC40ODAwMDMsODQu" + "ODQsMC40ODAwMDNMODQuODQsMC40ODAwMDNDNjQuMjkyLDAuNDc4Njc2LDQzLjc1MDcsMC45MTIwMSwzMS4wMjkzLDEuNzc3MzR6IiBmaWxsPSJ1cmwoI2RlZjApIi8+PHBhdGggZD" + "0iTTEwOC40MjUsNjAuMDIyN0w2Mi4yNDE5LDkxLjk0NjcgNjIuMjQxOSwyOC4wOTg3IDEwOC40MjUsNjAuMDIyN3oiIGZpbGw9IiNGRkZGRkYiLz48L2c+PC9zdmc+)");
+        LDiv.style.setProperty("background-position-x","center");
+        LDiv.style.setProperty("background-size","128px");
+        Result = LDiv;
       } else {
         Result = document.createElement("IFRAME");
         Result.setAttribute("id",this.GetID());
@@ -21322,10 +24025,9 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
       var FURL = "";
       pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
       if (this.IsUpdating()) return;
-      if ((pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) && (this.FVideoID === "")) {
+      if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) {
         if (this.GetElementHandle() != null) {
-          this.GetElementHandle().style.setProperty("display","table");
-          this.GetElementHandle().style.setProperty("background-color","silver");
+          this.GetElementHandle().style.setProperty("background-color","slategray");
         };
       };
       if (this.GetContainer() != null) {
@@ -21337,6 +24039,15 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
         if (this.FAllowFullScreen) {
           this.GetContainer().setAttribute("allowfullscreen","allowfullscreen")}
          else this.GetContainer().removeAttribute("allowfullscreen");
+      };
+    };
+    this.UpdateElementVisual = function () {
+      pas["WEBLib.Controls"].TCustomControl.UpdateElementVisual.call(this);
+      if (this.IsUpdating()) return;
+      if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) {
+        if (this.GetElementHandle() != null) {
+          this.GetElementHandle().style.setProperty("background-color","slategray");
+        };
       };
     };
     this.CreateInitialize = function () {
@@ -21356,12 +24067,12 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
   });
   $mod.$rtti.$MethodVar("TMapClickEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Lon",rtl.double],["Lat",rtl.double]]), methodkind: 0});
   $mod.$rtti.$MethodVar("TMapZoomEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["ZoomLevel",rtl.longint]]), methodkind: 0});
-  $mod.$rtti.$MethodVar("TMapMarkerClickEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AIndex",rtl.longint],["AMarker",pas.JS.$rtti["TJSObject"]]]), methodkind: 0});
-  $mod.$rtti.$MethodVar("TMapPolygonClickEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AIndex",rtl.longint],["APolygon",pas.JS.$rtti["TJSObject"]]]), methodkind: 0});
-  $mod.$rtti.$MethodVar("TMapPolylineClickEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AIndex",rtl.longint],["APolyline",pas.JS.$rtti["TJSObject"]]]), methodkind: 0});
-  $mod.$rtti.$MethodVar("TMapCircleClickEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AIndex",rtl.longint],["ACircle",pas.JS.$rtti["TJSObject"]]]), methodkind: 0});
-  $mod.$rtti.$MethodVar("TMapRectangleClickEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AIndex",rtl.longint],["ARectangle",pas.JS.$rtti["TJSObject"]]]), methodkind: 0});
-  $mod.$rtti.$MethodVar("TMapKMLClickEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AIndex",rtl.longint],["AKML",pas.JS.$rtti["TJSObject"]]]), methodkind: 0});
+  $mod.$rtti.$MethodVar("TMapMarkerClickEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AIndex",rtl.longint],["AMarker",pas["WEBLib.Controls"].$rtti["TJSObjectRecord"]]]), methodkind: 0});
+  $mod.$rtti.$MethodVar("TMapPolygonClickEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AIndex",rtl.longint],["APolygon",pas["WEBLib.Controls"].$rtti["TJSObjectRecord"]]]), methodkind: 0});
+  $mod.$rtti.$MethodVar("TMapPolylineClickEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AIndex",rtl.longint],["APolyline",pas["WEBLib.Controls"].$rtti["TJSObjectRecord"]]]), methodkind: 0});
+  $mod.$rtti.$MethodVar("TMapCircleClickEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AIndex",rtl.longint],["ACircle",pas["WEBLib.Controls"].$rtti["TJSObjectRecord"]]]), methodkind: 0});
+  $mod.$rtti.$MethodVar("TMapRectangleClickEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AIndex",rtl.longint],["ARectangle",pas["WEBLib.Controls"].$rtti["TJSObjectRecord"]]]), methodkind: 0});
+  $mod.$rtti.$MethodVar("TMapKMLClickEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AIndex",rtl.longint],["AKML",pas["WEBLib.Controls"].$rtti["TJSObjectRecord"]]]), methodkind: 0});
   this.TGoogleMarkerColor = {"0": "mcDefault", mcDefault: 0, "1": "mcRed", mcRed: 1, "2": "mcBlue", mcBlue: 2, "3": "mcGreen", mcGreen: 3, "4": "mcPurple", mcPurple: 4, "5": "mcYellow", mcYellow: 5};
   $mod.$rtti.$Enum("TGoogleMarkerColor",{minvalue: 0, maxvalue: 5, ordtype: 1, enumtype: this.TGoogleMarkerColor});
   this.TGoogleMarkerShape = {"0": "msPin", msPin: 0, "1": "msPinDot", msPinDot: 1, "2": "msFlag", msFlag: 2, "3": "msBookmark", msBookmark: 3, "4": "msFlagSmall", msFlagSmall: 4, "5": "msHome", msHome: 5, "6": "msFavorite", msFavorite: 6, "7": "msStar", msStar: 7, "8": "msCustom", msCustom: 8};
@@ -21565,8 +24276,11 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
               map.setOptions({styles: myStyle});
       } else if ((this.FMapStyle === $mod.TGoogleMapStyle.mstCustom) && (this.FCustomStyle.GetTextStr() !== "")) {
         cstyle = this.FCustomStyle.GetTextStr();
-        ostyle = rtl.getObject(JSON.parse(cstyle));
-        map.setOptions({styles: ostyle});
+        try {
+          ostyle = rtl.getObject(JSON.parse(cstyle));
+          map.setOptions({styles: ostyle});
+        } catch ($e) {
+        };
       } else {
         map.setOptions({styles: []});
       };
@@ -21627,6 +24341,7 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
       this.FUpdateCount$1 = 0;
       this.FReq = null;
       this.FAPIKey = "";
+      this.FOldAPIKey = "";
       this.FMap = null;
       this.FDirectionsService = null;
       this.FDirectionsDisplay = null;
@@ -21746,11 +24461,16 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
       pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
       if (this.IsUpdating()) return;
       if (this.FUpdateCount$1 > 0) return;
-      if (!this.FCode && (this.FAPIKey !== "")) {
+      if ((!this.FCode && (this.FAPIKey !== "")) || (this.FAPIKey !== this.FOldAPIKey)) {
         this.FCode = true;
         id = this.GetID();
+        this.FOldAPIKey = this.FAPIKey;
+        scr = document.getElementById("scrgooglemaps");
+        if (scr != null) {
+          document.head.removeChild(scr);
+        };
         srcurl = "https:\/\/maps.googleapis.com\/maps\/api\/js?key=" + this.FAPIKey + "&callback=initMap" + id;
-        scriptsrc = "function initMap" + id + "() { " + "\r\n" + 'var el = document.getElementById("' + id + '");' + "\r\n" + 'if (el == null) { alert("Google Maps DIV element not found!"); }' + "\r\n" + "map = new google.maps.Map(el, {" + "\r\n" + "center: {lat: " + pas.SysUtils.StringReplace(pas.SysUtils.FloatToStr(this.FOptions.FDefaultLatitude),",",".",rtl.createSet(pas.SysUtils.TStringReplaceFlag.rfReplaceAll)) + ", lng: " + pas.SysUtils.StringReplace(pas.SysUtils.FloatToStr(this.FOptions.FDefaultLongitude),",",".",rtl.createSet(pas.SysUtils.TStringReplaceFlag.rfReplaceAll)) + "}," + "\r\n" + "zoom: " + pas.SysUtils.IntToStr(this.FOptions.FDefaultZoomLevel) + "});" + "\r\n" + "el.gMap = map;" + "\r\n" + "}";
+        scriptsrc = "var gmapserror = false;" + "\r\n" + "function initMap" + id + "() { " + "\r\n" + 'var el = document.getElementById("' + id + '");' + "\r\n" + 'if (el == null) { alert("Google Maps DIV element not found!"); }' + "\r\n" + "map = new google.maps.Map(el, {" + "\r\n" + "center: {lat: " + pas.SysUtils.StringReplace(pas.SysUtils.FloatToStr(this.FOptions.FDefaultLatitude),",",".",rtl.createSet(pas.SysUtils.TStringReplaceFlag.rfReplaceAll)) + ", lng: " + pas.SysUtils.StringReplace(pas.SysUtils.FloatToStr(this.FOptions.FDefaultLongitude),",",".",rtl.createSet(pas.SysUtils.TStringReplaceFlag.rfReplaceAll)) + "}," + "\r\n" + "zoom: " + pas.SysUtils.IntToStr(this.FOptions.FDefaultZoomLevel) + "});" + "\r\n" + "el.gMap = map;" + "\r\n" + "}";
         scr = document.createElement("script");
         scr.addEventListener("load",rtl.createCallback(this,"DoLoaded"));
         scr.defer = true;
@@ -21758,6 +24478,7 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
         scr.src = srcurl;
         scr.type = 'text/javascript';
         document.head.appendChild(scr);
+        scr.setAttribute("id","scrgooglemaps");
         var script = document.createElement('script');
         script.innerHTML = scriptsrc;
         document.head.appendChild(script);
@@ -21855,33 +24576,57 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
     };
     this.HandleMarkerClick = function (e) {
       var idx = 0;
+      var LObjRec = pas["WEBLib.Controls"].TJSObjectRecord.$new();
       idx = e.idx;
-      if (this.FOnMarkerClick != null) this.FOnMarkerClick(this,idx,e);
+      if (this.FOnMarkerClick != null) {
+        LObjRec.jsobject = e;
+        this.FOnMarkerClick(this,idx,pas["WEBLib.Controls"].TJSObjectRecord.$clone(LObjRec));
+      };
     };
     this.HandlePolygonClick = function (e) {
       var idx = 0;
+      var LObjRec = pas["WEBLib.Controls"].TJSObjectRecord.$new();
       idx = e.idx;
-      if (this.FOnPolygonClick != null) this.FOnPolygonClick(this,idx,e);
+      if (this.FOnPolygonClick != null) {
+        LObjRec.jsobject = e;
+        this.FOnPolygonClick(this,idx,pas["WEBLib.Controls"].TJSObjectRecord.$clone(LObjRec));
+      };
     };
     this.HandlePolylineClick = function (e) {
       var idx = 0;
+      var LObjRec = pas["WEBLib.Controls"].TJSObjectRecord.$new();
       idx = e.idx;
-      if (this.FOnPolylineClick != null) this.FOnPolylineClick(this,idx,e);
+      if (this.FOnPolylineClick != null) {
+        LObjRec.jsobject = e;
+        this.FOnPolylineClick(this,idx,pas["WEBLib.Controls"].TJSObjectRecord.$clone(LObjRec));
+      };
     };
     this.HandleCircleClick = function (e) {
       var idx = 0;
+      var LObjRec = pas["WEBLib.Controls"].TJSObjectRecord.$new();
       idx = e.idx;
-      if (this.FOnCircleClick != null) this.FOnCircleClick(this,idx,e);
+      if (this.FOnCircleClick != null) {
+        LObjRec.jsobject = e;
+        this.FOnCircleClick(this,idx,pas["WEBLib.Controls"].TJSObjectRecord.$clone(LObjRec));
+      };
     };
     this.HandleRectangleClick = function (e) {
       var idx = 0;
+      var LObjRec = pas["WEBLib.Controls"].TJSObjectRecord.$new();
       idx = e.idx;
-      if (this.FOnRectangleClick != null) this.FOnRectangleClick(this,idx,e);
+      if (this.FOnRectangleClick != null) {
+        LObjRec.jsobject = e;
+        this.FOnRectangleClick(this,idx,pas["WEBLib.Controls"].TJSObjectRecord.$clone(LObjRec));
+      };
     };
     this.HandleKMLClick = function (e) {
       var idx = 0;
+      var LObjRec = pas["WEBLib.Controls"].TJSObjectRecord.$new();
       idx = e.idx;
-      if (this.FOnKMLClick != null) this.FOnKMLClick(this,idx,e);
+      if (this.FOnKMLClick != null) {
+        LObjRec.jsobject = e;
+        this.FOnKMLClick(this,idx,pas["WEBLib.Controls"].TJSObjectRecord.$clone(LObjRec));
+      };
     };
     this.HandleResponse = function (Event) {
       var Result = false;
@@ -21931,8 +24676,28 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
       if (this.FOnMapLoaded != null) this.FOnMapLoaded(this);
       return Result;
     };
+    this.GetID = function () {
+      var Result = "";
+      Result = pas["WEBLib.Controls"].TControl.GetID.call(this);
+      if (Result === "") {
+        this.SetID(this.GetNewName());
+        Result = this.GetID();
+      };
+      return Result;
+    };
     this.Loaded = function () {
       pas["WEBLib.Controls"].TCustomControl.Loaded.call(this);
+    };
+    this.GoogleLoaded = function () {
+      var Result = false;
+      var res = false;
+      res = false;
+      if (typeof google === 'object' && typeof google.maps === 'object')
+      {
+        res = true;
+      };
+      Result = res;
+      return Result;
     };
     this.CreateInitialize = function () {
       pas["WEBLib.Controls"].TCustomControl.CreateInitialize.call(this);
@@ -22024,7 +24789,7 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
     this.PanTo = function (Lat, Lon) {
       var map = null;
       map = this.GetMap();
-      if (map != null) {
+      if ((map != null) && this.GoogleLoaded()) {
         map.panTo(new google.maps.LatLng(Lat, Lon));
       };
     };
@@ -22417,10 +25182,12 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
     this.FitBounds = function (LatMin, LonMin, LatMax, LonMax) {
       var map = null;
       map = this.GetMap();
-      var ne = new google.maps.LatLng(LatMax, LonMax);
-      var sw = new google.maps.LatLng(LatMin, LonMin);
-      var bounds = new google.maps.LatLngBounds(sw,ne);
-      map.fitBounds(bounds);
+      if ((map != null) && this.GoogleLoaded()) {
+        var ne = new google.maps.LatLng(LatMax, LonMax);
+        var sw = new google.maps.LatLng(LatMin, LonMin);
+        var bounds = new google.maps.LatLngBounds(sw,ne);
+        map.fitBounds(bounds);
+      };
     };
     this.ClearMarkers = function () {
       for (var i = 0; i < this.FMarkers.length; i++) {
@@ -22635,6 +25402,11 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
       pas["WEBLib.Controls"].TCustomControl.$init.call(this);
       this.FView = 0;
       this.FFolderID = "";
+      this.FFrameHandle = null;
+    };
+    this.$final = function () {
+      this.FFrameHandle = undefined;
+      pas["WEBLib.Controls"].TCustomControl.$final.call(this);
     };
     this.SetFolderID = function (Value) {
       if (this.FFolderID !== Value) {
@@ -22650,12 +25422,15 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
     };
     this.CreateElement = function () {
       var Result = null;
-      Result = document.createElement("IFRAME");
-      Result.setAttribute("frameborder","0");
+      Result = document.createElement("DIV");
+      this.FFrameHandle = document.createElement("IFRAME");
+      Result.appendChild(this.FFrameHandle);
+      this.FFrameHandle.setAttribute("frameborder","0");
       return Result;
     };
     this.UpdateElement = function () {
       var vs = "";
+      var img = "";
       pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
       var $tmp1 = this.FView;
       if ($tmp1 === $mod.TDriveView.dvList) {
@@ -22663,9 +25438,12 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
        else if ($tmp1 === $mod.TDriveView.dvGrid) vs = "grid";
       if (this.GetElementHandle() != null) {
         if (this.FFolderID !== "") {
-          this.GetElementHandle().setAttribute("src","https:\/\/drive.google.com\/embeddedfolderview?id=" + this.FFolderID + "&embedded=true#" + vs);
-          this.GetElementHandle().style.setProperty("border","0");
-        } else if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) this.RenderDesigning(this.$classname,this.GetContainer(),this,true);
+          this.FFrameHandle.setAttribute("src","https:\/\/drive.google.com\/embeddedfolderview?id=" + this.FFolderID + "&embedded=true#" + vs);
+          this.FFrameHandle.style.setProperty("border","0");
+        } else if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) {
+          img = "data:image\/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA\/PjwhRE9DVFlQRSBzdmcgIFBVQkxJQyAnLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4nICAnaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkJz48c3ZnIGV" + "uYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDEyOCAxMjgiIGlkPSJTb2NpYWxfSWNvbnMiIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDEyOCAxMjgiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1s" + "bnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiPjxnIGlkPSJfeDMzX19zdHJva2UiPjxnIGlkPSJHb29nbGVfRHJpdmUiPjxyZWN0IGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBoZWlnaHQ9I" + "jEyOCIgd2lkdGg9IjEyOCIvPjxnIGlkPSJHb29nbGVfRHJpdmVfMV8iPjxwb2x5Z29uIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzM3NzdFMyIgZmlsbC1ydWxlPSJldmVub2RkIiBwb2ludHM9IjIxLjMzNSwxMjAgNDIuNjY2LDgyLjY2NyAxMjgsODIuNj" + "Y3IDEwNi42NjYsMTIwICAgICAgICAgIi8+PHBvbHlnb24gY2xpcC1ydWxlPSJldmVub2RkIiBmaWxsPSIjRkZDRjYzIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHBvaW50cz0iODUuMzM1LDgyLjY2NyAxMjgsODIuNjY3IDg1LjMzNSw4IDQyLjY2Niw4ICAgICIvPjx" + "wb2x5Z29uIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzExQTg2MSIgZmlsbC1ydWxlPSJldmVub2RkIiBwb2ludHM9IjAsODIuNjY3IDIxLjMzNSwxMjAgNjQsNDUuMzMzIDQyLjY2Niw4ICAgICIvPjwvZz48L2c+PC9nPjwvc3ZnPg==";
+          this.RenderDesigning(this.$classname,this.GetContainer(),this,true,img);
+        };
       };
     };
     this.CreateInitialize = function () {
@@ -22704,6 +25482,7 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
     };
     this.UpdateElement = function () {
       var srcurl = "";
+      var img = "";
       var script = null;
       pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
       if ((this.GetElementHandle() != null) && !this.IsUpdating()) {
@@ -22720,14 +25499,15 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
         };
       };
       if ((this.GetElementHandle() != null) && !this.IsUpdating() && !this.FUpdatedFeed) {
-        if (this.FFeed !== "") {
+        if ((this.FFeed !== "") && !(pas.Classes.TComponentStateItem.csDesigning in this.FComponentState)) {
           srcurl = '<a class="twitter-timeline" href="https:\/\/twitter.com\/' + this.FFeed + '" data-chrome="nofooter noborders">' + this.FFeedLinkText + "<\/a>";
           this.SetBorderStyle(pas["WEBLib.Controls"].TBorderStyle.bsNone);
           this.GetElementHandle().innerHTML = srcurl;
           if (typeof twttr !== 'undefined') {
           twttr.widgets.load() };
         } else {
-          if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) this.RenderDesigning(this.$classname,this.GetContainer(),this,true);
+          img = "data:image\/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4NCjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIg0KICAgd2lkdGg9IjMwMCINCiAgIGhlaWdodD0iMzAwIj4NCjxwYX" + "RoIGQ9Im0gMjUwLDg3Ljk3NCBjIC03LjM1OCwzLjI2NCAtMTUuMjY3LDUuNDY5IC0yMy41NjYsNi40NjEgOC40NzEsLTUuMDc4IDE0Ljk3OCwtMTMuMTE5IDE4LjA0MSwtMjIuNzAxIC03LjkyOSw0LjcwMyAtMTYuNzEsOC4xMTcgLTI2LjA1Ny" + "w5Ljk1NyAtNy40ODQsLTcuOTc1IC0xOC4xNDgsLTEyLjk1NyAtMjkuOTUsLTEyLjk1NyAtMjIuNjYsMCAtNDEuMDMzLDE4LjM3MSAtNDEuMDMzLDQxLjAzMSAwLDMuMjE2IDAuMzYzLDYuMzQ4IDEuMDYyLDkuMzUxIC0zNC4xMDIsLTEuNzExIC" + "02NC4zMzYsLTE4LjA0NyAtODQuNTc0LC00Mi44NzIgLTMuNTMyLDYuMDYgLTUuNTU2LDEzLjEwOCAtNS41NTYsMjAuNjI4IDAsMTQuMjM2IDcuMjQ0LDI2Ljc5NSAxOC4yNTQsMzQuMTUzIC02LjcyNiwtMC4yMTMgLTEzLjA1MywtMi4wNTkgLT" + "E4LjU4NSwtNS4xMzIgLTAuMDA0LDAuMTcxIC0wLjAwNCwwLjM0MyAtMC4wMDQsMC41MTYgMCwxOS44OCAxNC4xNDQsMzYuNDY0IDMyLjkxNSw0MC4yMzQgLTMuNDQzLDAuOTM4IC03LjA2OCwxLjQzOSAtMTAuODEsMS40MzkgLTIuNjQ0LDAgLT" + "UuMjE0LC0wLjI1OCAtNy43MiwtMC43MzYgNS4yMjIsMTYuMzAxIDIwLjM3NSwyOC4xNjUgMzguMzMxLDI4LjQ5NSAtMTQuMDQzLDExLjAwNiAtMzEuNzM1LDE3LjU2NSAtNTAuOTYsMTcuNTY1IC0zLjMxMiwwIC02LjU3OCwtMC4xOTQgLTkuNz" + "g4LC0wLjU3NCAxOC4xNTksMTEuNjQzIDM5LjcyNywxOC40MzcgNjIuODk5LDE4LjQzNyA3NS40NzMsMCAxMTYuNzQ2LC02Mi41MjQgMTE2Ljc0NiwtMTE2Ljc0NyAwLC0xLjc3OSAtMC4wNCwtMy41NDggLTAuMTE5LC01LjMwOSA4LjAxNywtNS" + "43ODQgMTQuOTczLC0xMy4wMTEgMjAuNDc0LC0yMS4yMzkgeiIgc3R5bGU9ImZpbGw6IzNhYWFlMSIgLz4NCjwvc3ZnPg==";
+          this.RenderDesigning(this.$classname,this.GetContainer(),this,true,img);
         };
         this.FUpdatedFeed = true;
       };
@@ -22751,14 +25531,14 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
   $mod.$rtti.$MethodVar("TFileAsTextEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AFileIndex",rtl.longint],["AText",rtl.string]]), methodkind: 0});
   $mod.$rtti.$MethodVar("TFileAsBase64Event",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AFileIndex",rtl.longint],["ABase64",rtl.string]]), methodkind: 0});
   $mod.$rtti.$MethodVar("TFileAsDataURLEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AFileIndex",rtl.longint],["AURL",rtl.string]]), methodkind: 0});
-  $mod.$rtti.$MethodVar("TFileAsArrayBufferEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AFileIndex",rtl.longint],["ABuffer",pas.JS.$rtti["TJSArrayBuffer"]]]), methodkind: 0});
+  $mod.$rtti.$MethodVar("TFileAsArrayBufferEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AFileIndex",rtl.longint],["ABuffer",pas["WEBLib.Controls"].$rtti["TJSArrayBufferRecord"]]]), methodkind: 0});
   $mod.$rtti.$MethodVar("TFileUploadEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AFileIndex",rtl.longint]]), methodkind: 0});
   $mod.$rtti.$MethodVar("TFileUploadErrorEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AFileIndex",rtl.longint],["AError",rtl.string]]), methodkind: 0});
   $mod.$rtti.$MethodVar("TFileUploadProgressEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AFileIndex",rtl.longint],["APosition",rtl.longint],["ATotalSize",rtl.longint]]), methodkind: 0});
   $mod.$rtti.$MethodVar("TFileGetAsBase64",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["ABase64",rtl.string]]), methodkind: 0});
   $mod.$rtti.$MethodVar("TFileGetAsText",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AText",rtl.string]]), methodkind: 0});
   $mod.$rtti.$MethodVar("TFileGetAsURL",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["AURL",rtl.string]]), methodkind: 0});
-  $mod.$rtti.$MethodVar("TFileGetAsArrayBuffer",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["ABuffer",pas.JS.$rtti["TJSArrayBuffer"]]]), methodkind: 0});
+  $mod.$rtti.$MethodVar("TFileGetAsArrayBuffer",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["ABuffer",pas["WEBLib.Controls"].$rtti["TJSArrayBufferRecord"]]]), methodkind: 0});
   $mod.$rtti.$RefToProcVar("TGetAsStringProc",{procsig: rtl.newTIProcSig([["AValue",rtl.string]])});
   $mod.$rtti.$RefToProcVar("TGetAsArrayBufferProc",{procsig: rtl.newTIProcSig([["AValue",pas.JS.$rtti["TJSArrayBuffer"]]])});
   rtl.createClass($mod,"TFile",pas.Classes.TCollectionItem,function () {
@@ -22833,16 +25613,23 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
     this.HandleFileLoadAsArrayBuffer = function (Event) {
       var Result = false;
       var ja = null;
+      var LJARec = pas["WEBLib.Controls"].TJSArrayBufferRecord.$new();
       var ctrl = null;
       Result = true;
       ja = event.target.result;
-      if (this.FGetAsArrayBuffer != null) this.FGetAsArrayBuffer(ja);
+      if (this.FGetAsArrayBuffer != null) {
+        this.FGetAsArrayBuffer(ja);
+      };
       this.FGetAsArrayBuffer = null;
-      if (this.FOnGetFileAsArrayBuffer != null) this.FOnGetFileAsArrayBuffer(this,ja);
+      if (this.FOnGetFileAsArrayBuffer != null) {
+        LJARec.jsarraybuffer = ja;
+        this.FOnGetFileAsArrayBuffer(this,pas["WEBLib.Controls"].TJSArrayBufferRecord.$clone(LJARec));
+      };
       ctrl = this.GetControl();
       if (ctrl != null) {
-        if ($mod.TFilePicker.isPrototypeOf(ctrl) && (rtl.as(ctrl,$mod.TFilePicker).FOnGetFileAsArrayBuffer != null)) rtl.as(ctrl,$mod.TFilePicker).FOnGetFileAsArrayBuffer(ctrl,this.GetIndex(),ja);
-        if ($mod.TFileUpload.isPrototypeOf(ctrl) && (rtl.as(ctrl,$mod.TFileUpload).FOnGetFileAsArrayBuffer != null)) rtl.as(ctrl,$mod.TFileUpload).FOnGetFileAsArrayBuffer(ctrl,this.GetIndex(),ja);
+        LJARec.jsarraybuffer = ja;
+        if ($mod.TFilePicker.isPrototypeOf(ctrl) && (rtl.as(ctrl,$mod.TFilePicker).FOnGetFileAsArrayBuffer != null)) rtl.as(ctrl,$mod.TFilePicker).FOnGetFileAsArrayBuffer(ctrl,this.GetIndex(),pas["WEBLib.Controls"].TJSArrayBufferRecord.$clone(LJARec));
+        if ($mod.TFileUpload.isPrototypeOf(ctrl) && (rtl.as(ctrl,$mod.TFileUpload).FOnGetFileAsArrayBuffer != null)) rtl.as(ctrl,$mod.TFileUpload).FOnGetFileAsArrayBuffer(ctrl,this.GetIndex(),pas["WEBLib.Controls"].TJSArrayBufferRecord.$clone(LJARec));
       };
       return Result;
     };
@@ -23389,6 +26176,8 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
     this.CreateInitialize = function () {
       pas["WEBLib.Controls"].TCustomControl.CreateInitialize.call(this);
       this.FFiles = $mod.TFiles.$create("Create$2",[this]);
+      this.SetWidth(160);
+      this.SetHeight(40);
     };
     this.Destroy = function () {
       rtl.free(this,"FFiles");
@@ -23438,7 +26227,7 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
       if ((this.GetElementHandle() != null) && (this.FHTML.GetTextStr() !== "")) {
         this.GetElementHandle().innerHTML = this.FHTML.GetTextStr()}
        else {
-        if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) this.RenderDesigning(this.$classname,this.GetContainer(),this,true);
+        if (!this.GetIsLinked() && (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState)) this.RenderDesigning(this.$classname,this.GetContainer(),this,true,"");
       };
     };
     this.HTMLChanged = function (Sender) {
@@ -23506,7 +26295,7 @@ rtl.module("WEBLib.WebCtrls",["System","Classes","WEBLib.Controls","WEBLib.Graph
       if ((this.GetElementHandle() != null) && (this.FHTML.GetTextStr() !== "")) {
         this.GetElementHandle().innerHTML = this.FHTML.GetTextStr()}
        else {
-        if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) this.RenderDesigning(this.$classname,this.GetContainer(),this,true);
+        if (!this.GetIsLinked() && (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState)) this.RenderDesigning(this.$classname,this.GetContainer(),this,true,"");
       };
     };
     this.HTMLChanged = function (Sender) {
@@ -23972,6 +26761,7 @@ rtl.module("WEBLib.Dialogs",["System","Classes","WEBLib.Controls","Web","SysUtil
       var btnFocus = false;
       var i = 0;
       if ((pas["WEBLib.Forms"].Application === null) || (pas["WEBLib.Forms"].Application.FMainForm === null)) return;
+      if (!pas["WEBLib.Forms"].Application.HasCSS($impl.lMaterial)) this.AddControlLink("material",$impl.lMaterial);
       pas["WEBLib.Forms"].Application.LockForm(pas["WEBLib.Forms"].Application.FMainForm);
       this.FLayer$1 = document.createElement("SPAN");
       document.body.appendChild(this.FLayer$1);
@@ -24207,12 +26997,12 @@ rtl.module("WEBLib.Dialogs",["System","Classes","WEBLib.Controls","Web","SysUtil
           }, set: function (v) {
             btnFocus = v;
           }},""));
-        if ($mod.TMsgDlgBtn.mbNoToAll in this.FButtons) bar.appendChild(this.CreateButton(this.GetDialogText(13),{get: function () {
+        if ($mod.TMsgDlgBtn.mbYesToAll in this.FButtons) bar.appendChild(this.CreateButton(this.GetDialogText(13),{get: function () {
             return btnFocus;
           }, set: function (v) {
             btnFocus = v;
           }},""));
-        if ($mod.TMsgDlgBtn.mbYesToAll in this.FButtons) bar.appendChild(this.CreateButton(this.GetDialogText(14),{get: function () {
+        if ($mod.TMsgDlgBtn.mbNoToAll in this.FButtons) bar.appendChild(this.CreateButton(this.GetDialogText(14),{get: function () {
             return btnFocus;
           }, set: function (v) {
             btnFocus = v;
@@ -24517,6 +27307,7 @@ rtl.module("WEBLib.Dialogs",["System","Classes","WEBLib.Controls","Web","SysUtil
   "use strict";
   var $mod = this;
   var $impl = $mod.$impl;
+  $impl.lMaterial = "https:\/\/fonts.googleapis.com\/icon?family=Material+Icons";
   $impl.WebLibDlg = null;
   $impl.StringToHTML = function (AValue) {
     var Result = "";
@@ -25014,9 +27805,27 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
     };
     this.SetFormContainer = function (Value) {
       var el = null;
+      var old = null;
+      var i = 0;
+      old = this.GetContainer();
       this.FFormContainer = Value;
-      el = document.getElementById(Value);
-      if (el != null) this.FContainer = el;
+      if (Value === "") {
+        el = document.body}
+       else {
+        el = document.getElementById(Value);
+        if (!(el != null)) el = document.body;
+      };
+      if (el != null) {
+        this.FContainer = el;
+        if (old != null) {
+          for (var $l1 = 0, $end2 = this.GetControlsCount() - 1; $l1 <= $end2; $l1++) {
+            i = $l1;
+            if (this.GetControls(i).GetElementHandle().parentElement === old) {
+              el.appendChild(this.GetControls(i).GetElementHandle());
+            };
+          };
+        };
+      };
     };
     this.GetActiveControl = function () {
       var Result = null;
@@ -25307,7 +28116,7 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
       var k = 0;
       k = this.GetKeyCode(Event.key,true);
       if (!pas.System.Assigned(k)) return Result;
-      if ((k === 27) && !(pas.Classes.TComponentStateItem.csDesigning in this.FComponentState)) {
+      if ((k === 27) && !(pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) && this.FPopup) {
         this.Close();
       };
       Result = true;
@@ -25361,6 +28170,9 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
       };
       if (this.GetElementHandle() === document.body) {
         Result = window.innerWidth;
+        dr = document.documentElement.getBoundingClientRect();
+        Result = Math.round(dr.width);
+        if (Result > window.innerWidth) Result = window.innerWidth;
       } else {
         if (this.FPopup) {
           Result = pas["WEBLib.Controls"].TControl.GetWidth.call(this)}
@@ -25391,7 +28203,9 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
         s = css.getPropertyValue("margin-top");
         s = pas.System.Copy(s,1,s.length - 2);
         d = pas.SysUtils.StrToInt(s) - 2;
-        Result = window.innerHeight - Math.max(0,d);
+        dr = document.documentElement.getBoundingClientRect();
+        Result = Math.round(dr.height);
+        if (Result > window.innerHeight) Result = window.innerHeight - Math.max(0,d);
       } else {
         if (this.FPopup) {
           Result = pas["WEBLib.Controls"].TControl.GetHeight.call(this);
@@ -25504,7 +28318,7 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
         clr = pas["WEBLib.Graphics"].ColorToHTML(this.FColor);
         if (this.GetContainer() != null) {
           if ((this.FColor !== -1) && (this.FElementClassName === "")) this.GetContainer().style.setProperty(pas["WEBLib.Controls"].CSSBackground,clr);
-          if (this.FElementClassName !== "") this.GetContainer().style.removeProperty(pas["WEBLib.Controls"].CSSBackground);
+          if ((this.FElementClassName !== "") || (this.FColor === -1)) this.GetContainer().style.removeProperty(pas["WEBLib.Controls"].CSSBackground);
           if ((this.FElementClassName === "") && !this.FPopup) {
             document.documentElement.style.setProperty('height','100%');
           };
@@ -25528,10 +28342,7 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
     this.FormContainerElement = function () {
       var Result = null;
       if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) {
-        if (this.FDesignContainer != null) {
-          Result = this.FDesignContainer}
-         else Result = document.body;
-        return Result;
+        if (this.FDesignContainer != null) Result = this.FDesignContainer;
       };
       if (this.FFormContainer !== "") {
         Result = document.getElementById(this.FFormContainer);
@@ -25586,11 +28397,6 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
     this.IsFocused = function () {
       var Result = false;
       Result = false;
-      return Result;
-    };
-    this.GetUniqueComponentName = function (AComponent) {
-      var Result = "";
-      Result = this.$classname + "_" + pas["WEBLib.Controls"].FindUniqueName(AComponent.$classname);
       return Result;
     };
     this.CreateLayer = function () {
@@ -25818,6 +28624,28 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
         };
       };
     };
+    this.GetUniqueComponentName = function (AComponent) {
+      var Result = "";
+      var s = "";
+      var i = 0;
+      var j = 0;
+      var found = false;
+      i = 1;
+      do {
+        found = false;
+        s = pas.System.Copy(this.$classname,2,this.$classname.length) + "_" + pas.System.Copy(AComponent.$classname,2,AComponent.$classname.length) + pas.SysUtils.IntToStr(i);
+        i += 1;
+        for (var $l1 = 0, $end2 = this.GetComponentCount() - 1; $l1 <= $end2; $l1++) {
+          j = $l1;
+          if (this.GetComponent(j).FName === s) {
+            found = true;
+            break;
+          };
+        };
+      } while (!(found === false));
+      Result = s;
+      return Result;
+    };
     this.PreventDefault$1 = function () {
       this.GetElementEvent().preventDefault();
     };
@@ -25961,7 +28789,7 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
     $r.addProperty("ElementFont",2,pas["WEBLib.Controls"].$rtti["TElementFont"],"FElementFont","SetElementFont",{Default: pas["WEBLib.Controls"].TElementFont.efProperty});
     $r.addProperty("ElementPosition",2,pas["WEBLib.Controls"].$rtti["TElementPosition"],"FElementPosition","SetElementPosition",{Default: pas["WEBLib.Controls"].TElementPosition.epAbsolute});
     $r.addProperty("Font",2,pas["WEBLib.Graphics"].$rtti["TFont"],"FFont","SetFont");
-    $r.addProperty("FormContainer",2,rtl.string,"FFormContainer","SetFormContainer");
+    $r.addProperty("FormContainer",2,pas["WEBLib.Controls"].$rtti["TElementID"],"FFormContainer","SetFormContainer");
     $r.addProperty("FormStyle",3,$mod.$rtti["TFormStyle"],"GetFormStyle","SetFormStyle");
     $r.addProperty("Menu",0,pas["WEBLib.Controls"].$rtti["TCustomControl"],"FMenu","FMenu");
     $r.addProperty("TabOrder",2,rtl.longint,"FTabOrder","SetTabOrder");
@@ -26395,6 +29223,22 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
       Result = mob;
       return Result;
     };
+    this.InternalDownloadFile = function (AData, AFileName, AType, ANewTab) {
+      var lElement = document.createElement('a');
+      var lBlob = new Blob([AData], {type: AType})
+      var lUrl = window.URL.createObjectURL(lBlob);
+      lElement.href = lUrl;
+      if (AFileName != ''){
+        lElement.setAttribute('download', AFileName);
+      }
+      lElement.style.display = 'none';
+      if (ANewTab == true) {
+        lElement.target = '_blank';
+      }
+      document.body.appendChild(lElement);
+      lElement.click();
+      document.body.removeChild(lElement);
+    };
     this.CreateNewForm = function (AForm, HTML) {
       var eh = null;
       var op = null;
@@ -26566,9 +29410,9 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
         for (var $l1 = $Self.FActiveForm.GetControlsCount() - 1; $l1 >= 0; $l1--) {
           i = $l1;
           ctl = $Self.FActiveForm.GetControls(i);
-          ctl.PersistinHTML();
+          s = ctl.SaveState();
           ctl.GetElementHandle().id = ctl.FName;
-          s = ctl.FName + "=" + ctl.GetElementHandle().outerHTML;
+          s = ctl.FName + "=" + s;
           sl.Add(s);
         };
         for (var $l2 = $Self.FActiveForm.GetControlsCount() - 1; $l2 >= 0; $l2--) {
@@ -26587,9 +29431,7 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
           i = $l3;
           ctl = $Self.FActiveForm.GetControls(i);
           s = sl.GetValue(ctl.FName);
-          ctl.GetElementHandle().outerHTML = s;
-          ctl.FContainer = document.getElementById(ctl.FName);
-          ctl.BindEvents();
+          if (s !== "") ctl.LoadState(s);
         };
         sl = rtl.freeLoc(sl);
         $Self.FActiveForm.DoShow();
@@ -26738,7 +29580,7 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
         var LResponse = "";
         var LIsBody = false;
         LResponse = Event.target.responseText;
-        LIsBody = AElementID === $impl.cBodyTag;
+        LIsBody = pas.SysUtils.LowerCase(AElementID) === $impl.cBodyTag;
         if (LIsBody) {
           LElem = document.body}
          else LElem = document.getElementById(AElementID);
@@ -26819,6 +29661,23 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
       if (styleElement != null) {
         styleElement.parentNode.removeChild(styleElement);
       };
+    };
+    this.HasCSS = function (href) {
+      var Result = false;
+      var els = null;
+      var i = 0;
+      var s = "";
+      Result = false;
+      els = document.querySelectorAll("head > link");
+      for (var $l1 = 0, $end2 = els.length - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        s = els.item(i).href;
+        if (pas.SysUtils.CompareText(s,href) === 0) {
+          Result = true;
+          break;
+        };
+      };
+      return Result;
     };
     this.Initialize = function () {
       var query = "";
@@ -26930,18 +29789,17 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
       element.click();
       document.body.removeChild(element);
     };
-    this.DownloadBinaryFile = function (Data, AFileName) {
-      var element = document.createElement('a');
-      var blob = new Blob([Data], {type: "octet/stream"})
-      var url = window.URL.createObjectURL(blob);
-      element.href = url;
-      if (AFileName != ''){
-        element.setAttribute('download', AFileName);
-      }
-      element.style.display = 'none';
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+    this.DownloadBinaryFile = function (AData, AFileName, ANewTab) {
+      this.DownloadBinaryFile$1(Uint8Array.from(AData),AFileName,ANewTab);
+    };
+    this.DownloadBinaryFile$1 = function (AData, AFileName, ANewTab) {
+      this.InternalDownloadFile(AData,AFileName,"octet\/stream",ANewTab);
+    };
+    this.DownloadPDFFile = function (AData, AFileName, ANewTab) {
+      this.DownloadPDFFile$1(Uint8Array.from(AData),AFileName,ANewTab);
+    };
+    this.DownloadPDFFile$1 = function (AData, AFileName, ANewTab) {
+      this.InternalDownloadFile(AData,AFileName,"application\/pdf",ANewTab);
     };
     this.EXEName = function () {
       var Result = "";
@@ -26961,12 +29819,15 @@ rtl.module("WEBLib.Forms",["System","Classes","Types","SysUtils","WEBLib.Graphic
       var Result = "";
       Result = "";
       if (this.IDETheme() === "vscode-light") {
-        Result = ".IDECaption { background-color: #F0F0F0 !important; color: #555555 !important; border: 1px solid #DDDDDD !important}" + "\r\n" + ".IDEBkg { background-color: white !important; color: #555555 !important; border: 1px solid #DDDDDD !important}" + "\r\n" + ".IDEButton { background-color: #FAFAFA !important; color: #555555 !important; border: 1px solid #DDDDDD !important}" + "\r\n" + ".IDEButton:hover {background-color:#F0F0F0 !important}";
+        Result = ".IDECaption { background-color: #F0F0F0 !important; color: #555555 !important; border: 1px solid #DDDDDD !important}" + "\r\n" + ".IDEBkg { background-color: white !important; color: #555555 !important; border: 1px solid #DDDDDD !important}" + "\r\n" + ".IDEButton { background-color: #FAFAFA !important; font-size:10pt; color: #555555 !important; border: 1px solid #DDDDDD !important}" + "\r\n" + ".IDEButton:hover {background-color:#F0F0F0 !important}" + "\r\n" + ".IDEFont {font-size:10pt !important}";
       };
       if (this.IDETheme() === "vscode") {
-        Result = ".IDECaption,.IDEButton { background-color: #3F3E43 !important; color: #FFFFFF !important; border: 1px solid #35353A !important}" + "\r\n" + ".IDEBkg { background-color: #2A2A2C !important; color: #A9ACB4 !important; border: 1px solid #35353A !important}" + "\r\n" + ".IDEButton:hover {background-color:#434857 !important}";
+        Result = ".IDECaption,.IDEButton { background-color: #3F3E43 !important; color: #FFFFFF !important; border: 1px solid #35353A !important}" + "\r\n" + ".IDEBkg { background-color: #2A2A2C !important; color: #A9ACB4 !important; border: 1px solid #35353A !important}" + "\r\n" + ".IDEButton:hover {background-color:#434857 !important}" + "\r\n" + ".IDEFont {font-size:10pt !important}";
       };
       return Result;
+    };
+    this.IDEMessage = function (Msg) {
+      pas["WEBLib.Forms"].VSIDE.ShowMessage(Msg);
     };
     this.NeedsFormRouting = function () {
       var Result = false;
@@ -27059,8 +29920,8 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
   $mod.$rtti.$Enum("TCheckBoxState",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TCheckBoxState});
   this.TDateTimeKind = {"0": "dtkDate", dtkDate: 0, "1": "dtkTime", dtkTime: 1};
   $mod.$rtti.$Enum("TDateTimeKind",{minvalue: 0, maxvalue: 1, ordtype: 1, enumtype: this.TDateTimeKind});
-  this.TEllipsisPosition = {"0": "epEndEllipsis", epEndEllipsis: 0, "1": "epNone", epNone: 1};
-  $mod.$rtti.$Enum("TEllipsisPosition",{minvalue: 0, maxvalue: 1, ordtype: 1, enumtype: this.TEllipsisPosition});
+  this.TEllipsisPosition = {"0": "epEndEllipsis", epEndEllipsis: 0, "1": "epNone", epNone: 1, "2": "epPathEllipsis", epPathEllipsis: 2, "3": "epWordEllipsis", epWordEllipsis: 3};
+  $mod.$rtti.$Enum("TEllipsisPosition",{minvalue: 0, maxvalue: 3, ordtype: 1, enumtype: this.TEllipsisPosition});
   this.TTextLayout = {"0": "tlTop", tlTop: 0, "1": "tlCenter", tlCenter: 1, "2": "tlBottom", tlBottom: 2};
   $mod.$rtti.$Enum("TTextLayout",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TTextLayout});
   this.TSysLinkType = {"0": "sltID", sltID: 0, "1": "sltURL", sltURL: 1};
@@ -27117,14 +29978,18 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       };
     };
     this.SetHTMLType = function (Value) {
+      var el = null;
       if (this.FHTMLType !== Value) {
         this.FHTMLType = Value;
         if (this.FHTMLType in rtl.createSet(null,$mod.THTMLType.tH1,$mod.THTMLType.tH6)) this.SetElementFont(pas["WEBLib.Controls"].TElementFont.efCSS);
         if ((this.GetElementHandle() != null) && (this.FContent != null)) {
-          this.GetElementHandle().removeChild(this.FContent);
-          this.FContent = this.CreateLabelElement();
-          this.GetElementHandle().appendChild(this.FContent);
-          this.UpdateElement();
+          el = this.GetElementHandle().firstChild;
+          if ((el != null) && (el.getAttribute("data-lbl") === "lbl")) {
+            this.GetElementHandle().removeChild(this.FContent);
+            this.FContent = this.CreateLabelElement();
+            this.GetElementHandle().appendChild(this.FContent);
+            this.UpdateElement();
+          };
         };
       };
     };
@@ -27179,6 +30044,7 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
        else if ($tmp1 === $mod.THTMLType.tLABELTAG) {
         Result = document.createElement("LABEL")}
        else if ($tmp1 === $mod.THTMLType.tP) Result = document.createElement("P");
+      Result.setAttribute("data-lbl","lbl");
       return Result;
     };
     this.GetDisplayText = function () {
@@ -27221,8 +30087,10 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
        else lTxt = this.GetDisplayText();
       if (this.GetIsLinked() && (lTxt === "")) return;
       if (this.GetContentHandle() != null) {
-        this.GetContentHandle().innerHTML = lTxt}
-       else this.GetElementHandle().innerHTML = lTxt;
+        if (this.GetIsLinked() && (this.GetContentHandle().firstChild != null)) {
+          this.GetContentHandle().nodeValue = lTxt}
+         else this.GetContentHandle().innerHTML = lTxt;
+      } else this.GetElementHandle().innerHTML = lTxt;
       if ((acc !== "") && (this.FFocusControl != null)) {
         this.GetContentHandle().setAttribute("accesskey",acc);
         this.GetContentHandle().setAttribute("for",this.FFocusControl.GetID());
@@ -27249,8 +30117,8 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
         if ($tmp2 === pas.Classes.TAlignment.taCenter) {
           this.GetContentHandle().style.setProperty("text-align","center")}
          else if ($tmp2 === pas.Classes.TAlignment.taRightJustify) this.GetContentHandle().style.setProperty("text-align","right");
-        pas["WEBLib.Controls"].SetHTMLElementColor(this.GetElementHandle(),this.FColor$1,this.FTransparent && ((this.FColor$1 === 16777215) || (this.FColor$1 === -1)));
-        pas["WEBLib.Controls"].SetHTMLElementColor(this.GetContentHandle(),this.FColor$1,this.FTransparent && ((this.FColor$1 === 16777215) || (this.FColor$1 === -1)));
+        pas["WEBLib.Controls"].SetHTMLElementColor(this.GetElementHandle(),this.FColor$1,this.FTransparent && ((this.FColor$1 === 16777215) || (this.FColor$1 === -1) || (this.FColor$1 === 16711422)));
+        pas["WEBLib.Controls"].SetHTMLElementColor(this.GetContentHandle(),this.FColor$1,this.FTransparent && ((this.FColor$1 === 16777215) || (this.FColor$1 === -1) || (this.FColor$1 === 16711422)));
         this.GetContentHandle().style.setProperty("display","table-cell");
         if (this.FElementClassName === "") {
           if (this.FEnabled && (this.FElementFont === pas["WEBLib.Controls"].TElementFont.efProperty) && !this.GetIsLinked()) {
@@ -27406,6 +30274,14 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
         this.GetContainer().style.setProperty("box-sizing","border-box");
       };
     };
+    this.LoadState = function (AState) {
+      this.GetElementHandle().value = AState;
+    };
+    this.SaveState = function () {
+      var Result = "";
+      Result = this.GetElementHandle().value;
+      return Result;
+    };
     this.CreateInitialize = function () {
       pas["WEBLib.Controls"].TCustomControl.CreateInitialize.call(this);
       this.SetShowFocus(true);
@@ -27508,12 +30384,14 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
     };
     this.GetSelLength = function () {
       var Result = 0;
-      Result = this.GetElementInputHandle().selectionEnd - this.GetElementInputHandle().selectionStart;
+      Result = -1;
+      if (this.GetElementInputHandle() != null) Result = this.GetElementInputHandle().selectionEnd - this.GetElementInputHandle().selectionStart;
       return Result;
     };
     this.GetSelStart = function () {
       var Result = 0;
-      Result = this.GetElementInputHandle().selectionStart;
+      Result = -1;
+      if (this.GetElementInputHandle() != null) Result = this.GetElementInputHandle().selectionStart;
       return Result;
     };
     this.SetEditType = function (Value) {
@@ -27962,6 +30840,7 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
     $r.addProperty("Anchors",2,pas["WEBLib.Controls"].$rtti["TAnchors"],"FAnchors","SetAnchors",{Default: rtl.createSet(pas["WEBLib.Controls"].TAnchorKind.akLeft,pas["WEBLib.Controls"].TAnchorKind.akTop)});
     $r.addProperty("AutoSize",0,rtl.boolean,"FAutoSize","FAutoSize");
     $r.addProperty("BorderStyle",2,pas["WEBLib.Controls"].$rtti["TBorderStyle"],"FBorderStyle","SetBorderStyle",{Default: pas["WEBLib.Controls"].TBorderStyle.bsSingle});
+    $r.addProperty("ChildOrder",2,rtl.longint,"FChildOrder","SetChildOrderEx");
     $r.addProperty("Color",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FColor","SetColor");
     $r.addProperty("ElementClassName",2,pas["WEBLib.Controls"].$rtti["TElementClassName"],"FElementClassName","SetElementClassName");
     $r.addProperty("ElementID",3,pas["WEBLib.Controls"].$rtti["TElementID"],"GetID","SetID");
@@ -28012,8 +30891,8 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
     this.$init = function () {
       $mod.TCustomInput.$init.call(this);
       this.FDate = 0.0;
-      this.FKind = 0;
       this.FTime = 0.0;
+      this.FKind = 0;
       this.FOnChange = null;
       this.FReadOnly = false;
     };
@@ -28037,7 +30916,7 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       var moi = 0;
       var dai = 0;
       var e = 0;
-      Result = this.FTime;
+      Result = pas.System.Int(this.FDate) + pas.System.Frac(this.FTime);
       if (!(this.GetContainer() != null)) return Result;
       str = this.GetContainer().value;
       if (this.FKind === $mod.TDateTimeKind.dtkDate) {
@@ -28072,9 +30951,9 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
             e = v;
           }});
         if ((yei !== 0) && (moi !== 0) && (dai !== 0)) {
-          Result = pas.SysUtils.EncodeDate(yei,moi,dai)}
-         else Result = 0;
-      } else Result = 0;
+          Result = pas.SysUtils.EncodeDate(yei,moi,dai) + pas.System.Frac(this.FTime)}
+         else Result = this.FTime;
+      } else Result = this.FTime;
       return Result;
     };
     this.SetTime = function (AValue) {
@@ -28087,22 +30966,27 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       var Result = 0.0;
       var str = "";
       var d = 0.0;
-      Result = this.FTime;
+      Result = this.FTime + this.FDate;
       if (!(this.GetContainer() != null)) return Result;
       str = this.GetContainer().value;
       if (pas.SysUtils.TryStrToTime(str,{get: function () {
           return d;
         }, set: function (v) {
           d = v;
-        }})) Result = d;
+        }})) Result = d + pas.System.Int(this.FDate);
       return Result;
     };
     this.SetKind = function (AValue) {
+      var dt = 0.0;
       this.FKind = AValue;
       if (this.GetContainer() != null) {
+        dt = pas.System.Int(this.FDate) + pas.System.Frac(this.FTime);
         if (AValue === $mod.TDateTimeKind.dtkDate) {
           this.GetContainer().setAttribute("type","DATE")}
          else this.GetContainer().setAttribute("type","TIME");
+        this.SetDate(dt);
+        this.SetTime(dt);
+        this.UpdateElement();
       };
     };
     this.SetText = function (Value) {
@@ -28170,6 +31054,8 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       this.SetShowFocus(true);
       this.SetWidth(170);
       this.SetHeight(25);
+      this.FDate = pas.System.Int(pas.SysUtils.Now());
+      this.FTime = pas.System.Frac(pas.SysUtils.Now());
       this.FReadOnly = false;
     };
     rtl.addIntf(this,pas.System.IUnknown);
@@ -28178,8 +31064,9 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
     $r.addProperty("AlignWithMargins",2,rtl.boolean,"FAlignWithMargins","SetAlignWithMargins",{Default: false});
     $r.addProperty("Anchors",2,pas["WEBLib.Controls"].$rtti["TAnchors"],"FAnchors","SetAnchors",{Default: rtl.createSet(pas["WEBLib.Controls"].TAnchorKind.akLeft,pas["WEBLib.Controls"].TAnchorKind.akTop)});
     $r.addProperty("BorderStyle",2,pas["WEBLib.Controls"].$rtti["TBorderStyle"],"FBorderStyle","SetBorderStyle",{Default: pas["WEBLib.Controls"].TBorderStyle.bsSingle});
+    $r.addProperty("ChildOrder",2,rtl.longint,"FChildOrder","SetChildOrderEx");
     $r.addProperty("Color",2,pas["WEBLib.Graphics"].$rtti["TColor"],"FColor","SetColor");
-    $r.addProperty("Date",3,pas.System.$rtti["TDateTime"],"GetDate","SetDate");
+    $r.addProperty("Date",3,pas.System.$rtti["TDate"],"GetDate","SetDate");
     $r.addProperty("ElementClassName",2,pas["WEBLib.Controls"].$rtti["TElementClassName"],"FElementClassName","SetElementClassName");
     $r.addProperty("ElementID",3,pas["WEBLib.Controls"].$rtti["TElementID"],"GetID","SetID");
     $r.addProperty("ElementFont",2,pas["WEBLib.Controls"].$rtti["TElementFont"],"FElementFont","SetElementFont",{Default: pas["WEBLib.Controls"].TElementFont.efProperty});
@@ -28201,7 +31088,7 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
     $r.addProperty("TabOrder",2,rtl.longint,"FTabOrder","SetTabOrder");
     $r.addProperty("Text",3,rtl.string,"GetText","SetText");
     $r.addProperty("TextDirection",0,pas["WEBLib.Controls"].$rtti["TTextDirection"],"FTextDirection","FTextDirection");
-    $r.addProperty("Time",3,pas.System.$rtti["TDateTime"],"GetTime","SetTime");
+    $r.addProperty("Time",3,pas.System.$rtti["TTime"],"GetTime","SetTime");
     $r.addProperty("Top",3,rtl.longint,"GetTop","SetTop");
     $r.addProperty("Visible",2,rtl.boolean,"FVisible","SetVisible",{Default: true});
     $r.addProperty("Width",3,rtl.longint,"GetWidth","SetWidth");
@@ -28253,7 +31140,7 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       pas["WEBLib.Controls"].TControl.UpdateElementData.call(this);
       if (this.GetIsLinked() && (this.FCaption === "")) return;
       if (this.GetElementHandle() != null) {
-        this.GetElementHandle().innerHTML = pas["WEBLib.WebTools"].ProcessAccelerator(this.FCaption,{get: function () {
+        if (this.GetElementHandle().childElementCount === 0) this.GetElementHandle().innerHTML = pas["WEBLib.WebTools"].ProcessAccelerator(this.FCaption,{get: function () {
             return acc;
           }, set: function (v) {
             acc = v;
@@ -28392,6 +31279,8 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
               btn.style.setProperty("float","left");
               btn.style.setProperty("height","100%");
               btn.style.setProperty("vertical-align","middle");
+              btn.style.setProperty("margin-top","0px");
+              btn.style.setProperty("margin-bottom","0px");
             };
             if (this.FElementLabelClassName === "") {
               lbl = this.GetContainer().lastElementChild;
@@ -28433,6 +31322,9 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
     };
     this.SetChecked = function (AValue) {
       this.FChecked = AValue;
+      if (AValue) {
+        this.FState = $mod.TCheckBoxState.cbChecked}
+       else this.FState = $mod.TCheckBoxState.cbUnchecked;
       this.UpdateElement();
     };
     this.GetChecked = function () {
@@ -28464,9 +31356,10 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
     this.HandleLabelClick = function (Event) {
       var Result = false;
       var chk = null;
-      if (this.GetContainer() != null) {
+      if ((this.GetContainer() != null) && this.FEnabled) {
         chk = this.GetCheckElement();
         chk.checked = !chk.checked;
+        this.SetChecked(chk.checked);
       };
       Result = true;
       return Result;
@@ -28474,6 +31367,9 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
     this.Click = function () {
       pas["WEBLib.Controls"].TControl.Click.call(this);
       this.FChecked = this.GetChecked();
+      if (this.FChecked) {
+        this.FState = $mod.TCheckBoxState.cbChecked}
+       else this.FState = $mod.TCheckBoxState.cbUnchecked;
       this.SetFocus();
     };
     this.GetCheckElement = function () {
@@ -28493,10 +31389,27 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
         };
       };
     };
+    this.LoadState = function (AState) {
+      var cb = null;
+      if (!(this.GetContainer() != null)) return;
+      cb = this.GetCheckElement();
+      cb.checked = AState === "1";
+    };
+    this.SaveState = function () {
+      var Result = "";
+      var cb = null;
+      if (!(this.GetContainer() != null)) return Result;
+      cb = this.GetCheckElement();
+      if (cb.checked) {
+        Result = "1"}
+       else Result = "0";
+      return Result;
+    };
     this.CreateInitialize = function () {
       pas["WEBLib.Controls"].TCustomControl.CreateInitialize.call(this);
       this.SetColor(-1);
       this.FChecked = false;
+      this.FState = $mod.TCheckBoxState.cbUnchecked;
       if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) this.SetCaption(this.FName);
       this.SetShowFocus(true);
     };
@@ -28613,7 +31526,7 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
     this.HandleLabelClick = function (Event) {
       var Result = false;
       var rb = null;
-      if (this.GetContainer() != null) {
+      if ((this.GetContainer() != null) && this.FEnabled) {
         rb = this.GetRadioElement();
         rb.checked = true;
       };
@@ -28671,6 +31584,8 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
               btn.style.setProperty("float","left");
               btn.style.setProperty("height","100%");
               btn.style.setProperty("vertical-align","middle");
+              btn.style.setProperty("margin-top","0px");
+              btn.style.setProperty("margin-bottom","0px");
             };
             if (this.FElementLabelClassName === "") {
               lbl = this.GetContainer().lastElementChild;
@@ -28700,6 +31615,22 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
         rb = this.GetRadioElement();
         rb.checked = true;
       };
+    };
+    this.LoadState = function (AState) {
+      var rb = null;
+      if (!(this.GetContainer() != null)) return;
+      rb = this.GetRadioElement();
+      rb.checked = AState === "1";
+    };
+    this.SaveState = function () {
+      var Result = "";
+      var rb = null;
+      if (!(this.GetContainer() != null)) return Result;
+      rb = this.GetRadioElement();
+      if (rb.checked) {
+        Result = "1"}
+       else Result = "0";
+      return Result;
     };
     this.CreateInitialize = function () {
       pas["WEBLib.Controls"].TCustomControl.CreateInitialize.call(this);
@@ -28817,6 +31748,7 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       var opt = null;
       if (!(this.GetContainer() != null)) return;
       if (this.IsUpdating()) return;
+      if (this.GetElementHandle().tagName !== "SELECT") return;
       for (var $l1 = this.GetContainer().options.length - 1; $l1 >= 0; $l1--) {
         i = $l1;
         this.GetContainer().remove(i);
@@ -28833,6 +31765,7 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
     this.PersistinHTML = function () {
       var i = 0;
       if (!(this.GetContainer() != null)) return;
+      if (this.GetElementHandle().tagName !== "SELECT") return;
       for (var $l1 = 0, $end2 = this.GetContainer().options.length - 1; $l1 <= $end2; $l1++) {
         i = $l1;
         if (this.GetContainer().options.item(i).selected) {
@@ -28857,6 +31790,7 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       if (AIndex < this.FSelected.GetCount()) {
         Result = !(this.FSelected.Get(AIndex) == false)}
        else Result = false;
+      if (this.GetElementHandle().tagName !== "SELECT") return Result;
       if ((this.GetContainer() != null) && (AIndex < this.GetContainer().options.length)) Result = this.GetContainer().options.item(AIndex).selected;
       return Result;
     };
@@ -28907,6 +31841,36 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
     this.Change = function () {
       if (this.FOnChange != null) this.FOnChange(this);
     };
+    this.SaveState = function () {
+      var Result = "";
+      var i = 0;
+      var s = "";
+      for (var $l1 = 0, $end2 = this.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        if (this.GetSelected(i)) {
+          s = s + ",1"}
+         else s = s + ",0";
+      };
+      pas.System.Delete({get: function () {
+          return s;
+        }, set: function (v) {
+          s = v;
+        }},1,1);
+      Result = s;
+      return Result;
+    };
+    this.LoadState = function (AState) {
+      var sl = null;
+      var i = 0;
+      sl = pas.Classes.TStringList.$create("Create$1");
+      sl.SetDelimiter(",");
+      sl.SetCommaText(AState);
+      for (var $l1 = 0, $end2 = sl.GetCount() - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        this.SetSelected(i,sl.Get(i) === "1");
+      };
+      sl = rtl.freeLoc(sl);
+    };
     this.CreateInitialize = function () {
       pas["WEBLib.Controls"].TCustomControl.CreateInitialize.call(this);
       this.FItems = pas.Classes.TStringList.$create("Create$1");
@@ -28924,13 +31888,14 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       pas["WEBLib.Controls"].TCustomControl.Destroy.call(this);
     };
     this.EndUpdate = function () {
-      pas["WEBLib.Controls"].TControl.EndUpdate.call(this);
+      pas["WEBLib.Controls"].TCustomControl.EndUpdate.call(this);
       this.DoUpdateList();
     };
     this.ClearSelection = function () {
       var i = 0;
       this.SetItemIndex(-1);
       if (!(this.GetContainer() != null)) return;
+      if (this.GetElementHandle().tagName !== "SELECT") return;
       for (var $l1 = 0, $end2 = this.GetContainer().options.length - 1; $l1 <= $end2; $l1++) {
         i = $l1;
         this.GetContainer().options.item(i).selected = false;
@@ -28939,6 +31904,7 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
     this.SelectAll = function () {
       var i = 0;
       if (!(this.GetContainer() != null)) return;
+      if (this.GetElementHandle().tagName !== "SELECT") return;
       for (var $l1 = 0, $end2 = this.GetContainer().options.length - 1; $l1 <= $end2; $l1++) {
         i = $l1;
         this.SetSelected(i,true);
@@ -29077,6 +32043,7 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       var s = "";
       var opt = null;
       if (!(this.GetContainer() != null)) return;
+      if (this.GetElementHandle().tagName !== "SELECT") return;
       for (var $l1 = this.GetContainer().options.length - 1; $l1 >= 0; $l1--) {
         i = $l1;
         this.GetContainer().remove(i);
@@ -29091,6 +32058,25 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
         this.GetContainer().appendChild(opt);
       };
       this.UpdateElement();
+    };
+    this.LoadState = function (AState) {
+      var idx = 0;
+      var e = 0;
+      pas.System.val$6(AState,{get: function () {
+          return idx;
+        }, set: function (v) {
+          idx = v;
+        }},{get: function () {
+          return e;
+        }, set: function (v) {
+          e = v;
+        }});
+      if (e === 0) this.SetItemIndex(idx);
+    };
+    this.SaveState = function () {
+      var Result = "";
+      Result = pas.SysUtils.IntToStr(this.GetItemIndex());
+      return Result;
     };
     this.GetItemIndex = function () {
       var Result = 0;
@@ -29485,12 +32471,14 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
     };
     this.GetSelLength = function () {
       var Result = 0;
-      Result = this.GetElementInputHandle().selectionEnd - this.GetElementInputHandle().selectionStart;
+      Result = -1;
+      if (this.GetElementInputHandle() != null) Result = this.GetElementInputHandle().selectionEnd - this.GetElementInputHandle().selectionStart;
       return Result;
     };
     this.GetSelStart = function () {
       var Result = 0;
-      Result = this.GetElementInputHandle().selectionStart;
+      Result = -1;
+      if (this.GetElementInputHandle() != null) Result = this.GetElementInputHandle().selectionStart;
       return Result;
     };
     this.SetTextHint = function (Value) {
@@ -29584,8 +32572,12 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       pas["WEBLib.Controls"].TControl.UpdateElementData.call(this);
       if ((this.GetElementInputHandle() != null) && !this.FBlockChange) {
         this.GetElementInputHandle().value = this.GetDisplayText();
-        this.GetElementInputHandle().setSelectionRange(this.GetSelStart(),this.GetSelStart() + this.GetSelLength());
-        if (!this.GetIsLinked()) this.GetElementInputHandle().style.setProperty("resize","none");
+        if (this.GetElementInputHandle().tagName === "TEXTAREA") {
+          this.GetElementInputHandle().setSelectionRange(this.GetSelStart(),this.GetSelStart() + this.GetSelLength());
+        };
+        if (!this.GetIsLinked()) {
+          this.GetElementInputHandle().style.setProperty("resize","none");
+        };
         this.GetElementInputHandle().readOnly = this.IsReadOnly();
         if (this.FTextHint !== "") this.GetElementInputHandle().placeholder = this.FTextHint;
         if (!this.GetIsLinked()) {
@@ -29604,7 +32596,7 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
         this.GetElementInputHandle().style.setProperty("overflow","auto");
         this.GetElementInputHandle().style.setProperty("margin","0");
         this.GetElementInputHandle().style.setProperty("padding","0");
-        if (this.FColor !== -1) {
+        if ((this.FColor !== -1) && (this.FColor !== 16711422)) {
           this.GetElementInputHandle().style.setProperty("background-color",pas["WEBLib.Graphics"].ColorToHTML(this.FColor))}
          else this.GetElementInputHandle().style.removeProperty("background-color");
       };
@@ -29637,6 +32629,14 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       var Result = false;
       Result = true;
       return Result;
+    };
+    this.SaveState = function () {
+      var Result = "";
+      Result = this.FLines.GetTextStr();
+      return Result;
+    };
+    this.LoadState = function (AState) {
+      this.FLines.SetTextStr(AState);
     };
     this.Change = function () {
       if (this.FOnChange != null) this.FOnChange(this);
@@ -29796,13 +32796,14 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       var dc = 0;
       var col = 0;
       var row = 0;
+      var xpos = 0;
       var legend = null;
       if (!(this.GetContainer() != null)) return;
       if (this.FItems.GetCount() === 0) return;
       dy = this.FFont.FSize * 3;
       dx = Math.floor(this.GetWidth() / this.FColumns);
       if (this.FCaption !== "") {
-        dc = dy}
+        dc = this.FFont.FSize}
        else dc = 4;
       col = 0;
       row = 0;
@@ -29824,12 +32825,13 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       this.GetContainer().style.setProperty("margin","0px");
       for (var $l3 = 0, $end4 = this.FItems.GetCount() - 1; $l3 <= $end4; $l3++) {
         i = $l3;
+        xpos = dc + (row * dy);
         s = this.FItems.Get(i);
-        rd = this.CreateGroupControl(4 + (col * dx),dc + (row * dy),i,s,this.GetGroupControlState(i),true);
+        rd = this.CreateGroupControl(4 + (col * dx),xpos,i,s,this.GetGroupControlState(i),true);
         this.FControls$1.Add(rd);
         if (!this.GetIsLinked()) {
           rd.GetContainer().style.setProperty("float","left");
-          rd.GetContainer().style.setProperty("width",pas.SysUtils.IntToStr(pas.System.Trunc(100 / this.FColumns)) + "%");
+          rd.GetContainer().style.setProperty("width",pas.SysUtils.IntToStr(pas.System.Trunc(100 / this.FColumns) - 5) + "%");
         };
         if ((i % this.FColumns) === 0) rd.GetContainer().style.setProperty("clear","left");
         this.GetElementHandle().appendChild(rd.GetContainer());
@@ -29881,7 +32883,7 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       pas["WEBLib.Controls"].TCustomControl.Destroy.call(this);
     };
     this.EndUpdate = function () {
-      pas["WEBLib.Controls"].TControl.EndUpdate.call(this);
+      pas["WEBLib.Controls"].TCustomControl.EndUpdate.call(this);
       this.DoUpdateList();
     };
     this.SetHeight = function (AValue) {
@@ -29989,6 +32991,25 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       Result = AIndex === this.FItemIndex;
       return Result;
     };
+    this.LoadState = function (AState) {
+      var idx = 0;
+      var e = 0;
+      pas.System.val$6(AState,{get: function () {
+          return idx;
+        }, set: function (v) {
+          idx = v;
+        }},{get: function () {
+          return e;
+        }, set: function (v) {
+          e = v;
+        }});
+      if (e === 0) this.SetItemIndex(idx);
+    };
+    this.SaveState = function () {
+      var Result = "";
+      Result = pas.SysUtils.IntToStr(this.GetItemIndex());
+      return Result;
+    };
     this.CreateInitialize = function () {
       $mod.TControlGroup.CreateInitialize.call(this);
       this.FItemIndex = -1;
@@ -30060,6 +33081,37 @@ rtl.module("WEBLib.StdCtrls",["System","Classes","WEBLib.Controls","SysUtils","W
       var Result = false;
       Result = false;
       return Result;
+    };
+    this.SaveState = function () {
+      var Result = "";
+      var i = 0;
+      var s = "";
+      s = "";
+      for (var $l1 = 0, $end2 = this.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        if (this.GetChecked(i)) {
+          s = s + ",1"}
+         else s = s + ",0";
+      };
+      pas.System.Delete({get: function () {
+          return s;
+        }, set: function (v) {
+          s = v;
+        }},1,1);
+      Result = s;
+      return Result;
+    };
+    this.LoadState = function (AState) {
+      var sl = null;
+      var i = 0;
+      sl = pas.Classes.TStringList.$create("Create$1");
+      sl.SetDelimiter(",");
+      sl.SetCommaText(AState);
+      for (var $l1 = 0, $end2 = sl.GetCount() - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        this.SetChecked(i,sl.Get(i) === "1");
+      };
+      sl = rtl.freeLoc(sl);
     };
     this.CreateInitialize = function () {
       $mod.TControlGroup.CreateInitialize.call(this);
@@ -30533,7 +33585,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       if (!(this.GetContainer() != null)) return;
       contentelement = this.GetContentHandle();
       if (this.GetID() !== "") contentelement = document.getElementById(this.GetID());
-      contentelement.innerHTML = "";
+      contentelement.nodeValue = "";
       scaption = this.FCaption;
       sanchor = '<a href="';
       sid = '<a id="';
@@ -30577,7 +33629,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
         this.FDisplText = scaption;
       } else {
         this.FDisplText = pas.SysUtils.StringReplace(AValue,"> <",">&nbsp;<",rtl.createSet(pas.SysUtils.TStringReplaceFlag.rfReplaceAll));
-        contentelement.innerHTML = this.FDisplText;
+        contentelement.nodeValue = this.FDisplText;
       };
     };
     this.BindEvents = function () {
@@ -30766,6 +33818,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
         el.style.setProperty("-webkit-appearance","slider-vertical");
         el.style.removeProperty("width");
         if (this.FHeightStyle === pas["WEBLib.Controls"].TSizeStyle.ssAbsolute) el.style.setProperty("height",pas.SysUtils.IntToStr(this.GetHeight()));
+        el.style.setProperty("width","22px");
       };
     };
     this.CreateInitialize = function () {
@@ -30861,19 +33914,16 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
     rtl.addIntf(this,pas.System.IUnknown);
   });
   $mod.$rtti.$MethodVar("TGeolocationEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Lat",rtl.double],["Lon",rtl.double],["Alt",rtl.double]]), methodkind: 0});
-  rtl.createClass($mod,"TGeoLocation",pas["WEBLib.Controls"].TCustomControl,function () {
+  rtl.createClass($mod,"TGeoLocation",pas.Classes.TComponent,function () {
     this.$init = function () {
-      pas["WEBLib.Controls"].TCustomControl.$init.call(this);
+      pas.Classes.TComponent.$init.call(this);
       this.FOnGeolocation = null;
+      this.FWidth = 0;
+      this.FHeight = 0;
     };
     this.$final = function () {
       this.FOnGeolocation = undefined;
-      pas["WEBLib.Controls"].TCustomControl.$final.call(this);
-    };
-    this.CreateElement = function () {
-      var Result = null;
-      Result = null;
-      return Result;
+      pas.Classes.TComponent.$final.call(this);
     };
     this.DoHandleGeolocation = function (APosition) {
       if (this.FOnGeolocation != null) this.FOnGeolocation(this,APosition.coords.latitude,APosition.coords.longitude,APosition.coords.altitude);
@@ -31245,7 +34295,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
           PopupImage = this.FPictureZoomDataURL}
          else PopupImage = this.FURLZoom;
         if (PopupImage === "") PopupImage = this.FURL;
-        this.FStyle.innerHTML = "." + this.FName + "modal-overlay {\r" + "  display: none;\r" + "  position: fixed;\r" + "  z-index: 9999;\r" + "  width: 100%;\r" + "  height: 100%;\r" + "  overflow: hidden;\r" + "  top: 50%;\r" + "  left: 50%;\r" + "  -ms-transform: translate(-50%, -50%);\r" + "  transform: translate(-50%, -50%);\r" + "  background-color: rgba(0,0,0,0.2);\r" + "}\r" + "." + this.FName + "modal {\r" + "  display: block;\r" + "  position: absolute;\r" + "  z-index: 9999;\r" + "  width: " + pas.SysUtils.IntToStr(this.FAppearance.FWidthPercent) + "%;\r" + "  height: " + pas.SysUtils.IntToStr(this.FAppearance.FHeightPercent) + "%;\r" + "  overflow: hidden;\r" + "  top: 50%;\r" + "  left: 50%;\r" + "  -ms-transform: translate(-50%, -50%);\r" + "  transform: translate(-50%, -50%);\r" + "  background-color: rgba(0,0,0,0.9);\r" + "}\r" + "." + this.FName + "modal-content {\r" + "  display: block;\r" + "  margin: 0;\r" + "  position: absolute;\r" + "  top: 50%;\r" + "  left: 50%;\r" + "  -ms-transform: translate(-50%, -50%);\r" + "  transform: translate(-50%, -50%);\r" + "  max-width: 100%;\r" + "  max-height: 100%;\r" + "}\r" + "." + this.FName + "close {\r" + "  z-index: 9999;\r" + "  position: absolute;\r" + "  top: 15px;\r" + "  right: 35px;\r" + "  color: #f1f1f1;\r" + "  font-size: 40px;\r" + "  font-weight: bold;\r" + "  transition: 0.3s;\r" + "}\r" + "." + this.FName + "close:hover,\r" + "." + this.FName + "close:focus {\r" + "  color: #bbb;\r" + "  text-decoration: none;\r" + "  cursor: pointer;\r" + "}\r" + "@media only screen and (max-width: 769px) {\r" + "\t." + this.FName + "modal {\r" + "  width: " + pas.SysUtils.IntToStr(this.FAppearance.FResponsiveWidthPercent) + "%;\r" + "  height: " + pas.SysUtils.IntToStr(this.FAppearance.FResponsiveHeightPercent) + "%;\r" + "\t}\r" + "}\r";
+        this.FStyle.innerHTML = "." + this.FName + "modal-overlay {\r" + "  display: none;\r" + "  position: fixed;\r" + "  z-index: 99999999;\r" + "  width: 100%;\r" + "  height: 100%;\r" + "  overflow: hidden;\r" + "  top: 50%;\r" + "  left: 50%;\r" + "  -ms-transform: translate(-50%, -50%);\r" + "  transform: translate(-50%, -50%);\r" + "  background-color: rgba(0,0,0,0.2);\r" + "}\r" + "." + this.FName + "modal {\r" + "  display: block;\r" + "  position: absolute;\r" + "  z-index: 99999999;\r" + "  width: " + pas.SysUtils.IntToStr(this.FAppearance.FWidthPercent) + "%;\r" + "  height: " + pas.SysUtils.IntToStr(this.FAppearance.FHeightPercent) + "%;\r" + "  overflow: hidden;\r" + "  top: 50%;\r" + "  left: 50%;\r" + "  -ms-transform: translate(-50%, -50%);\r" + "  transform: translate(-50%, -50%);\r" + "  background-color: rgba(0,0,0,0.9);\r" + "}\r" + "." + this.FName + "modal-content {\r" + "  display: block;\r" + "  margin: 0;\r" + "  position: absolute;\r" + "  top: 50%;\r" + "  left: 50%;\r" + "  -ms-transform: translate(-50%, -50%);\r" + "  transform: translate(-50%, -50%);\r" + "  max-width: 100%;\r" + "  max-height: 100%;\r" + "}\r" + "." + this.FName + "close {\r" + "  z-index: 99999999;\r" + "  position: absolute;\r" + "  top: 15px;\r" + "  right: 35px;\r" + "  color: #f1f1f1;\r" + "  font-size: 40px;\r" + "  font-weight: bold;\r" + "  transition: 0.3s;\r" + "}\r" + "." + this.FName + "close:hover,\r" + "." + this.FName + "close:focus {\r" + "  color: #bbb;\r" + "  text-decoration: none;\r" + "  cursor: pointer;\r" + "}\r" + "@media only screen and (max-width: 769px) {\r" + "\t." + this.FName + "modal {\r" + "  width: " + pas.SysUtils.IntToStr(this.FAppearance.FResponsiveWidthPercent) + "%;\r" + "  height: " + pas.SysUtils.IntToStr(this.FAppearance.FResponsiveHeightPercent) + "%;\r" + "\t}\r" + "}\r";
         this.FOverlay.setAttribute("onClick",'this.style.display = "none";');
         this.FOverlay.setAttribute("id",this.FName + "myModal");
         this.FOverlay.setAttribute("class",this.FName + "modal-overlay");
@@ -31347,44 +34397,9 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       this.UpdateElement();
     };
     this.SetAutoSize = function (AValue) {
-      var i = 0;
-      var mx = 0;
-      var my = 0;
-      var r = null;
-      var el = null;
       this.FAutoSize = AValue;
       if (this.FAutoSize && !this.IsUpdating()) {
-        if ((this.FWidthStyle === pas["WEBLib.Controls"].TSizeStyle.ssAbsolute) && (this.FHeightStyle === pas["WEBLib.Controls"].TSizeStyle.ssAbsolute)) {
-          mx = 0;
-          my = 0;
-          for (var $l1 = 0, $end2 = this.GetControlsCount() - 1; $l1 <= $end2; $l1++) {
-            i = $l1;
-            if (this.GetControls(i).FWidthStyle === pas["WEBLib.Controls"].TSizeStyle.ssAbsolute) {
-              if ((this.GetControls(i).GetLeft() + this.GetControls(i).GetWidth()) > mx) mx = this.GetControls(i).GetLeft() + this.GetControls(i).GetWidth();
-            } else {
-              el = this.GetControls(i).GetElementHandle();
-              if (el != null) {
-                r = el.getBoundingClientRect();
-                if (((r.x - this.GetLeft()) + r.width) > mx) mx = Math.round((r.x - this.GetLeft()) + r.width);
-              };
-            };
-            if (this.GetControls(i).FHeightStyle === pas["WEBLib.Controls"].TSizeStyle.ssAbsolute) {
-              if ((this.GetControls(i).GetTop() + this.GetControls(i).GetHeight()) > my) my = this.GetControls(i).GetTop() + this.GetControls(i).GetHeight();
-            } else {
-              el = this.GetControls(i).GetElementHandle();
-              if (el != null) {
-                r = el.getBoundingClientRect();
-                if (((r.y - this.GetTop()) + r.height) > my) my = Math.round((r.y - this.GetTop()) + r.height);
-              };
-            };
-          };
-          this.SetWidth(mx);
-          this.SetHeight(my);
-        } else {
-          this.SetWidth(-1);
-          this.SetHeight(-1);
-        };
-        this.UpdateElement();
+        this.DoAutoSize();
       };
     };
     this.UpdateElementVisual = function () {
@@ -31440,6 +34455,76 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
        else Result = pas["WEBLib.Controls"].TControl.GetChildContainer.call(this);
       return Result;
     };
+    this.RegisterParent = function (AValue) {
+      pas["WEBLib.Controls"].TControl.RegisterParent.apply(this,arguments);
+      if (this.FAutoSize) this.DoAutoSize();
+    };
+    this.UnRegisterParent = function (AValue) {
+      pas["WEBLib.Controls"].TControl.UnRegisterParent.apply(this,arguments);
+      if (this.FAutoSize) this.DoAutoSize();
+    };
+    this.DoAutoSize = function () {
+      var i = 0;
+      var minx = 0;
+      var miny = 0;
+      var maxx = 0;
+      var maxy = 0;
+      var r = null;
+      var el = null;
+      if ((this.FWidthStyle === pas["WEBLib.Controls"].TSizeStyle.ssAbsolute) && (this.FHeightStyle === pas["WEBLib.Controls"].TSizeStyle.ssAbsolute)) {
+        maxx = 0;
+        maxy = 0;
+        minx = 0xFFFF;
+        miny = 0xFFFF;
+        for (var $l1 = 0, $end2 = this.GetControlsCount() - 1; $l1 <= $end2; $l1++) {
+          i = $l1;
+          if (this.GetControls(i).FWidthStyle === pas["WEBLib.Controls"].TSizeStyle.ssAbsolute) {
+            if ((this.GetControls(i).GetLeft() + this.GetControls(i).GetWidth()) > maxx) maxx = this.GetControls(i).GetLeft() + this.GetControls(i).GetWidth();
+            if (this.GetControls(i).GetLeft() < minx) minx = this.GetControls(i).GetLeft();
+          } else {
+            el = this.GetControls(i).GetElementHandle();
+            if (el != null) {
+              r = el.getBoundingClientRect();
+              if (((r.x - this.GetLeft()) + r.width) > maxx) maxx = Math.round((r.x - this.GetLeft()) + r.width);
+              minx = 0;
+            };
+          };
+          if (this.GetControls(i).FHeightStyle === pas["WEBLib.Controls"].TSizeStyle.ssAbsolute) {
+            if ((this.GetControls(i).GetTop() + this.GetControls(i).GetHeight()) > maxy) maxy = this.GetControls(i).GetTop() + this.GetControls(i).GetHeight();
+            if (this.GetControls(i).GetTop() < miny) miny = this.GetControls(i).GetTop();
+          } else {
+            el = this.GetControls(i).GetElementHandle();
+            if (el != null) {
+              r = el.getBoundingClientRect();
+              if (((r.y - this.GetTop()) + r.height) > maxy) maxy = Math.round((r.y - this.GetTop()) + r.height);
+              miny = 0;
+            };
+          };
+        };
+        if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) {
+          if ((this.GetControlsCount() === 0) || (maxx === 0) || (maxy === 0)) return;
+        };
+        if (this.FBorderStyle === pas["WEBLib.Controls"].TBorderStyle.bsSingle) {
+          maxx += 1;
+          maxy += 1;
+        };
+        for (var $l3 = 0, $end4 = this.GetControlsCount() - 1; $l3 <= $end4; $l3++) {
+          i = $l3;
+          this.GetControls(i).SetLeft(this.GetControls(i).GetLeft() - minx);
+          this.GetControls(i).SetTop(this.GetControls(i).GetTop() - miny);
+        };
+        this.SetWidth(maxx - minx);
+        this.SetHeight(maxy - miny);
+      } else {
+        this.SetWidth(-1);
+        this.SetHeight(-1);
+      };
+      this.UpdateElement();
+    };
+    this.AlignControl = function (AControl) {
+      pas["WEBLib.Controls"].TControl.AlignControl.apply(this,arguments);
+      if (this.FAutoSize) this.DoAutoSize();
+    };
     this.CreateInitialize = function () {
       pas["WEBLib.Controls"].TCustomControl.CreateInitialize.call(this);
       this.FEnablePropagation = true;
@@ -31461,8 +34546,12 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       pas["WEBLib.Controls"].TCustomControl.Destroy.call(this);
     };
     this.EndUpdate = function () {
-      pas["WEBLib.Controls"].TControl.EndUpdate.call(this);
+      pas["WEBLib.Controls"].TCustomControl.EndUpdate.call(this);
       if (this.FAutoSize) this.SetAutoSize(true);
+    };
+    this.SetBounds = function (X, Y, AWidth, AHeight) {
+      pas["WEBLib.Controls"].TControl.SetBounds.apply(this,arguments);
+      if (this.FAutoSize) this.DoAutoSize();
     };
     rtl.addIntf(this,pas.System.IUnknown);
   });
@@ -32140,6 +35229,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
     this.Create$1 = function (ACollection) {
       pas.Classes.TCollectionItem.Create$1.apply(this,arguments);
       this.FSizeStyle = pas["WEBLib.Controls"].TSizeStyle.ssPercent;
+      this.FValue = 0;
       this.FMarginLeft = 0;
       this.FMarginRight = 0;
       this.FAlignment = pas.Classes.TAlignment.taLeftJustify;
@@ -32340,8 +35430,8 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
         i = $l2;
         cell = document.createElement("td");
         if (this.FElementClassName === "") cell.style.setProperty("border",ps);
-        if (this.FColumnCollection.GetItem$1(i).FMarginLeft !== 0) cell.style.setProperty("margin-left",pas.SysUtils.IntToStr(this.FColumnCollection.GetItem$1(i).FMarginLeft));
-        if (this.FColumnCollection.GetItem$1(i).FMarginRight !== 0) cell.style.setProperty("margin-right",pas.SysUtils.IntToStr(this.FColumnCollection.GetItem$1(i).FMarginRight));
+        if (this.FColumnCollection.GetItem$1(i).FMarginLeft !== 0) cell.style.setProperty("padding-left",pas.SysUtils.IntToStr(this.FColumnCollection.GetItem$1(i).FMarginLeft) + "px");
+        if (this.FColumnCollection.GetItem$1(i).FMarginRight !== 0) cell.style.setProperty("padding-right",pas.SysUtils.IntToStr(this.FColumnCollection.GetItem$1(i).FMarginRight) + "px");
         if (this.FColumnCollection.GetItem$1(i).FElementClassName !== "") {
           cell.setAttribute("class",this.FColumnCollection.GetItem$1(i).FElementClassName);
         };
@@ -32367,31 +35457,47 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       var i = 0;
       var j = 0;
       var k = 0;
+      var mw = 0;
       var numrows = 0;
       var fragment = null;
-      var ctrlid = "";
       var destid = "";
       var control = null;
       var el = null;
       var row = null;
       var isPercent = false;
+      var f = 0.0;
       if (!(this.FTblBody != null)) return;
-      i = 0;
-      j = 0;
-      if (this.FTblBody.childNodes.length < this.FRowCollection.GetCount()) {
-        isPercent = true;
-        for (var $l1 = 0, $end2 = this.FRowCollection.GetCount() - 1; $l1 <= $end2; $l1++) {
-          k = $l1;
-          if (this.FRowCollection.GetItem$1(k).FSizeStyle !== pas["WEBLib.Controls"].TSizeStyle.ssPercent) {
-            isPercent = false;
-            break;
-          };
+      if (this.IsUpdating()) return;
+      isPercent = true;
+      mw = 0;
+      for (var $l1 = 0, $end2 = this.FRowCollection.GetCount() - 1; $l1 <= $end2; $l1++) {
+        i = $l1;
+        if (this.FRowCollection.GetItem$1(i).FSizeStyle !== pas["WEBLib.Controls"].TSizeStyle.ssPercent) {
+          isPercent = false;
+          break;
+        } else mw = mw + this.FRowCollection.GetItem$1(i).FValue;
+      };
+      if (isPercent && (mw > 100)) {
+        f = mw / 100;
+        for (var $l3 = 0, $end4 = this.FRowCollection.GetCount() - 1; $l3 <= $end4; $l3++) {
+          i = $l3;
+          this.FRowCollection.GetItem$1(i).FValue = pas.System.Trunc(this.FRowCollection.GetItem$1(i).FValue / f);
         };
-        if (isPercent) {
-          for (var $l3 = 0, $end4 = this.FRowCollection.GetCount() - 1; $l3 <= $end4; $l3++) {
-            k = $l3;
-            this.FRowCollection.GetItem$1(k).SetValue(pas.System.Trunc(100 / this.FRowCollection.GetCount()));
-          };
+      };
+      isPercent = true;
+      mw = 0;
+      for (var $l5 = 0, $end6 = this.FColumnCollection.GetCount() - 1; $l5 <= $end6; $l5++) {
+        i = $l5;
+        if (this.FColumnCollection.GetItem$1(i).FSizeStyle !== pas["WEBLib.Controls"].TSizeStyle.ssPercent) {
+          isPercent = false;
+          break;
+        } else mw = mw + this.FColumnCollection.GetItem$1(i).FValue;
+      };
+      if (isPercent && (mw > 100)) {
+        f = mw / 100;
+        for (var $l7 = 0, $end8 = this.FColumnCollection.GetCount() - 1; $l7 <= $end8; $l7++) {
+          i = $l7;
+          this.FColumnCollection.GetItem$1(i).FValue = pas.System.Trunc(this.FColumnCollection.GetItem$1(i).FValue / f);
         };
       };
       numrows = this.FRowCollection.GetCount();
@@ -32402,10 +35508,16 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       while (this.FTblBody.childNodes.length < this.FRowCollection.GetCount()) {
         row = this.CreateRow(this.FTblBody.childNodes.length);
         this.FTblBody.appendChild(row);
-        row.setAttribute("height",this.FRowCollection.GetItem$1(j).HeightAttribute());
       };
-      for (var $l5 = 0, $end6 = this.FControlCollection.GetCount() - 1; $l5 <= $end6; $l5++) {
-        k = $l5;
+      for (var $l9 = 0, $end10 = this.FRowCollection.GetCount() - 1; $l9 <= $end10; $l9++) {
+        i = $l9;
+        row = this.FTblBody.childNodes.item(i);
+        row.setAttribute("height",this.FRowCollection.GetItem$1(i).HeightAttribute());
+      };
+      i = 0;
+      j = 0;
+      for (var $l11 = 0, $end12 = this.FControlCollection.GetCount() - 1; $l11 <= $end12; $l11++) {
+        k = $l11;
         if (this.FControlCollection.GetItem$1(k).FControl != null) {
           fragment = document.createDocumentFragment();
           control = this.FControlCollection.GetItem$1(k).FControl;
@@ -32413,7 +35525,6 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
           this.FControlCollection.GetItem$1(k).FRow = j;
           control.SetElementPosition(pas["WEBLib.Controls"].TElementPosition.epRelative);
           control.SetChildOrderEx(-1);
-          ctrlid = control.GetID();
           if (control.FAlign === pas["WEBLib.Controls"].TAlign.alLeft) {
             control.SetHeightStyle(pas["WEBLib.Controls"].TSizeStyle.ssPercent);
             control.SetHeight(100);
@@ -32441,7 +35552,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
               row.setAttribute("class",this.FRowCollection.GetItem$1(j).FElementClassName)}
              else row.removeAttribute("class");
           };
-          fragment.appendChild(document.getElementById(ctrlid));
+          if (control.GetElementHandle() != null) fragment.appendChild(control.GetElementHandle());
           destid = this.FName + "R" + pas.SysUtils.IntToStr(j) + "C" + pas.SysUtils.IntToStr(i);
           el = document.getElementById(destid);
           if (!(el != null)) {
@@ -32470,6 +35581,12 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
             j += 1;
           };
         };
+      };
+      for (var $l13 = 0, $end14 = this.FColumnCollection.GetCount() - 1; $l13 <= $end14; $l13++) {
+        i = $l13;
+        destid = this.FName + "R0C" + pas.SysUtils.IntToStr(i);
+        el = document.getElementById(destid);
+        if (el != null) el.style.setProperty("width",this.FColumnCollection.GetItem$1(i).WidthAttribute());
       };
       this.FColCount = this.FColumnCollection.GetCount();
     };
@@ -32538,7 +35655,6 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
         this.FRowCollection.Add$1();
         this.FRowCollection.GetItem$1(0).SetValue(100);
         this.FRowCollection.GetItem$1(0).SetSizeStyle(pas["WEBLib.Controls"].TSizeStyle.ssPercent);
-        this.FRowCollection.FOnChange = rtl.createCallback(this,"TableChanged");
       };
       this.FColumnCollection = $mod.TGridPanelColumns.$create("Create$3",[this]);
       this.FColumnCollection.FPropName = "ColumnCollection";
@@ -32550,6 +35666,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
         this.FColumnCollection.GetItem$1(0).SetSizeStyle(pas["WEBLib.Controls"].TSizeStyle.ssPercent);
         this.FColumnCollection.GetItem$1(1).SetSizeStyle(pas["WEBLib.Controls"].TSizeStyle.ssPercent);
       };
+      this.FRowCollection.FOnChange = rtl.createCallback(this,"TableChanged");
       this.FColumnCollection.FOnChange = rtl.createCallback(this,"TableChanged");
       this.FControlCollection = $mod.TControlCollection.$create("Create$3",[this]);
       if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) {
@@ -32598,7 +35715,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       };
     };
     this.EndUpdate = function () {
-      pas["WEBLib.Controls"].TControl.EndUpdate.call(this);
+      pas["WEBLib.Controls"].TCustomControl.EndUpdate.call(this);
       this.UpdateTable();
     };
     rtl.addIntf(this,pas.System.IUnknown);
@@ -32843,7 +35960,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
           TextFound = this.FHTML.GetTextStr() !== "";
           this.GetContainer().innerHTML = this.FHTML.GetTextStr();
         };
-        if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) this.RenderDesigning(this.$classname,this.GetContainer(),this,!TextFound);
+        if (!this.GetIsLinked() && (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState)) this.RenderDesigning(this.$classname,this.GetContainer(),this,!TextFound,"");
         var $tmp1 = this.FScrollStyle;
         if ($tmp1 === pas["WEBLib.Controls"].TScrollStyle.ssBoth) {
           this.GetElementHandle().style.setProperty("overflow","auto")}
@@ -32899,41 +36016,22 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       pas["WEBLib.Controls"].TCustomControl.$final.call(this);
     };
     this.SetAction = function (Value) {
+      var el = null;
       this.FAction = Value;
-      if (this.GetElementHandle() != null) this.GetElementHandle().setAttribute("action",this.FAction);
+      if (!(pas.Classes.TComponentStateItem.csDesigning in this.FComponentState)) {
+        el = this.GetChildContainer();
+        if (el != null) el.setAttribute("action",this.FAction);
+      };
     };
     this.UpdateElement = function () {
-      var eh = null;
       if (!(this.GetElementHandle() != null)) return;
-      if ((pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) && !(pas.Classes.TComponentStateItem.csDestroying in this.FComponentState)) {
-        eh = this.GetElementHandle();
-        if (eh != null) {
-          eh.style.setProperty("display","table");
-          eh.style.setProperty("background-color","silver");
-        };
-      };
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+      if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) this.GetElementHandle().style.setProperty("background","repeating-linear-gradient(45deg,#EEEEEE 10px,#EEEEEE 10px, #ffffff 20px)");
     };
     this.CreateElement = function () {
       var Result = null;
-      var LLabel = null;
-      if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) {
-        Result = document.createElement("DIV");
-        LLabel = document.createElement("DIV");
-        LLabel.innerHTML = "TWebHTMLForm";
-        this.SetBorderStyle(pas["WEBLib.Controls"].TBorderStyle.bsSingle);
-        LLabel.setAttribute("align","center");
-        LLabel.style.setProperty("border","1px solid gray");
-        LLabel.style.setProperty("vertical-align","middle");
-        LLabel.style.setProperty("display","table-cell");
-        Result.appendChild(LLabel);
-      } else {
-        Result = document.createElement("FORM");
-      };
-      return Result;
-    };
-    this.IsStructuralElement = function () {
-      var Result = false;
-      Result = true;
+      Result = document.createElement("DIV");
+      Result.appendChild(document.createElement("FORM"));
       return Result;
     };
     this.DoHandleSubmit = function (Event) {
@@ -32943,9 +36041,16 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       Result = true;
       return Result;
     };
+    this.GetChildContainer = function () {
+      var Result = null;
+      if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) {
+        Result = this.GetElementHandle()}
+       else Result = this.GetElementHandle().firstChild;
+      return Result;
+    };
     this.BindEvents = function () {
       pas["WEBLib.Controls"].TCustomControl.BindEvents.call(this);
-      this.GetElementHandle().addEventListener("submit",rtl.createCallback(this,"DoHandleSubmit"));
+      this.GetChildContainer().addEventListener("submit",rtl.createCallback(this,"DoHandleSubmit"));
     };
     this.CheckValidity = function () {
       var Result = false;
@@ -32960,6 +36065,10 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       pas["WEBLib.Controls"].TCustomControl.CreateInitialize.call(this);
       this.FEnablePropagation = true;
       this.FControlStyle = rtl.unionSet(this.FControlStyle,rtl.createSet(pas["WEBLib.Controls"].TControlStyleValue.csAcceptsControls));
+      if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) {
+        this.SetWidth(400);
+        this.SetHeight(300);
+      };
     };
     rtl.addIntf(this,pas.System.IUnknown);
     var $r = this.$rtti;
@@ -33133,7 +36242,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
   });
   $mod.$rtti.$MethodVar("TAccordionSectionEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["ASection",$mod.$rtti["TAccordionSection"]]]), methodkind: 0});
   $mod.$rtti.$MethodVar("TAccordionSectionAllowEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["ASection",$mod.$rtti["TAccordionSection"]],["Allow",rtl.boolean,1]]), methodkind: 0});
-  $mod.$rtti.$MethodVar("TAccordionSectionRenderEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["ASection",$mod.$rtti["TAccordionSection"]],["ACaption",pas.Web.$rtti["TJSHTMLElement"]],["APanel",pas.Web.$rtti["TJSHTMLElement"]]]), methodkind: 0});
+  $mod.$rtti.$MethodVar("TAccordionSectionRenderEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["ASection",$mod.$rtti["TAccordionSection"]],["ACaption",pas["WEBLib.Controls"].$rtti["TJSHTMLElementRecord"]],["APanel",pas["WEBLib.Controls"].$rtti["TJSHTMLElementRecord"]]]), methodkind: 0});
   rtl.createClass($mod,"TAccordion",pas["WEBLib.Controls"].TCustomControl,function () {
     this.$init = function () {
       pas["WEBLib.Controls"].TCustomControl.$init.call(this);
@@ -33173,6 +36282,8 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       var btn = null;
       var divel = null;
       var p = null;
+      var LCaptionElementRec = pas["WEBLib.Controls"].TJSHTMLElementRecord.$new();
+      var LPanelElementRec = pas["WEBLib.Controls"].TJSHTMLElementRecord.$new();
       if (this.GetElementHandle().childNodes.length > 0) {
         while (this.GetElementHandle().firstChild != null) this.GetElementHandle().removeChild(this.GetElementHandle().firstChild);
         if (this.FElementClassName !== "") {
@@ -33199,9 +36310,13 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
         sp.appendChild(btn);
         sp.appendChild(divel);
         divel.appendChild(p);
-        if (this.FOnRenderSection != null) this.FOnRenderSection(this,this.FSections.GetItem$1(i),btn,p);
+        if (this.FOnRenderSection != null) {
+          LCaptionElementRec.element = btn;
+          LPanelElementRec.element = p;
+          this.FOnRenderSection(this,this.FSections.GetItem$1(i),pas["WEBLib.Controls"].TJSHTMLElementRecord.$clone(LCaptionElementRec),pas["WEBLib.Controls"].TJSHTMLElementRecord.$clone(LPanelElementRec));
+        };
       };
-      if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) this.RenderDesigning(this.$classname,this.GetContainer(),this,this.FSections.GetCount() === 0);
+      if (!this.GetIsLinked() && (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState)) this.RenderDesigning(this.$classname,this.GetContainer(),this,this.FSections.GetCount() === 0,"");
     };
     this.RenderStyle = function () {
       var css = "";
@@ -33317,7 +36432,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       pas["WEBLib.Controls"].TCustomControl.Destroy.call(this);
     };
     this.EndUpdate = function () {
-      pas["WEBLib.Controls"].TControl.EndUpdate.call(this);
+      pas["WEBLib.Controls"].TCustomControl.EndUpdate.call(this);
       this.RenderStyle();
       this.RenderAccordion();
     };
@@ -33471,6 +36586,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       this.FOldWidth = 0;
       this.FControlCollection = null;
       this.FOnLayoutChange = null;
+      this.FResizePtr = null;
     };
     this.$final = function () {
       this.FLabel = undefined;
@@ -33538,11 +36654,15 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
     };
     this.BindEvents = function () {
       pas["WEBLib.Controls"].TCustomControl.BindEvents.call(this);
-      document.defaultView.addEventListener("resize",rtl.createCallback(this,"HandleResize"));
+      this.FResizePtr = rtl.createCallback(this,"HandleResize");
+      document.defaultView.addEventListener("resize",this.FResizePtr);
     };
     this.UnbindEvents = function () {
       pas["WEBLib.Controls"].TControl.UnbindEvents.call(this);
-      document.defaultView.removeEventListener("resize",rtl.createCallback(this,"HandleResize"));
+      if (this.FResizePtr != null) {
+        document.defaultView.removeEventListener("resize",this.FResizePtr);
+        this.FResizePtr = null;
+      };
     };
     this.UpdateControls = function () {
       var i = 0;
@@ -33551,7 +36671,6 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       var el = null;
       var fragment = null;
       var control = null;
-      var ctrlid = "";
       if (pas.Classes.TComponentStateItem.csLoading in this.FComponentState) return;
       if (this.IsUpdating()) return;
       if ((this.FControlCollection.GetCount() > 0) && (this.FLabel != null)) {
@@ -33583,9 +36702,10 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
         if (control != null) {
           control.SetElementPosition(pas["WEBLib.Controls"].TElementPosition.epRelative);
           control.SetChildOrderEx(-1);
-          ctrlid = control.GetID();
-          fragment.appendChild(document.getElementById(ctrlid));
-          el.appendChild(fragment);
+          if (control.GetElementHandle() != null) {
+            fragment.appendChild(control.GetElementHandle());
+            el.appendChild(fragment);
+          };
         };
       };
       this.UpdateElement();
@@ -33665,6 +36785,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
     };
     this.Create$1 = function (AOwner) {
       pas["WEBLib.Controls"].TControl.Create$1.apply(this,arguments);
+      this.FResizePtr = null;
       return this;
     };
     this.Destroy = function () {
@@ -33737,7 +36858,7 @@ rtl.module("WEBLib.ExtCtrls",["System","Classes","SysUtils","Types","WEBLib.Cont
       };
     };
     this.EndUpdate = function () {
-      pas["WEBLib.Controls"].TControl.EndUpdate.call(this);
+      pas["WEBLib.Controls"].TCustomControl.EndUpdate.call(this);
       this.UpdateControls();
     };
     rtl.addIntf(this,pas.System.IUnknown);
@@ -34155,7 +37276,7 @@ rtl.module("uGraphUtils",["System","SysUtils","WEBLib.Graphics","Types","uDrawTy
     var Result = false;
     var i = 0;
     var OuterSegs = rtl.arraySetLength(null,pas.uDrawTypes.TLineSegment,4);
-    OuterSegs = pas.uDrawTypes.TBoundingBoxSegments$clone(node.getNodeBoundingBox());
+    OuterSegs = node.getNodeBoundingBox();
     for (i = 1; i <= 4; i++) {
       OuterSegs[i - 1].p.$assign($mod.ScalePt(OuterSegs[i - 1].p,scalingFactor));
       OuterSegs[i - 1].q.$assign($mod.ScalePt(OuterSegs[i - 1].q,scalingFactor));
@@ -34384,6 +37505,31 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
     var $r = $mod.$rtti.$Record("TARGB",{});
     $r.addField("color",rtl.longint);
   });
+  rtl.recNewT($mod,"TCompartmentState",function () {
+    this.id = "";
+    this.volume = 0.0;
+    this.$eq = function (b) {
+      return (this.id === b.id) && (this.volume === b.volume);
+    };
+    this.$assign = function (s) {
+      this.id = s.id;
+      this.volume = s.volume;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TCompartmentState",{});
+    $r.addField("id",rtl.string);
+    $r.addField("volume",rtl.double);
+  });
+  rtl.createClass($mod,"TCompartment",pas.System.TObject,function () {
+    this.$init = function () {
+      pas.System.TObject.$init.call(this);
+      this.state = $mod.TCompartmentState.$new();
+    };
+    this.$final = function () {
+      this.state = undefined;
+      pas.System.TObject.$final.call(this);
+    };
+  });
   rtl.recNewT($mod,"TNodeState",function () {
     this.id = "";
     this.x = 0;
@@ -34444,7 +37590,7 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       pas.System.TObject.$init.call(this);
       this.state = $mod.TNodeState.$new();
       this.selected = false;
-      this.reactionSelected = false;
+      this.addReactionSelected = false;
     };
     this.$final = function () {
       this.state = undefined;
@@ -34507,7 +37653,7 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       this.state.w = 60;
       this.state.h = 40;
       this.selected = false;
-      this.reactionSelected = false;
+      this.addReactionSelected = false;
       this.state.fillColor = pas["WEBLib.Graphics"].RGB(255,204,153);
       this.state.outlineColor = pas["WEBLib.Graphics"].RGB(255,102,0);
       return this;
@@ -34564,13 +37710,13 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       jso = pas["WEBLib.JSON"].TJSONObject.$create("Create$2");
       for (var $l1 = 0, $end2 = this.nReactants - 1; $l1 <= $end2; $l1++) {
         i = $l1;
-        jso.AddPair(pas["WEBLib.JSON"].TJSONPair.$create("Create$3",[this.srcPtr[i].state.id,"-1"]));
+        jso.AddPair(pas["WEBLib.JSON"].TJSONPair.$create("Create$3",[this.srcPtr[i].state.id,"1"]));
       };
       speciesArray.Add$4(jso);
       jso = pas["WEBLib.JSON"].TJSONObject.$create("Create$2");
       for (var $l3 = 0, $end4 = this.nProducts - 1; $l3 <= $end4; $l3++) {
         i = $l3;
-        jso.AddPair(pas["WEBLib.JSON"].TJSONPair.$create("Create$3",[this.destPtr[i].state.id,"-1"]));
+        jso.AddPair(pas["WEBLib.JSON"].TJSONPair.$create("Create$3",[this.destPtr[i].state.id,"1"]));
       };
       speciesArray.Add$4(jso);
       reactionObject.AddPair$1("fillColor",pas["WEBLib.JSON"].TJSONNumber.$create("Create$1",[this.fillColor]));
@@ -34595,11 +37741,11 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
           this.nProducts = 1;
           pa = reactantObject.Get$1(0);
           this.srcId[0] = pa.fjs.GetStrValue();
-          stoich = pas.SysUtils.StrToInt(pa.fjv.GetStrValue());
+          stoich = -pas.SysUtils.StrToInt(pa.fjv.GetStrValue());
           reactantObject = rtl.as(speciesArray.GetItem$1(1),pas["WEBLib.JSON"].TJSONObject);
           pa = reactantObject.Get$1(0);
           this.destId[0] = pa.fjs.GetStrValue();
-          stoich = pas.SysUtils.StrToInt(pa.fjv.GetStrValue());
+          stoich = -pas.SysUtils.StrToInt(pa.fjv.GetStrValue());
         } else if ($tmp1 === pas.uNetworkTypes.TReactionType.eAnyToAny) {
           reactantObject = rtl.as(speciesArray.GetItem$1(0),pas["WEBLib.JSON"].TJSONObject);
           this.nReactants = reactantObject.GetCount();
@@ -34615,7 +37761,7 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
             i = $l4;
             pa = reactantObject.Get$1(i);
             this.destId[i] = pa.fjs.GetStrValue();
-            stoich = pas.SysUtils.StrToInt(pa.fjv.GetStrValue());
+            stoich = -pas.SysUtils.StrToInt(pa.fjv.GetStrValue());
           };
         };
       } else throw pas.SysUtils.Exception.$create("Create$1",["No species in reaction"]);
@@ -34981,7 +38127,7 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       Result = rtl.length(this.reactions);
       return Result;
     };
-    this.AddAnyToAnyEdge = function (sourceNodes, destNodes, edgeIndex) {
+    this.addAnyToAnyEdge = function (sourceNodes, destNodes, edgeIndex) {
       var Result = null;
       var newReaction = null;
       var i = 0;
@@ -35017,7 +38163,7 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       for (var $in1 = this.nodes, $l2 = 0, $end3 = rtl.length($in1) - 1; $l2 <= $end3; $l2++) {
         node = $in1[$l2];
         node.selected = false;
-        node.reactionSelected = false;
+        node.addReactionSelected = false;
       };
       for (var $in4 = this.reactions, $l5 = 0, $end6 = rtl.length($in4) - 1; $l5 <= $end6; $l5++) {
         reaction = $in4[$l5];
@@ -35028,7 +38174,7 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       var node = null;
       for (var $in1 = this.nodes, $l2 = 0, $end3 = rtl.length($in1) - 1; $l2 <= $end3; $l2++) {
         node = $in1[$l2];
-        node.reactionSelected = false;
+        node.addReactionSelected = false;
       };
     };
     this.clear = function () {
@@ -35091,7 +38237,7 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       for (var $l3 = 0, $end4 = ln - 1; $l3 <= $end4; $l3++) {
         i = $l3;
         this.reactions[i] = $mod.TReaction.$create("create$1");
-        this.reactions[i].loadState(this.nodes,$mod.TReactionState.$clone(networkState.savedReactions[i]));
+        this.reactions[i].loadState(rtl.arrayRef(this.nodes),$mod.TReactionState.$clone(networkState.savedReactions[i]));
       };
     };
     this.Create$1 = function (id) {
@@ -35451,8 +38597,9 @@ rtl.module("WEBLib.TreeNodes",["System","Classes","Types","SysUtils","Web"],func
           };
         } else if (!(PN != null)) {
           if (this.IsFirstNode()) {
-            this.FOwner.FFirstNode = NN}
-           else if ((this.GetParent() != null) && this.IsFirstChild()) this.GetParent().FFirstChild = NN;
+            this.FOwner.FFirstNode = NN;
+            NN.FPrevSibling = PN;
+          } else if ((this.GetParent() != null) && this.IsFirstChild()) this.GetParent().FFirstChild = NN;
         } else {
           PN.FNextSibling = NN;
           NN.FPrevSibling = PN;
@@ -35460,7 +38607,9 @@ rtl.module("WEBLib.TreeNodes",["System","Classes","Types","SysUtils","Web"],func
       };
       if (!(this.GetParent() != null)) {
         i = this.FOwner.FNodeList.IndexOf(this);
-        if (i >= 0) this.FOwner.FNodeList.Delete(i);
+        if (i >= 0) {
+          this.FOwner.FNodeList.Delete(i);
+        };
       };
       this.SetData(null);
       pas.System.TObject.Destroy.call(this);
@@ -35549,6 +38698,8 @@ rtl.module("WEBLib.TreeNodes",["System","Classes","Types","SysUtils","Web"],func
       };
       for (var $l1 = ChildList.GetCount() - 1; $l1 >= 0; $l1--) {
         i = $l1;
+        N = ChildList.GetItemsEx(i);
+        N = rtl.freeLoc(N);
         ChildList.GetItemsEx(i).Delete();
       };
       ChildList = rtl.freeLoc(ChildList);
@@ -35999,6 +39150,49 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
       this.RichEdit.DoLinkAction();
     };
   });
+  rtl.recNewT($mod,"TSelAttributes",function () {
+    this.FontName = "";
+    this.FontSize = "";
+    this.FontColor = "";
+    this.BkColor = "";
+    this.IsBold = false;
+    this.IsItalic = false;
+    this.IsStrikeThrough = false;
+    this.IsUnderline = false;
+    this.IsLeft = false;
+    this.IsRight = false;
+    this.IsCenter = false;
+    this.$eq = function (b) {
+      return (this.FontName === b.FontName) && (this.FontSize === b.FontSize) && (this.FontColor === b.FontColor) && (this.BkColor === b.BkColor) && (this.IsBold === b.IsBold) && (this.IsItalic === b.IsItalic) && (this.IsStrikeThrough === b.IsStrikeThrough) && (this.IsUnderline === b.IsUnderline) && (this.IsLeft === b.IsLeft) && (this.IsRight === b.IsRight) && (this.IsCenter === b.IsCenter);
+    };
+    this.$assign = function (s) {
+      this.FontName = s.FontName;
+      this.FontSize = s.FontSize;
+      this.FontColor = s.FontColor;
+      this.BkColor = s.BkColor;
+      this.IsBold = s.IsBold;
+      this.IsItalic = s.IsItalic;
+      this.IsStrikeThrough = s.IsStrikeThrough;
+      this.IsUnderline = s.IsUnderline;
+      this.IsLeft = s.IsLeft;
+      this.IsRight = s.IsRight;
+      this.IsCenter = s.IsCenter;
+      return this;
+    };
+    var $r = $mod.$rtti.$Record("TSelAttributes",{});
+    $r.addField("FontName",rtl.string);
+    $r.addField("FontSize",rtl.string);
+    $r.addField("FontColor",rtl.string);
+    $r.addField("BkColor",rtl.string);
+    $r.addField("IsBold",rtl.boolean);
+    $r.addField("IsItalic",rtl.boolean);
+    $r.addField("IsStrikeThrough",rtl.boolean);
+    $r.addField("IsUnderline",rtl.boolean);
+    $r.addField("IsLeft",rtl.boolean);
+    $r.addField("IsRight",rtl.boolean);
+    $r.addField("IsCenter",rtl.boolean);
+  });
+  $mod.$rtti.$MethodVar("TAttributesChangeEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Attributes",$mod.$rtti["TSelAttributes"]]]), methodkind: 0});
   rtl.createClass($mod,"TCustomRichEdit",pas["WEBLib.Controls"].TCustomControl,function () {
     this.$init = function () {
       pas["WEBLib.Controls"].TCustomControl.$init.call(this);
@@ -36012,6 +39206,7 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
       this.FWantTabs = false;
       this.FReadOnly = false;
       this.FOnChange = null;
+      this.FOnAttributesChanged = null;
     };
     this.$final = function () {
       this.FOwner$1 = undefined;
@@ -36019,6 +39214,7 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
       this.FSelAttributes = undefined;
       this.FOnSelectionChange = undefined;
       this.FOnChange = undefined;
+      this.FOnAttributesChanged = undefined;
       pas["WEBLib.Controls"].TCustomControl.$final.call(this);
     };
     this.GetText = function () {
@@ -36062,6 +39258,11 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
         };
       };
     };
+    this.GetLines = function () {
+      var Result = null;
+      Result = this.FLines;
+      return Result;
+    };
     this.CreateElement = function () {
       var Result = null;
       Result = document.createElement("DIV");
@@ -36076,10 +39277,18 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
       return Result;
     };
     this.UpdateElement = function () {
+      var i = 0;
+      var s = "";
       pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
       if (this.ElementIFrameHandle() != null) ;
       if (this.GetElementHandle() != null) {
-        this.GetElementHandle().innerHTML = this.FLines.GetTextStr();
+        s = "";
+        for (var $l1 = 0, $end2 = this.FLines.GetCount() - 1; $l1 <= $end2; $l1++) {
+          i = $l1;
+          if (i > 0) s = s + "<br>";
+          s = s + this.FLines.Get(i);
+        };
+        this.GetElementHandle().innerHTML = s;
         if (this.FReadOnly) {
           this.GetElementHandle().contentEditable = "false"}
          else this.GetElementHandle().contentEditable = "true";
@@ -36124,6 +39333,7 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
         rtl.as(this.FOwner$1,pas["WEBLib.Buttons"].TRichEditToolBar).SetTextColor(0x1);
         rtl.as(this.FOwner$1,pas["WEBLib.Buttons"].TRichEditToolBar).SetBackgroundColor(0x1);
       };
+      this.GetSelectionAttributes(document.getSelection());
       if (this.FOnSelectionChange != null) this.FOnSelectionChange(this);
       Result = true;
       return Result;
@@ -36139,6 +39349,16 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
         Result = true;
       };
       pas["WEBLib.Controls"].TControl.HandleDoKeyDown.apply(this,arguments);
+      return Result;
+    };
+    this.GetOuterHeight = function () {
+      var Result = 0;
+      Result = pas["WEBLib.Controls"].TControl.GetOuterHeight.call(this) - 6;
+      return Result;
+    };
+    this.GetOuterWidth = function () {
+      var Result = 0;
+      Result = pas["WEBLib.Controls"].TControl.GetOuterWidth.call(this) - 6;
       return Result;
     };
     this.SetLines = function (ALines) {
@@ -36159,6 +39379,89 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
     this.BindEvents = function () {
       pas["WEBLib.Controls"].TCustomControl.BindEvents.call(this);
       this.GetContainer().addEventListener("input",rtl.createCallback(this,"DoHandleInput"));
+    };
+    this.GetSelectionAttributes = function (selnode) {
+      var el = null;
+      var fn = "";
+      var fs = "";
+      var fc = "";
+      var fbk = "";
+      var found = false;
+      var Attr = $mod.TSelAttributes.$new();
+      if (this.FOnAttributesChanged != null) {
+        el = null;
+        if (selnode.focusNode) {
+          el = selnode.focusNode.parentElement;
+        };
+        do {
+          found = false;
+          if (el != null) {
+            if (el.tagName === "B") {
+              found = true;
+              Attr.IsBold = true;
+            };
+            if (el.tagName === "I") {
+              found = true;
+              Attr.IsItalic = true;
+            };
+            if (el.tagName === "U") {
+              found = true;
+              Attr.IsUnderline = true;
+            };
+            if (el.tagName === "STRIKE") {
+              found = true;
+              Attr.IsStrikeThrough = true;
+            };
+            if (el.tagName === "SPAN") {
+              fbk = el.style.getPropertyValue("background-color");
+              if (fbk == null) {
+              fbk = ''; };
+              Attr.BkColor = fbk;
+              found = true;
+            };
+            if (el.tagName === "DIV") {
+              fbk = el.style.getPropertyValue("text-align");
+              if (fbk == null) {
+              fbk = ''; };
+              if (fbk === "center") Attr.IsCenter = true;
+              if (fbk === "right") Attr.IsRight = true;
+              if (fbk === "left") Attr.IsLeft = true;
+              found = true;
+            };
+            if (el.tagName === "FONT") {
+              fn = el.getAttribute("face");
+              if (fn == null) {
+              fn = ''; };
+              fs = el.getAttribute("size");
+              if (fs == null) {
+              fs = ''; };
+              fc = el.getAttribute("color");
+              if (fc == null) {
+              fc = ''; };
+              fbk = el.style.getPropertyValue("background-color");
+              if (fbk == null) {
+              fbk = ''; };
+              found = true;
+              Attr.FontName = fn;
+              Attr.FontColor = fc;
+              if (fs !== "") {
+                if (fs === "7") fs = "36";
+                if (fs === "6") fs = "24";
+                if (fs === "5") fs = "18";
+                if (fs === "4") fs = "14";
+                if (fs === "3") fs = "10";
+                if (fs === "2") fs = "9";
+                if (fs === "1") fs = "8";
+              };
+              Attr.FontSize = fs;
+              Attr.BkColor = fbk;
+            };
+            el = el.parentElement;
+            if (el === this.GetElementHandle()) found = false;
+          };
+        } while (found);
+        this.FOnAttributesChanged(this,$mod.TSelAttributes.$clone(Attr));
+      };
     };
     this.CreateInitialize = function () {
       pas["WEBLib.Controls"].TCustomControl.CreateInitialize.call(this);
@@ -36297,7 +39600,7 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
     $r.addProperty("HeightPercent",2,pas["WEBLib.Controls"].$rtti["TPercentSize"],"FHeightPercent","SetHeightPercent",{Default: 100});
     $r.addProperty("HeightStyle",2,pas["WEBLib.Controls"].$rtti["TSizeStyle"],"FHeightStyle","SetHeightStyle",{Default: pas["WEBLib.Controls"].TSizeStyle.ssAbsolute});
     $r.addProperty("InsertLineBreaks",0,rtl.boolean,"FInsertLineBreaks","FInsertLineBreaks",{Default: false});
-    $r.addProperty("Lines",2,pas.Classes.$rtti["TStringList"],"FLines","SetLines");
+    $r.addProperty("Lines",3,pas.Classes.$rtti["TStrings"],"GetLines","SetLines");
     $r.addProperty("Margins",2,pas["WEBLib.Controls"].$rtti["TMargins"],"FMargins","SetMargins");
     $r.addProperty("ReadOnly",2,rtl.boolean,"FReadOnly","SetReadOnly",{Default: false});
     $r.addProperty("WantTabs",0,rtl.boolean,"FWantTabs","FWantTabs",{Default: false});
@@ -36475,7 +39778,7 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
         };
         li.appendChild(a);
       };
-      if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) this.RenderDesigning("TWebTabSet",this.GetContainer(),this,this.FItems.GetCount() === 0);
+      if (!this.GetIsLinked() && (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState)) this.RenderDesigning("TWebTabSet",this.GetContainer(),this,this.FItems.GetCount() === 0,"");
       this.UpdateElement();
     };
     this.Loaded = function () {
@@ -36497,7 +39800,7 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
       pas["WEBLib.Controls"].TCustomControl.Destroy.call(this);
     };
     this.EndUpdate = function () {
-      pas["WEBLib.Controls"].TControl.EndUpdate.call(this);
+      pas["WEBLib.Controls"].TCustomControl.EndUpdate.call(this);
       this.DoUpdateList();
     };
     this.Clear = function () {
@@ -36565,7 +39868,7 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
     this.$init = function () {
       pas["WEBLib.ExtCtrls"].TPanel.$init.call(this);
       this.FTabVisible = false;
-      this.FTabCaption = "";
+      this.FPosUpdating = false;
     };
     this.SetTabVisible = function (Value) {
       if (this.FTabVisible !== Value) {
@@ -36576,11 +39879,18 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
       };
     };
     this.SetCaption = function (AValue) {
-      if (this.FTabCaption !== AValue) {
-        this.FTabCaption = AValue;
-        if (this.FParent != null) {
-          if ($mod.TPageControl.isPrototypeOf(this.FParent)) rtl.as(this.FParent,$mod.TPageControl).DoUpdateList();
-        };
+      pas["WEBLib.ExtCtrls"].TCustomPanel.SetCaption.apply(this,arguments);
+      if (this.FParent != null) {
+        if ($mod.TPageControl.isPrototypeOf(this.FParent)) rtl.as(this.FParent,$mod.TPageControl).DoUpdateList();
+      };
+    };
+    this.SetParent = function (AValue) {
+      if ($mod.TTabSheet.isPrototypeOf(AValue)) {
+        if ($mod.TPageControl.isPrototypeOf(rtl.as(AValue,$mod.TTabSheet).FParent)) AValue = rtl.as(AValue,$mod.TTabSheet).FParent;
+      };
+      pas["WEBLib.Controls"].TControl.SetParent.call(this,AValue);
+      if (this.FParent != null) {
+        if ($mod.TPageControl.isPrototypeOf(this.FParent)) rtl.as(this.FParent,$mod.TPageControl).DoUpdateList();
       };
     };
     this.CreateInitialize = function () {
@@ -36590,6 +39900,30 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
       this.SetColor(16777215);
       this.SetTabVisible(true);
       this.SetShowCaption(false);
+      this.FPosUpdating = false;
+    };
+    this.EndUpdate = function () {
+      pas["WEBLib.ExtCtrls"].TCustomPanel.EndUpdate.call(this);
+      if (this.FParent != null) {
+        if ($mod.TPageControl.isPrototypeOf(this.FParent)) rtl.as(this.FParent,$mod.TPageControl).DoUpdateList();
+      };
+    };
+    this.SetBounds = function (X, Y, AWidth, AHeight) {
+      pas["WEBLib.ExtCtrls"].TCustomPanel.SetBounds.apply(this,arguments);
+      if ($mod.TPageControl.isPrototypeOf(this.FParent) && !this.FPosUpdating) {
+        this.FPosUpdating = true;
+        rtl.as(this.FParent,$mod.TPageControl).DoUpdateList();
+        this.FPosUpdating = false;
+      };
+    };
+    this.Destroy = function () {
+      if (this.FParent != null) {
+        if ($mod.TPageControl.isPrototypeOf(this.FParent)) {
+          rtl.as(this.FParent,$mod.TPageControl).DoUpdateList();
+          rtl.as(this.FParent,$mod.TPageControl).SetTabIndex(0);
+        };
+      };
+      pas["WEBLib.ExtCtrls"].TCustomPanel.Destroy.call(this);
     };
     rtl.addIntf(this,pas.System.IUnknown);
     var $r = this.$rtti;
@@ -36602,6 +39936,7 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
   rtl.createClass($mod,"TPageControl",pas["WEBLib.Controls"].TCustomControl,function () {
     this.$init = function () {
       pas["WEBLib.Controls"].TCustomControl.$init.call(this);
+      this.FDesignTime = false;
       this.FPrevTabIndex = 0;
       this.FItems = null;
       this.FTabIndex = 0;
@@ -36628,6 +39963,20 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
         this.FPrevTabIndex = this.FTabIndex;
         this.DoUpdateList();
       };
+    };
+    this.GetActivePage = function () {
+      var Result = null;
+      var pi = 0;
+      Result = null;
+      pi = this.GetActivePageIndex();
+      if (pi >= 0) Result = this.GetPage(pi);
+      return Result;
+    };
+    this.GetActivePageIndex = function () {
+      var Result = 0;
+      Result = -1;
+      if ((this.PageCount() >= 0) && (this.FTabIndex >= 0) && (this.FTabIndex < this.PageCount())) Result = this.FTabIndex;
+      return Result;
     };
     this.GetPage = function (Index) {
       var Result = null;
@@ -36702,6 +40051,14 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
       };
       return Result;
     };
+    this.CanAcceptChild = function (AValue) {
+      var Result = null;
+      Result = pas["WEBLib.Controls"].TControl.CanAcceptChild.apply(this,arguments);
+      if ((AValue != null) && !$mod.TTabSheet.isPrototypeOf(AValue)) {
+        Result = this.FParent;
+      };
+      return Result;
+    };
     this.BindEvents = function () {
       pas["WEBLib.Controls"].TCustomControl.BindEvents.call(this);
       if (this.GetElementHandle() != null) {
@@ -36717,8 +40074,12 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
         };
       };
     };
+    this.UpdateElement = function () {
+      pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
+    };
     this.DoUpdateList = function () {
       var i = 0;
+      var vistabindex = 0;
       var s = "";
       var shidden = "";
       var n = null;
@@ -36727,24 +40088,33 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
       var a = null;
       var tabs = null;
       var tab = null;
+      var LLabel = null;
+      var LHasLabel = false;
       if (!(this.GetContainer() != null)) return;
       if (!(this.GetElementHandle() != null) || this.IsUpdating()) return;
       if (this.GetControlsCount() > 0) {
+        LLabel = this.GetElementHandle().firstChild;
+        LHasLabel = (LLabel != null) && (LLabel.tagName === "DIV") && (LLabel.getAttribute("data-design") === "1");
+        if (LHasLabel) {
+          this.GetElementHandle().removeChild(this.GetElementHandle().firstChild);
+        };
         tabs = pas.Classes.TStringList.$create("Create$1");
         shidden = "{#hidden#}";
+        vistabindex = this.FTabIndex;
         for (var $l1 = 0, $end2 = this.GetControlsCount() - 1; $l1 <= $end2; $l1++) {
           i = $l1;
-          if ($mod.TTabSheet.isPrototypeOf(this.GetControls(i))) {
+          if ((pas.Classes.TComponentStateItem.csDestroying in this.GetControls(i).FComponentState) && (i <= this.FTabIndex)) vistabindex += 1;
+          if ($mod.TTabSheet.isPrototypeOf(this.GetControls(i)) && !(pas.Classes.TComponentStateItem.csDestroying in this.GetControls(i).FComponentState)) {
             tab = this.GetControls(i);
             if (tab.FTabVisible) {
-              tabs.Add(tab.FTabCaption)}
+              tabs.Add(tab.FCaption)}
              else tabs.Add(shidden);
             tab.SetAlign(pas["WEBLib.Controls"].TAlign.alClient);
             tab.SetAlignWithMargins(true);
             tab.FMargins.SetLeft(0);
             tab.SetBorderStyle(pas["WEBLib.Controls"].TBorderStyle.bsSingle);
-            tab.SetVisible(this.FTabIndex === i);
-            if (this.FTabIndex === i) {
+            tab.SetVisible(vistabindex === i);
+            if (vistabindex === i) {
               tab.BringToFront()}
              else tab.SendToBack();
             tab.GetElementHandle().style.setProperty("background-color",pas["WEBLib.Graphics"].ColorToHTML(tab.FColor));
@@ -36824,18 +40194,18 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
           if ($mod.TTabSheet.isPrototypeOf(this.GetControls(i))) {
             this.GetControls(i).FMargins.SetTop(Math.round(ul.offsetHeight) - 1);
             this.GetControls(i).GetElementHandle().style.setProperty("white-space","");
-            this.GetControls(i).SetBorderStyle(this.FBorderStyle);
           };
         };
         tabs = rtl.freeLoc(tabs);
       } else {
-        if (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) this.RenderDesigning("TWebPageControl",this.GetContainer(),this,true);
+        if (!this.GetIsLinked() && (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState)) this.RenderDesigning("TWebPageControl",this.GetContainer(),this,true,"");
       };
       this.DoUpdateResize();
       this.UpdateElement();
     };
     this.DoUpdateResize = function () {
       var i = 0;
+      var vistabindex = 0;
       for (var $l1 = 0, $end2 = this.GetControlsCount() - 1; $l1 <= $end2; $l1++) {
         i = $l1;
         if ($mod.TTabSheet.isPrototypeOf(this.GetControls(i))) this.GetControls(i).SetVisible(false);
@@ -36849,10 +40219,12 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
           this.GetControls(i).SetVisible(false);
         };
       };
+      vistabindex = this.FTabIndex;
       for (var $l5 = 0, $end6 = this.GetControlsCount() - 1; $l5 <= $end6; $l5++) {
         i = $l5;
+        if ((pas.Classes.TComponentStateItem.csDestroying in this.GetControls(i).FComponentState) && (i <= this.FTabIndex)) vistabindex += 1;
         if ($mod.TTabSheet.isPrototypeOf(this.GetControls(i))) {
-          this.GetControls(i).SetVisible(this.FTabIndex === i);
+          this.GetControls(i).SetVisible(vistabindex === i);
         };
       };
     };
@@ -36884,9 +40256,51 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
       };
       this.DoUpdateList();
     };
+    this.SetParent = function (AValue) {
+      var ts = null;
+      var frm = null;
+      pas["WEBLib.Controls"].TControl.SetParent.apply(this,arguments);
+      if (this.FDesignTime) {
+        frm = pas["WEBLib.Forms"].GetParentForm(this);
+        this.FDesignTime = false;
+        ts = $mod.TWebTabSheet.$create("Create$1",[frm]);
+        ts.SetParent(this);
+        ts.SetCaption("Page1");
+        ts.SetName(this.GetUniqueName());
+        ts = $mod.TWebTabSheet.$create("Create$1",[frm]);
+        ts.SetParent(this);
+        ts.SetCaption("Page2");
+        ts.SetName(this.GetUniqueName());
+      };
+      this.DoUpdateList();
+    };
+    this.GetUniqueName = function () {
+      var Result = "";
+      var i = 0;
+      var id = 0;
+      var found = false;
+      var AName = "";
+      id = 1;
+      AName = this.FName + "sheet";
+      do {
+        Result = AName + pas.SysUtils.IntToStr(id);
+        found = true;
+        for (var $l1 = 0, $end2 = this.FOwner.GetComponentCount() - 1; $l1 <= $end2; $l1++) {
+          i = $l1;
+          if (this.FOwner.GetComponent(i).FName === Result) {
+            found = false;
+            id += 1;
+            break;
+          };
+        };
+      } while (!found);
+      return Result;
+    };
     this.CreateInitialize = function () {
       pas["WEBLib.Controls"].TCustomControl.CreateInitialize.call(this);
+      this.FDesignTime = (pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) && !((pas.Classes.TComponentStateItem.csReading in this.FOwner.FComponentState) || (pas.Classes.TComponentStateItem.csLoading in this.FOwner.FComponentState));
       this.FControlStyle = rtl.unionSet(this.FControlStyle,rtl.createSet(pas["WEBLib.Controls"].TControlStyleValue.csAcceptsControls));
+      this.SetBorderStyle(pas["WEBLib.Controls"].TBorderStyle.bsNone);
       this.FItems = pas.Classes.TStringList.$create("Create$1");
       this.FItems.FOnChange = rtl.createCallback(this,"ItemsChanged");
       this.FTabIndex = 0;
@@ -36905,7 +40319,7 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
       this.FItems.Clear();
     };
     this.EndUpdate = function () {
-      pas["WEBLib.Controls"].TControl.EndUpdate.call(this);
+      pas["WEBLib.Controls"].TCustomControl.EndUpdate.call(this);
       this.DoUpdateList();
     };
     this.SelectNextPage = function (GoForward) {
@@ -36934,7 +40348,8 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
     $r.addProperty("Align",2,pas["WEBLib.Controls"].$rtti["TAlign"],"FAlign","SetAlign",{Default: pas["WEBLib.Controls"].TAlign.alNone});
     $r.addProperty("AlignWithMargins",2,rtl.boolean,"FAlignWithMargins","SetAlignWithMargins",{Default: false});
     $r.addProperty("Anchors",2,pas["WEBLib.Controls"].$rtti["TAnchors"],"FAnchors","SetAnchors",{Default: rtl.createSet(pas["WEBLib.Controls"].TAnchorKind.akLeft,pas["WEBLib.Controls"].TAnchorKind.akTop)});
-    $r.addProperty("BorderStyle",2,pas["WEBLib.Controls"].$rtti["TBorderStyle"],"FBorderStyle","SetBorderStyle",{Default: pas["WEBLib.Controls"].TBorderStyle.bsSingle});
+    $r.addProperty("BorderStyle",2,pas["WEBLib.Controls"].$rtti["TBorderStyle"],"FBorderStyle","SetBorderStyle",{Default: pas["WEBLib.Controls"].TBorderStyle.bsNone});
+    $r.addProperty("ChildOrder",2,rtl.longint,"FChildOrder","SetChildOrderEx");
     $r.addProperty("ElementClassName",2,pas["WEBLib.Controls"].$rtti["TElementClassName"],"FElementClassName","SetElementClassName");
     $r.addProperty("ElementFont",2,pas["WEBLib.Controls"].$rtti["TElementFont"],"FElementFont","SetElementFont",{Default: pas["WEBLib.Controls"].TElementFont.efProperty});
     $r.addProperty("ElementID",3,pas["WEBLib.Controls"].$rtti["TElementID"],"GetID","SetID");
@@ -37122,7 +40537,7 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
   });
   $mod.$rtti.$MethodVar("TTreeViewNodeEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Node",pas["WEBLib.TreeNodes"].$rtti["TTreeNode"]]]), methodkind: 0});
   $mod.$rtti.$MethodVar("TTreeViewNodeAllowEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Node",pas["WEBLib.TreeNodes"].$rtti["TTreeNode"]],["Allow",rtl.boolean,1]]), methodkind: 0});
-  $mod.$rtti.$MethodVar("TTreeViewNodeRenderEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Node",pas["WEBLib.TreeNodes"].$rtti["TTreeNode"]],["AElement",pas.Web.$rtti["TJSHTMLElement"]]]), methodkind: 0});
+  $mod.$rtti.$MethodVar("TTreeViewNodeRenderEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Node",pas["WEBLib.TreeNodes"].$rtti["TTreeNode"]],["AElement",pas["WEBLib.Controls"].$rtti["TJSHTMLElementRecord"]]]), methodkind: 0});
   rtl.createClass($mod,"TTreeView",pas["WEBLib.Controls"].TCustomControl,function () {
     this.$init = function () {
       pas["WEBLib.Controls"].TCustomControl.$init.call(this);
@@ -37192,7 +40607,11 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
       };
     };
     this.DoRenderNode = function (ANode, AElement) {
-      if (this.FOnRenderNode != null) this.FOnRenderNode(this,ANode,AElement);
+      var LElementRec = pas["WEBLib.Controls"].TJSHTMLElementRecord.$new();
+      if (this.FOnRenderNode != null) {
+        LElementRec.element = AElement;
+        this.FOnRenderNode(this,ANode,pas["WEBLib.Controls"].TJSHTMLElementRecord.$clone(LElementRec));
+      };
     };
     this.RenderNode = function (ANode, AElementName) {
       var Result = null;
@@ -37503,7 +40922,7 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
       pas["WEBLib.Controls"].TControl.BeginUpdate.call(this);
     };
     this.EndUpdate = function () {
-      pas["WEBLib.Controls"].TControl.EndUpdate.call(this);
+      pas["WEBLib.Controls"].TCustomControl.EndUpdate.call(this);
       this.SetSelected(null);
       this.RenderNodes();
     };
@@ -37596,7 +41015,7 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
   rtl.createClass($mod,"TWebTreeView",$mod.TTreeView,function () {
     rtl.addIntf(this,pas.System.IUnknown);
   });
-},["WEBLib.Buttons"],function () {
+},["WEBLib.Buttons","WEBLib.Forms"],function () {
   "use strict";
   var $mod = this;
   var $impl = $mod.$impl;
@@ -37625,6 +41044,7 @@ rtl.module("WEBLib.ComCtrls",["System","Classes","SysUtils","Web","WEBLib.Contro
 rtl.module("WEBLib.Buttons",["System","Classes","SysUtils","WEBLib.Controls","Web","WEBLib.Graphics","WEBLib.StdCtrls","WEBLib.ComCtrls","WEBLib.ExtCtrls"],function () {
   "use strict";
   var $mod = this;
+  var $impl = $mod.$impl;
   this.TButtonLayout = {"0": "blGlyphLeft", blGlyphLeft: 0, "1": "blGlyphRight", blGlyphRight: 1, "2": "blGlyphTop", blGlyphTop: 2, "3": "blGlyphBottom", blGlyphBottom: 3};
   $mod.$rtti.$Enum("TButtonLayout",{minvalue: 0, maxvalue: 3, ordtype: 1, enumtype: this.TButtonLayout});
   rtl.createClass($mod,"TCustomSpeedButton",pas["WEBLib.Controls"].TCustomControl,function () {
@@ -38103,6 +41523,7 @@ rtl.module("WEBLib.Buttons",["System","Classes","SysUtils","WEBLib.Controls","We
       this.FBackgroundColor = 0;
       this.FVisibleButtons = {};
       this.FHints = null;
+      this.FBtnID = "";
     };
     this.$final = function () {
       this.FBold = undefined;
@@ -38128,6 +41549,7 @@ rtl.module("WEBLib.Buttons",["System","Classes","SysUtils","WEBLib.Controls","We
       if (AValue != null) {
         this.FRichEdit = AValue;
         this.FRichEdit.FOwner$1 = this;
+        this.FRichEdit.FOnAttributesChanged = rtl.createCallback(this,"HandleAttributeChanged");
       };
     };
     this.GetRichEdit = function () {
@@ -38150,6 +41572,12 @@ rtl.module("WEBLib.Buttons",["System","Classes","SysUtils","WEBLib.Controls","We
     this.SetHints = function (Value) {
       this.FHints.Assign(Value);
     };
+    this.Notification = function (AComponent, Operation) {
+      pas.Classes.TComponent.Notification.apply(this,arguments);
+      if ((Operation === pas.Classes.TOperation.opRemove) && (AComponent === this.FRichEdit)) {
+        this.FRichEdit = null;
+      };
+    };
     this.CreateButton = function (btn, BtnID, Glyph, Hint) {
       btn.set($mod.TSpeedButton.$create("Create$2",[BtnID]));
       btn.get().SetParent(this);
@@ -38167,45 +41595,45 @@ rtl.module("WEBLib.Buttons",["System","Classes","SysUtils","WEBLib.Controls","We
       var BID = "";
       if (this.GetRichEdit() != null) {
         BID = Sender.GetID();
-        if (BID === (this.GetID() + "_bold")) {
+        if (BID === (this.FBtnID + "_bold")) {
           if (pas["WEBLib.Graphics"].TFontStyle.fsBold in this.GetRichEdit().FSelAttributes.FStyle) {
             this.GetRichEdit().FSelAttributes.SetStyle(rtl.diffSet(this.GetRichEdit().FSelAttributes.FStyle,rtl.createSet(pas["WEBLib.Graphics"].TFontStyle.fsBold)))}
            else this.GetRichEdit().FSelAttributes.SetStyle(rtl.unionSet(this.GetRichEdit().FSelAttributes.FStyle,rtl.createSet(pas["WEBLib.Graphics"].TFontStyle.fsBold)));
-        } else if (BID === (this.GetID() + "_italic")) {
+        } else if (BID === (this.FBtnID + "_italic")) {
           if (pas["WEBLib.Graphics"].TFontStyle.fsItalic in this.GetRichEdit().FSelAttributes.FStyle) {
             this.GetRichEdit().FSelAttributes.SetStyle(rtl.diffSet(this.GetRichEdit().FSelAttributes.FStyle,rtl.createSet(pas["WEBLib.Graphics"].TFontStyle.fsItalic)))}
            else this.GetRichEdit().FSelAttributes.SetStyle(rtl.unionSet(this.GetRichEdit().FSelAttributes.FStyle,rtl.createSet(pas["WEBLib.Graphics"].TFontStyle.fsItalic)));
-        } else if (BID === (this.GetID() + "_underline")) {
+        } else if (BID === (this.FBtnID + "_underline")) {
           if (pas["WEBLib.Graphics"].TFontStyle.fsUnderline in this.GetRichEdit().FSelAttributes.FStyle) {
             this.GetRichEdit().FSelAttributes.SetStyle(rtl.diffSet(this.GetRichEdit().FSelAttributes.FStyle,rtl.createSet(pas["WEBLib.Graphics"].TFontStyle.fsUnderline)))}
            else this.GetRichEdit().FSelAttributes.SetStyle(rtl.unionSet(this.GetRichEdit().FSelAttributes.FStyle,rtl.createSet(pas["WEBLib.Graphics"].TFontStyle.fsUnderline)));
-        } else if (BID === (this.GetID() + "_strikethrough")) {
+        } else if (BID === (this.FBtnID + "_strikethrough")) {
           if (pas["WEBLib.Graphics"].TFontStyle.fsStrikeOut in this.GetRichEdit().FSelAttributes.FStyle) {
             this.GetRichEdit().FSelAttributes.SetStyle(rtl.diffSet(this.GetRichEdit().FSelAttributes.FStyle,rtl.createSet(pas["WEBLib.Graphics"].TFontStyle.fsStrikeOut)))}
            else this.GetRichEdit().FSelAttributes.SetStyle(rtl.unionSet(this.GetRichEdit().FSelAttributes.FStyle,rtl.createSet(pas["WEBLib.Graphics"].TFontStyle.fsStrikeOut)));
-        } else if (BID === (this.GetID() + "_alignleft")) {
+        } else if (BID === (this.FBtnID + "_alignleft")) {
           this.GetRichEdit().FSelAttributes.SetAlignment(pas.Classes.TAlignment.taLeftJustify)}
-         else if (BID === (this.GetID() + "_aligncenter")) {
+         else if (BID === (this.FBtnID + "_aligncenter")) {
           this.GetRichEdit().FSelAttributes.SetAlignment(pas.Classes.TAlignment.taCenter)}
-         else if (BID === (this.GetID() + "_alignright")) {
+         else if (BID === (this.FBtnID + "_alignright")) {
           this.GetRichEdit().FSelAttributes.SetAlignment(pas.Classes.TAlignment.taRightJustify)}
-         else if (BID === (this.GetID() + "_olist")) {
+         else if (BID === (this.FBtnID + "_olist")) {
           this.GetRichEdit().FSelAttributes.SetOrderedList(!this.GetRichEdit().FSelAttributes.FOrderedList)}
-         else if (BID === (this.GetID() + "_ulist")) this.GetRichEdit().FSelAttributes.SetUnOrderedList(!this.GetRichEdit().FSelAttributes.FUnOrderedList);
+         else if (BID === (this.FBtnID + "_ulist")) this.GetRichEdit().FSelAttributes.SetUnOrderedList(!this.GetRichEdit().FSelAttributes.FUnOrderedList);
       };
       if (this.FOnSpeedButtonClick != null) this.FOnSpeedButtonClick(this);
     };
     this.FgSelect = function (Sender) {
-      this.GetRichEdit().FSelAttributes.SetColor(this.FFgClr.GetColor());
+      if (this.GetRichEdit() != null) this.GetRichEdit().FSelAttributes.SetColor(this.FFgClr.GetColor());
     };
     this.BkSelect = function (Sender) {
-      this.GetRichEdit().FSelAttributes.SetBackColor(this.FBkClr.GetColor());
+      if (this.GetRichEdit() != null) this.GetRichEdit().FSelAttributes.SetBackColor(this.FBkClr.GetColor());
     };
     this.FntChange = function (Sender) {
-      this.GetRichEdit().FSelAttributes.SetName(this.FFnt.FItems.Get(this.FFnt.GetItemIndex()));
+      if (this.GetRichEdit() != null) this.GetRichEdit().FSelAttributes.SetName(this.FFnt.FItems.Get(this.FFnt.GetItemIndex()));
     };
     this.FntSizeChange = function (Sender) {
-      this.GetRichEdit().FSelAttributes.SetHeight(this.FFntSize.GetItemIndex() + 1);
+      if (this.GetRichEdit() != null) this.GetRichEdit().FSelAttributes.SetHeight(this.FFntSize.GetItemIndex() + 1);
     };
     this.UpdateButtons = function () {
       if (this.IsUpdating()) return;
@@ -38239,6 +41667,23 @@ rtl.module("WEBLib.Buttons",["System","Classes","SysUtils","WEBLib.Controls","We
       pas["WEBLib.Controls"].TCustomControl.Loaded.call(this);
       this.UpdateButtons();
     };
+    this.HandleAttributeChanged = function (Sender, Attributes) {
+      this.FFnt.SetItemIndex(this.FFnt.FItems.IndexOf(Attributes.FontName));
+      this.FFntSize.SetItemIndex(this.FFntSize.FItems.IndexOf(Attributes.FontSize));
+      this.FBold.SetDown(Attributes.IsBold);
+      this.FItalic.SetDown(Attributes.IsItalic);
+      this.FUnderline.SetDown(Attributes.IsUnderline);
+      this.FStrikeThrough.SetDown(Attributes.IsStrikeThrough);
+      this.FAlignLeft.SetDown(Attributes.IsLeft);
+      this.FAlignRight.SetDown(Attributes.IsRight);
+      this.FAlignCenter.SetDown(Attributes.IsCenter);
+      if (Attributes.FontColor !== "") {
+        this.FFgClr.SetColor$1(pas["WEBLib.Graphics"].HexToColor(Attributes.FontColor));
+      };
+      if (Attributes.BkColor !== "") {
+        this.FBkClr.SetColor$1(pas["WEBLib.Graphics"].RGBToColor(Attributes.BkColor));
+      };
+    };
     this.CreateInitialize = function () {
       $mod.TCustomToolBar.CreateInitialize.call(this);
       this.FFnt = pas["WEBLib.StdCtrls"].TFontPicker.$create("Create$1",[this]);
@@ -38264,26 +41709,27 @@ rtl.module("WEBLib.Buttons",["System","Classes","SysUtils","WEBLib.Controls","We
       this.FHints.Add("Align right");
       this.FHints.Add("Numbered list");
       this.FHints.Add("List");
+      this.FBtnID = pas["WEBLib.Controls"].FindUniqueName("RETBBtn");
       this.CreateButton({p: this, get: function () {
           return this.p.FBold;
         }, set: function (v) {
           this.p.FBold = v;
-        }},this.GetID() + "_bold","&#xE238;",this.FHints.Get(0));
+        }},this.FBtnID + "_bold","&#xE238;",this.FHints.Get(0));
       this.CreateButton({p: this, get: function () {
           return this.p.FItalic;
         }, set: function (v) {
           this.p.FItalic = v;
-        }},this.GetID() + "_italic","&#xE23F;",this.FHints.Get(1));
+        }},this.FBtnID + "_italic","&#xE23F;",this.FHints.Get(1));
       this.CreateButton({p: this, get: function () {
           return this.p.FUnderline;
         }, set: function (v) {
           this.p.FUnderline = v;
-        }},this.GetID() + "_underline","&#xE249;",this.FHints.Get(2));
+        }},this.FBtnID + "_underline","&#xE249;",this.FHints.Get(2));
       this.CreateButton({p: this, get: function () {
           return this.p.FStrikeThrough;
         }, set: function (v) {
           this.p.FStrikeThrough = v;
-        }},this.GetID() + "_strikethrough","&#xE257;",this.FHints.Get(3));
+        }},this.FBtnID + "_strikethrough","&#xE257;",this.FHints.Get(3));
       this.FFgClr = pas["WEBLib.StdCtrls"].TColorPicker.$create("Create$1",[this]);
       this.FFgClr.SetParent(this);
       this.FFgClr.SetAlign(pas["WEBLib.Controls"].TAlign.alLeft);
@@ -38302,33 +41748,34 @@ rtl.module("WEBLib.Buttons",["System","Classes","SysUtils","WEBLib.Controls","We
           return this.p.FAlignLeft;
         }, set: function (v) {
           this.p.FAlignLeft = v;
-        }},this.GetID() + "_alignleft","&#xE236;",this.FHints.Get(6));
+        }},this.FBtnID + "_alignleft","&#xE236;",this.FHints.Get(6));
       this.CreateButton({p: this, get: function () {
           return this.p.FAlignCenter;
         }, set: function (v) {
           this.p.FAlignCenter = v;
-        }},this.GetID() + "_aligncenter","&#xE234;",this.FHints.Get(7));
+        }},this.FBtnID + "_aligncenter","&#xE234;",this.FHints.Get(7));
       this.CreateButton({p: this, get: function () {
           return this.p.FAlignRight;
         }, set: function (v) {
           this.p.FAlignRight = v;
-        }},this.GetID() + "_alignright","&#xE237;",this.FHints.Get(8));
+        }},this.FBtnID + "_alignright","&#xE237;",this.FHints.Get(8));
       this.CreateButton({p: this, get: function () {
           return this.p.FOList;
         }, set: function (v) {
           this.p.FOList = v;
-        }},this.GetID() + "_olist","&#xE242;",this.FHints.Get(9));
+        }},this.FBtnID + "_olist","&#xE242;",this.FHints.Get(9));
       this.CreateButton({p: this, get: function () {
           return this.p.FUList;
         }, set: function (v) {
           this.p.FUList = v;
-        }},this.GetID() + "_ulist","&#xE241;",this.FHints.Get(10));
+        }},this.FBtnID + "_ulist","&#xE241;",this.FHints.Get(10));
       this.FVisibleButtons = rtl.createSet($mod.TRichEditBtn.reFont,$mod.TRichEditBtn.reFontSize,$mod.TRichEditBtn.reBold,$mod.TRichEditBtn.reItalic,$mod.TRichEditBtn.reUnderline,$mod.TRichEditBtn.reStrikeThrough,$mod.TRichEditBtn.reAlignLeft,$mod.TRichEditBtn.reAlignCenter,$mod.TRichEditBtn.reAlignRight,$mod.TRichEditBtn.reUnorderedList,$mod.TRichEditBtn.reOrderedList,$mod.TRichEditBtn.reForegroundColor,$mod.TRichEditBtn.reBackgroundColor);
       this.SetWidth(540);
       this.SetRichEdit(null);
     };
     this.Destroy = function () {
       rtl.free(this,"FHints");
+      if (this.FRichEdit != null) this.FRichEdit.FOnAttributesChanged = null;
       pas["WEBLib.Controls"].TCustomControl.Destroy.call(this);
     };
     rtl.addIntf(this,pas.System.IUnknown);
@@ -38440,7 +41887,14 @@ rtl.module("WEBLib.Buttons",["System","Classes","SysUtils","WEBLib.Controls","We
   rtl.createClass($mod,"TWebToggleButton",$mod.TToggleButton,function () {
     rtl.addIntf(this,pas.System.IUnknown);
   });
-},["WEBLib.WebTools"]);
+},["WEBLib.WebTools"],function () {
+  "use strict";
+  var $mod = this;
+  var $impl = $mod.$impl;
+  rtl.createClass($impl,"TRichEditorCracker",pas["WEBLib.ComCtrls"].TRichEdit,function () {
+    rtl.addIntf(this,pas.System.IUnknown);
+  });
+});
 rtl.module("libjquery",["System","JS","Web"],function () {
   "use strict";
   var $mod = this;
@@ -38534,6 +41988,16 @@ rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBL
   this.TMainMenuHamburgerMenuVisible = {"0": "hmAlways", hmAlways: 0, "1": "hmNever", hmNever: 1, "2": "hmResponsive", hmResponsive: 2};
   $mod.$rtti.$Enum("TMainMenuHamburgerMenuVisible",{minvalue: 0, maxvalue: 2, ordtype: 1, enumtype: this.TMainMenuHamburgerMenuVisible});
   $mod.$rtti.$MethodVar("TMainMenuChangeEvent",{procsig: rtl.newTIProcSig([["Sender",pas.System.$rtti["TObject"]],["Source",$mod.$rtti["TMenuItem"]],["Rebuild",rtl.boolean]]), methodkind: 0});
+  rtl.createClass($mod,"TMenuItemList",pas.Classes.TList,function () {
+    this.GetItem = function (Index) {
+      var Result = null;
+      Result = rtl.getObject(this.Get(Index));
+      return Result;
+    };
+    this.PutItem = function (Index, Value) {
+      this.Put(Index,Value);
+    };
+  });
   rtl.createClass($mod,"TMenuItem",pas.Classes.TComponent,function () {
     this.$init = function () {
       pas.Classes.TComponent.$init.call(this);
@@ -38581,7 +42045,7 @@ rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBL
             Item = this.FOwner;
             for (var $l1 = 0, $end2 = Item.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
               I = $l1;
-              OtherItem = rtl.getObject(Item.FItems.Get(I));
+              OtherItem = Item.FItems.GetItem(I);
               if (OtherItem.FRadioItem && (OtherItem !== this)) OtherItem.SetChecked(false);
             };
           };
@@ -38634,6 +42098,22 @@ rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBL
       this.FOwner$1 = AOwner;
       return this;
     };
+    this.Destroy = function () {
+      var i = 0;
+      var pm = null;
+      pm = this.GetParentMenu();
+      if ((this.FParentItem != null) && (pm != null)) {
+        pm.BeginUpdate();
+        for (var $l1 = this.FParentItem.FItems.GetCount() - 1; $l1 >= 0; $l1--) {
+          i = $l1;
+          if (this.FParentItem.FItems.GetItem(i) === this) {
+            this.FParentItem.FItems.Delete(i);
+          };
+        };
+        pm.EndUpdate();
+      };
+      pas.Classes.TComponent.Destroy.call(this);
+    };
     this.Assign = function (Source) {
       var i = 0;
       var srcmenu = null;
@@ -38663,16 +42143,16 @@ rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBL
           if (this.FItems != null) {
             for (var $l1 = this.FItems.GetCount() - 1; $l1 >= 0; $l1--) {
               i = $l1;
-              this.RemoveItem(this.GetParentMenu().FParent,rtl.getObject(this.FItems.Get(i)));
+              this.RemoveItem(this.GetParentMenu().FParent,this.FItems.GetItem(i));
             };
             this.FItems.Clear();
-          } else this.FItems = pas.Classes.TList.$create("Create$1");
+          } else this.FItems = $mod.TMenuItemList.$create("Create$1");
           for (var $l2 = 0, $end3 = srcmenu.FItems.GetCount() - 1; $l2 <= $end3; $l2++) {
             i = $l2;
             mnu = $mod.TMenuItem.$create("Create$1",[pm.FOwner]);
             mnu.FParentMenu = pm;
             mnu.FParentItem = this;
-            mnu.Assign(rtl.getObject(srcmenu.FItems.Get(i)));
+            mnu.Assign(srcmenu.FItems.GetItem(i));
             this.FItems.Add(mnu);
           };
         };
@@ -38698,7 +42178,7 @@ rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBL
       this.Insert$1(this.GetCount(),Item);
     };
     this.Insert$1 = function (Index, Item) {
-      if (this.FItems === null) this.FItems = pas.Classes.TList.$create("Create$1");
+      if (this.FItems === null) this.FItems = $mod.TMenuItemList.$create("Create$1");
       this.FItems.Insert(Index,Item);
       Item.FParentItem = this;
       Item.GetParentMenu().UpdateElement();
@@ -38723,7 +42203,7 @@ rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBL
       var I = 0;
       if (this.FItems != null) for (var $l1 = 0, $end2 = this.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
         I = $l1;
-        Proc(rtl.getObject(this.FItems.Get(I)));
+        Proc(this.FItems.GetItem(I));
       };
     };
     this.SetChildOrder = function (Child, Order) {
@@ -38738,10 +42218,23 @@ rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBL
       if (AItem.FItems != null) {
         for (var $l1 = AItem.FItems.GetCount() - 1; $l1 >= 0; $l1--) {
           I = $l1;
-          this.RemoveItem(AOwner,rtl.getObject(AItem.FItems.Get(I)));
+          this.RemoveItem(AOwner,AItem.FItems.GetItem(I));
         };
       };
       AOwner.RemoveComponent(AItem);
+    };
+    this.Clear = function () {
+      var i = 0;
+      var mnu = null;
+      for (var $l1 = this.GetCount() - 1; $l1 >= 0; $l1--) {
+        i = $l1;
+        mnu = this.FItems.GetItem(i);
+        if (mnu.FItems != null) mnu.FItems.Clear();
+        mnu = rtl.freeLoc(mnu);
+      };
+    };
+    this.Click = function () {
+      if (this.FOnClick != null) this.FOnClick(this);
     };
     rtl.addIntf(this,pas.System.IUnknown);
     var $r = this.$rtti;
@@ -38959,10 +42452,18 @@ rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBL
       pas["WEBLib.Controls"].TControl.UpdateElement.call(this);
       if (this.IsUpdating()) return;
     };
+    this.SetName = function (NewName) {
+      pas["WEBLib.Controls"].TCustomControl.SetName.apply(this,arguments);
+      if (this.IsUpdating()) return;
+      if (pas.Classes.TComponentStateItem.csLoading in this.FComponentState) return;
+      this.UpdateElement();
+    };
     this.CreateInitialize = function () {
       pas["WEBLib.Controls"].TCustomControl.CreateInitialize.call(this);
       this.FItems = $mod.TMenuItem.$create("Create$1",[this]);
       this.FItems.FParentMenu = this;
+      this.SetWidthStyle(pas["WEBLib.Controls"].TSizeStyle.ssAuto);
+      this.SetHeight(30);
     };
     this.Destroy = function () {
       rtl.free(this,"FItems");
@@ -38973,7 +42474,7 @@ rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBL
       if ((this.FItems != null) && (this.FItems.FItems != null)) {
         for (var $l1 = 0, $end2 = this.FItems.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
           I = $l1;
-          Proc(rtl.getObject(this.FItems.FItems.Get(I)));
+          Proc(this.FItems.FItems.GetItem(I));
         };
       };
     };
@@ -39013,7 +42514,7 @@ rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBL
       it = this.GetItemByName(this.FItems,h.id);
       if (it != null) {
         if (this.FOnChange != null) this.FOnChange(this,it,false);
-        if (it.FOnClick != null) it.FOnClick(it);
+        it.Click();
       };
       return Result;
     };
@@ -39047,8 +42548,9 @@ rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBL
         ElHandle.style.setProperty("left","0");
         if ((pas.Classes.TComponentStateItem.csDesigning in this.FComponentState) && !(this.FContainer$1 != null)) this.GetElementHandle().style.setProperty("background-color","silver");
       };
-      this.FMenu = document.getElementById(this.FName + "menu");
+      this.FMenu = ElHandle.firstChild;
       if (this.FMenu != null) this.FMenu.parentElement.removeChild(this.FMenu);
+      if (pas.Classes.TComponentStateItem.csDestroying in this.FComponentState) return;
       this.FMenu = document.createElement("NAV");
       this.FMenu.setAttribute("id",this.FName + "menu");
       this.FMenu.innerHTML = "";
@@ -39122,7 +42624,7 @@ rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBL
         Result.setAttribute("class",MenuClass);
         for (var $l1 = 0, $end2 = Item.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
           I = $l1;
-          it = rtl.getObject(Item.FItems.Get(I));
+          it = Item.FItems.GetItem(I);
           if (it.FVisible) {
             ElListItem = document.createElement("LI");
             if (it.FCaption !== "-") {
@@ -39178,7 +42680,7 @@ rtl.module("WEBLib.Menus",["System","Classes","SysUtils","WEBLib.Controls","WEBL
       if (AMenu.FItems != null) {
         for (var $l1 = 0, $end2 = AMenu.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
           I = $l1;
-          it = rtl.getObject(AMenu.FItems.Get(I));
+          it = AMenu.FItems.GetItem(I);
           if (it.FName === Name) {
             Result = it;
             if (it.FOnClick != null) Result.FOnClick = it.FOnClick;
@@ -39994,7 +43496,7 @@ rtl.module("WEBLib.JQCtrls",["System","Classes","WEBLib.Graphics","SysUtils","We
       if (Item.FItems != null) {
         for (var $l1 = 0, $end2 = Item.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
           I = $l1;
-          it = rtl.getObject(Item.FItems.Get(I));
+          it = Item.FItems.GetItem(I);
           if (I > 0) Result = Result + ", ";
           Result = Result + '{ "label": "' + it.FCaption + '", "id": "' + it.FName + '", "items": ' + this.GetMenuSource(it) + " }";
         };
@@ -40010,7 +43512,7 @@ rtl.module("WEBLib.JQCtrls",["System","Classes","WEBLib.Graphics","SysUtils","We
       if (AMenu.FItems != null) {
         for (var $l1 = 0, $end2 = AMenu.FItems.GetCount() - 1; $l1 <= $end2; $l1++) {
           I = $l1;
-          it = rtl.getObject(AMenu.FItems.Get(I));
+          it = AMenu.FItems.GetItem(I);
           if (it.FName === Name) {
             Result = it;
             if (it.FOnClick != null) Result.FOnClick = it.FOnClick;
@@ -43749,7 +47251,7 @@ rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","co
           }}) !== null) {
           this.srcNode = index;
           this.destNode = -1;
-          this.network.nodes[index].reactionSelected = true;
+          this.network.nodes[index].addReactionSelected = true;
         } else this.mStatus = $mod.TMouseStatus.sIdle;
       } else if (this.srcNode !== -1) {
         if (this.network.overNode$1(x,y,{get: function () {
@@ -43760,7 +47262,7 @@ rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","co
           this.destNode = index;
           this.prepareUndo();
           this.network.addUniUniReaction("J" + pas.SysUtils.IntToStr(rtl.length(this.network.reactions)),this.network.nodes[this.srcNode],this.network.nodes[this.destNode]);
-          this.network.nodes[this.srcNode].reactionSelected = false;
+          this.network.nodes[this.srcNode].addReactionSelected = false;
           this.srcNode = -1;
           this.destNode = -1;
           rtl.as(Sender,pas["WEBLib.ExtCtrls"].TPaintBox).SetControlCursor(0);
@@ -43799,7 +47301,7 @@ rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","co
           };
           if (!(this.destNodeCounter < (this.anyByAny_nProducts - 1))) {
             this.prepareUndo();
-            this.network.AddAnyToAnyEdge(this.sourceNodes,this.destNodes,{get: function () {
+            this.network.addAnyToAnyEdge(this.sourceNodes,this.destNodes,{get: function () {
                 return index;
               }, set: function (v) {
                 index = v;
@@ -43890,7 +47392,7 @@ rtl.module("uController",["System","SysUtils","Classes","UITypes","uNetwork","co
         }, set: function (v) {
           index = v;
         }}) !== null)) {
-        this.network.nodes[index].reactionSelected = true;
+        this.network.nodes[index].addReactionSelected = true;
       } else this.network.unReactionSelect();
     };
     this.OnMouseUp = function (Sender, Button, Shift, X, Y) {
@@ -43943,7 +47445,7 @@ rtl.module("uNetworkCanvas",["System","WEBLib.Graphics","Types","WEBLib.Dialogs"
     this.drawMouseGrabPoints = function (x, y, w, h) {
       var scalingFactor = 0.0;
       var rectList = rtl.arraySetLength(null,pas.Types.TRect,4);
-      rectList = pas.uDrawTypes.TRectArray$clone(this.getControlRects(x,y,w,h));
+      rectList = this.getControlRects(x,y,w,h);
       this.canvas.FBrush.FColor = 255;
       this.canvas.FBrush.FStyle = pas["WEBLib.Graphics"].TBrushStyle.bsSolid;
       this.canvas.FillRect(rectList[0]);
@@ -44004,7 +47506,7 @@ rtl.module("uNetworkCanvas",["System","WEBLib.Graphics","Types","WEBLib.Dialogs"
             this.canvas.Rectangle$1(sX,sY,sX + scaledW + (2 * f),sY + scaledH + (2 * f));
             this.drawMouseGrabPoints(sX,sY,scaledW + (2 * f),scaledH + (2 * f));
           };
-          if (this.network.nodes[i].reactionSelected) {
+          if (this.network.nodes[i].addReactionSelected) {
             this.canvas.FPen.SetColor(255);
             this.canvas.FBrush.FStyle = pas["WEBLib.Graphics"].TBrushStyle.bsClear;
             this.canvas.FPen.FWidth = 1;
