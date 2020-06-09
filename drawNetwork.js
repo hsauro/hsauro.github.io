@@ -37702,7 +37702,6 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       var i = 0;
       var jso = null;
       reactionObject.AddPair$2("id",this.id);
-      reactionObject.AddPair$2("reactionType",pas.uNetworkTypes.getReactionTypeString(this.reactionType));
       reactionObject.AddPair$2("arcCenterX",pas.SysUtils.FloatToStr(this.arcCenter.x));
       reactionObject.AddPair$2("arcCenterY",pas.SysUtils.FloatToStr(this.arcCenter.y));
       speciesArray = pas["WEBLib.JSON"].TJSONArray.$create("Create$2");
@@ -37731,22 +37730,11 @@ rtl.module("uNetwork",["System","SysUtils","Classes","Types","WEBLib.Graphics","
       var speciesName = "";
       var i = 0;
       this.id = obj.GetJSONValue("id");
-      this.reactionType = pas.uNetworkTypes.getReactionType(obj.GetJSONValue("reactionType"));
+      this.reactionType = pas.uNetworkTypes.TReactionType.eAnyToAny;
       if (obj.Get("species") !== null) {
         speciesArray = rtl.as(obj.Get("species").fjv,pas["WEBLib.JSON"].TJSONArray);
         var $tmp1 = this.reactionType;
-        if ($tmp1 === pas.uNetworkTypes.TReactionType.eUniUni) {
-          reactantObject = rtl.as(speciesArray.GetItem$1(0),pas["WEBLib.JSON"].TJSONObject);
-          this.nReactants = 1;
-          this.nProducts = 1;
-          pa = reactantObject.Get$1(0);
-          this.srcId[0] = pa.fjs.GetStrValue();
-          stoich = -pas.SysUtils.StrToInt(pa.fjv.GetStrValue());
-          reactantObject = rtl.as(speciesArray.GetItem$1(1),pas["WEBLib.JSON"].TJSONObject);
-          pa = reactantObject.Get$1(0);
-          this.destId[0] = pa.fjs.GetStrValue();
-          stoich = -pas.SysUtils.StrToInt(pa.fjv.GetStrValue());
-        } else if ($tmp1 === pas.uNetworkTypes.TReactionType.eAnyToAny) {
+        if (($tmp1 === pas.uNetworkTypes.TReactionType.eAnyToAny) || ($tmp1 === pas.uNetworkTypes.TReactionType.eUniUni)) {
           reactantObject = rtl.as(speciesArray.GetItem$1(0),pas["WEBLib.JSON"].TJSONObject);
           this.nReactants = reactantObject.GetCount();
           for (var $l2 = 0, $end3 = this.nReactants - 1; $l2 <= $end3; $l2++) {
