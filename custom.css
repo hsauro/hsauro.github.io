@@ -8,13 +8,14 @@
 }
 
 .btnOverlay {
-  border: 2px white;
+  border: 0px white;
   color: white;
-  background-color: #007aff;
-  padding: 8px 20px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: bold;
+  background-color: #602b30;  /* #272b30; */
+  /* background-color: #007aff; */
+  padding: 3px 0px;
+  border-radius: 2px;
+  font-size: 14px;
+  /*font-weight: bold;*/
   pointer-events:none;
 }
 
